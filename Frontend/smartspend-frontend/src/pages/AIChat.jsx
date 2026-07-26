@@ -98,24 +98,27 @@ export default function AIChat() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#0a0f1c] to-indigo-950 flex flex-col relative font-sans selection:bg-cyan-500/30">
       <Navbar />
 
-      <div className="max-w-3xl mx-auto w-full px-4 py-6 flex flex-col flex-1">
+      <div className="absolute top-1/4 left-0 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[150px] -z-10 pointer-events-none" />
+      <div className="absolute bottom-1/4 right-0 w-[500px] h-[500px] bg-fuchsia-500/10 rounded-full blur-[150px] -z-10 pointer-events-none" />
+
+      <div className="max-w-4xl mx-auto w-full px-6 py-8 flex flex-col flex-1 relative z-10">
 
         {/* Header + Mode Toggle + Reset */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-blue-900">AI Chat</h1>
-            <p className="text-gray-500 text-sm">Talk to your finances</p>
+            <h1 className="text-3xl font-extrabold text-white drop-shadow-md">AI Chat</h1>
+            <p className="text-cyan-400 font-semibold tracking-wide text-sm mt-1">Talk to your finances</p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex bg-gray-100 rounded-lg p-1">
+          <div className="flex items-center gap-4">
+            <div className="flex bg-white/5 backdrop-blur-md rounded-xl p-1.5 border border-white/5">
               <button
                 type="button"
                 onClick={() => setMode('parse')}
-                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  mode === 'parse' ? 'bg-white shadow text-blue-900' : 'text-gray-500'
+                className={`px-5 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
+                  mode === 'parse' ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.2)] border border-cyan-500/30' : 'text-slate-500 hover:text-slate-300'
                 }`}
               >
                 Add Expense
@@ -123,17 +126,17 @@ export default function AIChat() {
               <button
                 type="button"
                 onClick={() => setMode('query')}
-                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-                  mode === 'query' ? 'bg-white shadow text-blue-900' : 'text-gray-500'
+                className={`px-5 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
+                  mode === 'query' ? 'bg-fuchsia-500/20 text-fuchsia-400 shadow-[0_0_15px_rgba(217,70,239,0.2)] border border-fuchsia-500/30' : 'text-slate-500 hover:text-slate-300'
                 }`}
               >
-                Ask a Question
+                Ask Question
               </button>
             </div>
             <button
               type="button"
               onClick={handleReset}
-              className="text-xs text-gray-400 hover:text-red-500 transition-all"
+              className="text-sm font-semibold text-slate-500 hover:text-rose-400 transition-colors uppercase tracking-widest"
             >
               Reset Chat
             </button>
@@ -141,63 +144,63 @@ export default function AIChat() {
         </div>
 
         {/* Chat Window */}
-        <div className="flex-1 bg-white rounded-2xl border border-gray-200 p-4 overflow-y-auto mb-4 space-y-4 min-h-96 max-h-[60vh]">
+        <div className="flex-1 bg-white/[0.02] backdrop-blur-2xl border border-white/10 rounded-3xl p-6 overflow-y-auto mb-6 space-y-6 shadow-2xl min-h-96 max-h-[65vh]">
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
 
               {/* User message */}
               {msg.role === 'user' && (
-                <div className="bg-blue-900 text-white px-4 py-2 rounded-2xl rounded-tr-sm max-w-sm text-sm">
+                <div className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-6 py-3 rounded-2xl rounded-tr-sm shadow-[0_0_20px_rgba(34,211,238,0.3)] max-w-md text-sm font-medium leading-relaxed">
                   {msg.content}
                 </div>
               )}
 
               {/* Assistant text message */}
               {msg.role === 'assistant' && msg.type === 'text' && (
-                <div className="bg-gray-100 text-gray-800 px-4 py-2 rounded-2xl rounded-tl-sm max-w-sm text-sm whitespace-pre-line">
+                <div className="bg-white/5 border border-white/10 text-slate-300 px-6 py-3 rounded-2xl rounded-tl-sm shadow-lg max-w-md text-sm leading-relaxed whitespace-pre-line">
                   {msg.content}
                 </div>
               )}
 
               {/* Parsed expense card */}
               {msg.role === 'assistant' && msg.type === 'parse' && (
-                <div className="bg-blue-50 border border-blue-200 rounded-2xl rounded-tl-sm p-4 max-w-sm w-full">
-                  <p className="text-sm text-blue-900 font-medium mb-3">{msg.content}</p>
-                  <div className="bg-white rounded-lg border border-blue-100 p-3 space-y-1 text-xs text-gray-700 mb-3">
-                    <div className="flex justify-between"><span className="text-gray-500">Date</span><span>{msg.parsed?.date}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Type</span><span>{msg.parsed?.type}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Category</span><span>{msg.parsed?.category}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500">Amount</span><span className="font-bold text-blue-900">GH₵{msg.parsed?.amount}</span></div>
+                <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-2xl rounded-tl-sm p-5 max-w-md w-full shadow-[0_0_20px_rgba(34,211,238,0.1)]">
+                  <p className="text-sm text-cyan-300 font-semibold mb-4">{msg.content}</p>
+                  <div className="bg-black/30 rounded-xl border border-white/10 p-4 space-y-2 text-sm text-slate-300 mb-4">
+                    <div className="flex justify-between"><span className="text-slate-500 font-medium">Date</span><span>{msg.parsed?.date}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500 font-medium">Type</span><span>{msg.parsed?.type}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500 font-medium">Category</span><span>{msg.parsed?.category}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-500 font-medium">Amount</span><span className="font-bold text-cyan-400 drop-shadow-md">GH₵{msg.parsed?.amount}</span></div>
                     {msg.parsed?.details && (
-                      <div className="flex justify-between"><span className="text-gray-500">Details</span><span>{msg.parsed.details}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-500 font-medium">Details</span><span>{msg.parsed.details}</span></div>
                     )}
                     {msg.parsed?.payment_method && (
-                      <div className="flex justify-between"><span className="text-gray-500">Payment</span><span>{msg.parsed.payment_method}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-500 font-medium">Payment</span><span>{msg.parsed.payment_method}</span></div>
                     )}
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Confidence</span>
-                      <span className={`font-medium ${
-                        msg.parsed?.confidence === 'high' ? 'text-green-600' :
-                        msg.parsed?.confidence === 'medium' ? 'text-yellow-600' : 'text-red-500'
+                    <div className="flex justify-between pt-2 border-t border-white/10 mt-2">
+                      <span className="text-slate-500 font-medium">Confidence</span>
+                      <span className={`font-bold tracking-wide uppercase text-xs mt-0.5 ${
+                        msg.parsed?.confidence === 'high' ? 'text-emerald-400' :
+                        msg.parsed?.confidence === 'medium' ? 'text-yellow-400' : 'text-rose-400'
                       }`}>
                         {msg.parsed?.confidence}
                       </span>
                     </div>
                   </div>
                   {pendingParse?.message === msg.originalMessage && (
-                    <div className="flex gap-2">
+                    <div className="flex gap-3">
                       <button
                         type="button"
                         onClick={() => handleConfirm(msg.originalMessage)}
                         disabled={loading}
-                        className="flex-1 bg-blue-900 text-white py-1.5 rounded-lg text-xs font-medium hover:bg-blue-800 disabled:opacity-50"
+                        className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 text-white py-2 rounded-lg text-sm font-bold shadow-[0_0_15px_rgba(34,211,238,0.3)] hover:shadow-[0_0_20px_rgba(34,211,238,0.5)] transition-all disabled:opacity-50"
                       >
-                        Save
+                        Save Expense
                       </button>
                       <button
                         type="button"
                         onClick={handleDiscard}
-                        className="flex-1 border border-gray-300 text-gray-600 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-50"
+                        className="flex-1 bg-white/5 border border-white/10 text-slate-300 py-2 rounded-lg text-sm font-bold hover:bg-white/10 transition-all"
                       >
                         Discard
                       </button>
@@ -208,32 +211,32 @@ export default function AIChat() {
 
               {/* Query result card */}
               {msg.role === 'assistant' && msg.type === 'query' && (
-                <div className="bg-green-50 border border-green-200 rounded-2xl rounded-tl-sm p-4 max-w-md w-full">
-                  <p className="text-sm text-green-900 font-medium mb-3">{msg.content}</p>
+                <div className="bg-fuchsia-500/10 border border-fuchsia-500/30 rounded-2xl rounded-tl-sm p-5 max-w-lg w-full shadow-[0_0_20px_rgba(217,70,239,0.1)]">
+                  <p className="text-sm text-fuchsia-300 font-semibold mb-4 leading-relaxed">{msg.content}</p>
                   {msg.data && msg.data.length > 0 && (
-                    <div className="bg-white rounded-lg border border-green-100 overflow-hidden">
-                      <table className="w-full text-xs">
-                        <thead className="bg-green-50">
+                    <div className="bg-black/30 rounded-xl border border-white/10 overflow-hidden">
+                      <table className="w-full text-sm">
+                        <thead className="bg-white/5 border-b border-white/10">
                           <tr>
-                            <th className="text-left px-3 py-2 text-green-800">Date</th>
-                            <th className="text-left px-3 py-2 text-green-800">Category</th>
-                            <th className="text-right px-3 py-2 text-green-800">Amount</th>
+                            <th className="text-left px-4 py-3 text-fuchsia-400 font-bold uppercase tracking-widest text-xs">Date</th>
+                            <th className="text-left px-4 py-3 text-fuchsia-400 font-bold uppercase tracking-widest text-xs">Category</th>
+                            <th className="text-right px-4 py-3 text-fuchsia-400 font-bold uppercase tracking-widest text-xs">Amount</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y divide-white/10">
                           {msg.data.slice(0, 5).map((row, j) => (
-                            <tr key={j}>
-                              <td className="px-3 py-1.5 text-gray-600">{row.date}</td>
-                              <td className="px-3 py-1.5 text-gray-700">{row.category}</td>
-                              <td className="px-3 py-1.5 text-right font-medium text-blue-900">
+                            <tr key={j} className="hover:bg-white/5 transition-colors">
+                              <td className="px-4 py-3 text-slate-400">{row.date}</td>
+                              <td className="px-4 py-3 text-slate-300">{row.category}</td>
+                              <td className="px-4 py-3 text-right font-bold text-cyan-400">
                                 GH₵{Number(row.amount).toLocaleString()}
                               </td>
                             </tr>
                           ))}
                           {msg.data.length > 5 && (
                             <tr>
-                              <td colSpan={3} className="px-3 py-1.5 text-center text-gray-400">
-                                +{msg.data.length - 5} more transactions
+                              <td colSpan={3} className="px-4 py-3 text-center text-slate-500 font-medium text-xs tracking-widest uppercase bg-white/[0.02]">
+                                +{msg.data.length - 5} more records
                               </td>
                             </tr>
                           )}
@@ -248,16 +251,18 @@ export default function AIChat() {
           ))}
 
           {loading && (
-            <div className="flex justify-start">
-              <div className="bg-gray-100 px-4 py-2 rounded-2xl rounded-tl-sm text-sm text-gray-500">
-                Thinking...
+            <div className="flex justify-start animate-pulse">
+              <div className="bg-white/5 border border-white/10 px-6 py-3 rounded-2xl rounded-tl-sm text-sm text-cyan-400 font-semibold flex items-center gap-2">
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           )}
         </div>
 
         {/* Input */}
-        <div className="flex gap-3">
+        <div className="flex gap-4">
           <input
             type="text"
             value={input}
@@ -267,13 +272,13 @@ export default function AIChat() {
               ? "e.g. I spent GH₵45 on food today"
               : "e.g. How much did I spend this month?"
             }
-            className="flex-1 border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 bg-black/30 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all shadow-inner"
           />
           <button
             type="button"
             onClick={handleSend}
             disabled={loading || !input.trim()}
-            className="bg-blue-900 text-white px-6 py-3 rounded-xl text-sm font-medium hover:bg-blue-800 disabled:opacity-50 transition-all"
+            className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-8 py-4 rounded-2xl text-sm font-bold shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:shadow-[0_0_25px_rgba(34,211,238,0.5)] disabled:opacity-50 disabled:cursor-not-allowed transition-all uppercase tracking-widest"
           >
             Send
           </button>

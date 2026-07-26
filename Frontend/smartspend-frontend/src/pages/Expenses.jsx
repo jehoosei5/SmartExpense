@@ -122,15 +122,12 @@ export default function Expenses() {
     setShowForm(true)
   }
 
-  // Filter categories by selected type
-  const filteredCategories = categories.filter(c =>
-    !form.type || c.type === form.type
-  )
+  const filteredCategories = categories.filter(c => !form.type || c.type === form.type)
 
   const typeColors = {
-    Expenses: 'bg-red-100 text-red-700',
-    Income:   'bg-green-100 text-green-700',
-    Savings:  'bg-purple-100 text-purple-700'
+    Expenses: 'bg-rose-500/20 text-rose-400 border border-rose-500/30',
+    Income:   'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
+    Savings:  'bg-fuchsia-500/20 text-fuchsia-400 border border-fuchsia-500/30'
   }
 
   const months = [
@@ -142,54 +139,50 @@ export default function Expenses() {
     { value: '11', label: 'November'},{ value: '12', label: 'December' }
   ]
 
+  const inputClasses = "w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all"
+  const labelClasses = "block text-xs font-semibold tracking-wider text-slate-400 mb-1.5 uppercase"
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#0a0f1c] to-indigo-950 text-slate-100 font-sans selection:bg-cyan-500/30 relative">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="absolute top-20 left-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-fuchsia-500/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-6 py-10 relative z-10">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-blue-900">Expenses</h1>
-            <p className="text-gray-500 text-sm mt-1">{expenses.length} transactions</p>
+            <h1 className="text-4xl font-extrabold tracking-tight text-white drop-shadow-lg">Transactions</h1>
+            <p className="text-cyan-400 text-sm mt-2 font-semibold tracking-wide drop-shadow-md">
+              {expenses.length} records found
+            </p>
           </div>
           <button
             type="button"
             onClick={() => { setShowForm(true); setEditingId(null); setForm(EMPTY_FORM) }}
-            className="bg-blue-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-800 transition-all"
+            className="bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 px-5 py-2.5 rounded-xl text-sm font-bold shadow-[0_0_15px_rgba(34,211,238,0.2)] hover:bg-cyan-500/30 hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all"
           >
             + Add Transaction
           </button>
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6 grid grid-cols-2 md:grid-cols-5 gap-3">
-          <select
-            value={filterType}
-            onChange={e => setFilterType(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All Types</option>
-            {TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+        <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-5 mb-8 grid grid-cols-2 md:grid-cols-5 gap-4 shadow-xl">
+          <select value={filterType} onChange={e => setFilterType(e.target.value)} className={inputClasses}>
+            <option value="" className="bg-slate-900">All Types</option>
+            {TYPES.map(t => <option key={t} value={t} className="bg-slate-900">{t}</option>)}
           </select>
 
-          <select
-            value={filterCategory}
-            onChange={e => setFilterCategory(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All Categories</option>
-            {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+          <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} className={inputClasses}>
+            <option value="" className="bg-slate-900">All Categories</option>
+            {categories.map(c => <option key={c.id} value={c.name} className="bg-slate-900">{c.name}</option>)}
           </select>
 
-          <select
-            value={filterMonth}
-            onChange={e => setFilterMonth(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">All Months</option>
-            {months.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+          <select value={filterMonth} onChange={e => setFilterMonth(e.target.value)} className={inputClasses}>
+            <option value="" className="bg-slate-900">All Months</option>
+            {months.map(m => <option key={m.value} value={m.value} className="bg-slate-900">{m.label}</option>)}
           </select>
 
           <input
@@ -197,187 +190,191 @@ export default function Expenses() {
             placeholder="Year e.g. 2026"
             value={filterYear}
             onChange={e => setFilterYear(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={inputClasses}
           />
 
           <button
             type="button"
             onClick={loadExpenses}
-            className="bg-blue-900 text-white rounded-lg px-3 py-2 text-sm font-medium hover:bg-blue-800 transition-all"
+            className="bg-fuchsia-500/20 border border-fuchsia-500/30 text-fuchsia-400 rounded-xl px-4 py-2 text-sm font-bold shadow-[0_0_15px_rgba(217,70,239,0.2)] hover:bg-fuchsia-500/30 transition-all"
           >
             Apply Filters
           </button>
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
           {loading ? (
-            <div className="p-8 text-center text-gray-400">Loading...</div>
+            <div className="p-12 text-center text-slate-500 flex justify-center">
+              <div className="w-8 h-8 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin" />
+            </div>
           ) : expenses.length === 0 ? (
-            <div className="p-8 text-center text-gray-400">No transactions found</div>
+            <div className="p-12 text-center text-slate-500 font-medium tracking-wide">No transactions found</div>
           ) : (
-            <table className="w-full text-sm">
-              <thead className="bg-blue-50 border-b border-gray-200">
-                <tr>
-                  {['Date','Type','Category','Amount','Details','Payment','Source',''].map(h => (
-                    <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-blue-900 uppercase tracking-wide">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {expenses.map(exp => (
-                  <tr key={exp.id} className="hover:bg-gray-50 transition-all">
-                    <td className="px-4 py-3 text-gray-600">{exp.date}</td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${typeColors[exp.type]}`}>
-                        {exp.type}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-700">{exp.category}</td>
-                    <td className="px-4 py-3 font-semibold text-blue-900">
-                      GH₵{Number(exp.amount).toLocaleString('en-GH', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="px-4 py-3 text-gray-500">{exp.details || '—'}</td>
-                    <td className="px-4 py-3 text-gray-500">{exp.payment_method || '—'}</td>
-                    <td className="px-4 py-3">
-                      <span className="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600">
-                        {exp.source}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleEdit(exp)}
-                          className="text-blue-600 hover:text-blue-800 text-xs font-medium"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeletingId(exp.id)}
-                          className="text-red-500 hover:text-red-700 text-xs font-medium"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-white/5 border-b border-white/10">
+                  <tr>
+                    {['Date','Type','Category','Amount','Details','Payment','Source',''].map(h => (
+                      <th key={h} className="text-left px-5 py-4 text-xs font-bold text-slate-300 uppercase tracking-widest">
+                        {h}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {expenses.map(exp => (
+                    <tr key={exp.id} className="hover:bg-white/[0.04] transition-colors duration-200">
+                      <td className="px-5 py-4 text-slate-400 font-medium">{exp.date}</td>
+                      <td className="px-5 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold tracking-wide ${typeColors[exp.type]}`}>
+                          {exp.type}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-slate-300">{exp.category}</td>
+                      <td className="px-5 py-4 font-bold text-cyan-400 tracking-tight drop-shadow-md">
+                        GH₵{Number(exp.amount).toLocaleString('en-GH', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td className="px-5 py-4 text-slate-500">{exp.details || '—'}</td>
+                      <td className="px-5 py-4 text-slate-500">{exp.payment_method || '—'}</td>
+                      <td className="px-5 py-4">
+                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-white/5 border border-white/10 text-slate-400">
+                          {exp.source}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex gap-4">
+                          <button
+                            type="button"
+                            onClick={() => handleEdit(exp)}
+                            className="text-cyan-400 hover:text-cyan-300 text-xs font-bold uppercase tracking-wider transition-colors"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeletingId(exp.id)}
+                            className="text-rose-400 hover:text-rose-300 text-xs font-bold uppercase tracking-wider transition-colors"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>
 
       {/* Add/Edit Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg max-h-screen overflow-y-auto">
-            <h2 className="text-lg font-bold text-blue-900 mb-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="bg-slate-900 border border-white/10 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.5)] p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto relative">
+            <h2 className="text-2xl font-bold text-white mb-6 tracking-tight">
               {editingId ? 'Edit Transaction' : 'Add Transaction'}
             </h2>
 
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-5">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Date</label>
+                  <label className={labelClasses}>Date</label>
                   <input
                     type="date"
                     value={form.date}
                     onChange={e => setForm({...form, date: e.target.value})}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={inputClasses}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Type</label>
+                  <label className={labelClasses}>Type</label>
                   <select
                     value={form.type}
                     onChange={e => setForm({...form, type: e.target.value, category: ''})}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={inputClasses}
                   >
-                    {TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    {TYPES.map(t => <option key={t} value={t} className="bg-slate-900">{t}</option>)}
                   </select>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Category</label>
+                  <label className={labelClasses}>Category</label>
                   <select
                     value={form.category}
                     onChange={e => setForm({...form, category: e.target.value})}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={inputClasses}
                   >
-                    <option value="">Select category</option>
+                    <option value="" className="bg-slate-900">Select category</option>
                     {filteredCategories.map(c => (
-                      <option key={c.id} value={c.name}>{c.name}</option>
+                      <option key={c.id} value={c.name} className="bg-slate-900">{c.name}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Amount (GHS)</label>
+                  <label className={labelClasses}>Amount (GHS)</label>
                   <input
                     type="number"
                     value={form.amount}
                     onChange={e => setForm({...form, amount: e.target.value})}
                     placeholder="0.00"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={inputClasses}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Details</label>
+                <label className={labelClasses}>Details</label>
                 <input
                   type="text"
                   value={form.details}
                   onChange={e => setForm({...form, details: e.target.value})}
                   placeholder="e.g. Lunch at KFC"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={inputClasses}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Payment Method</label>
+                <label className={labelClasses}>Payment Method</label>
                 <select
                   value={form.payment_method}
                   onChange={e => setForm({...form, payment_method: e.target.value})}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={inputClasses}
                 >
-                  <option value="">Select method</option>
-                  {PAYMENT_METHODS.map(m => <option key={m} value={m}>{m}</option>)}
+                  <option value="" className="bg-slate-900">Select method</option>
+                  {PAYMENT_METHODS.map(m => <option key={m} value={m} className="bg-slate-900">{m}</option>)}
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">Notes</label>
+                <label className={labelClasses}>Notes</label>
                 <textarea
                   value={form.notes}
                   onChange={e => setForm({...form, notes: e.target.value})}
                   placeholder="Any additional notes..."
                   rows={2}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className={inputClasses}
                 />
               </div>
 
-              {formError && <p className="text-red-500 text-xs">{formError}</p>}
+              {formError && <p className="text-rose-400 text-xs font-semibold">{formError}</p>}
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-4 pt-4">
                 <button
                   type="button"
                   onClick={handleSave}
                   disabled={saving}
-                  className="flex-1 bg-blue-900 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-800 disabled:opacity-50"
+                  className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 text-white py-3 rounded-xl text-sm font-bold shadow-[0_0_15px_rgba(34,211,238,0.3)] hover:shadow-[0_0_20px_rgba(34,211,238,0.5)] transition-all disabled:opacity-50"
                 >
-                  {saving ? 'Saving...' : editingId ? 'Update' : 'Save'}
+                  {saving ? 'Processing...' : editingId ? 'Update' : 'Save'}
                 </button>
                 <button
                   type="button"
                   onClick={() => { setShowForm(false); setFormError('') }}
-                  className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg text-sm font-medium hover:bg-gray-50"
+                  className="flex-1 bg-white/5 border border-white/10 text-slate-300 py-3 rounded-xl text-sm font-bold hover:bg-white/10 transition-all"
                 >
                   Cancel
                 </button>
@@ -389,22 +386,22 @@ export default function Expenses() {
 
       {/* Delete Confirmation Modal */}
       {deletingId && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm">
-            <h2 className="text-lg font-bold text-gray-900 mb-2">Delete Transaction?</h2>
-            <p className="text-gray-500 text-sm mb-6">This action cannot be undone.</p>
-            <div className="flex gap-3">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="bg-slate-900 border border-rose-500/30 rounded-3xl shadow-[0_0_40px_rgba(244,63,94,0.3)] p-8 w-full max-w-sm text-center">
+            <h2 className="text-xl font-bold text-white mb-2">Delete Transaction?</h2>
+            <p className="text-slate-400 text-sm mb-8">This action cannot be undone.</p>
+            <div className="flex gap-4">
               <button
                 type="button"
                 onClick={() => handleDelete(deletingId)}
-                className="flex-1 bg-red-500 text-white py-2 rounded-lg text-sm font-medium hover:bg-red-600"
+                className="flex-1 bg-rose-500 text-white py-3 rounded-xl text-sm font-bold hover:bg-rose-600 shadow-[0_0_15px_rgba(244,63,94,0.4)] transition-all"
               >
-                Delete
+                Confirm Delete
               </button>
               <button
                 type="button"
                 onClick={() => setDeletingId(null)}
-                className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg text-sm font-medium hover:bg-gray-50"
+                className="flex-1 bg-white/5 border border-white/10 text-slate-300 py-3 rounded-xl text-sm font-bold hover:bg-white/10 transition-all"
               >
                 Cancel
               </button>

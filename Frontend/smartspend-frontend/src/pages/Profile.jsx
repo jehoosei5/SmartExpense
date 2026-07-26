@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
-// Added deleteAccount to imports
 import { getMe, updateMe, deleteAccount } from '../api/client'
 
 const CURRENCIES = ['GHS', 'USD', 'EUR', 'GBP', 'NGN', 'KES', 'ZAR']
@@ -128,74 +127,95 @@ export default function Profile() {
   const pwChecks = validatePassword(newPassword)
   const pwStrength = Object.values(pwChecks).filter(Boolean).length
   const strengthLabel = pwStrength <= 2 ? 'Weak' : pwStrength <= 4 ? 'Medium' : 'Strong'
-  const strengthColor = pwStrength <= 2 ? 'bg-red-400' : pwStrength <= 4 ? 'bg-yellow-400' : 'bg-green-500'
+  const strengthColor = pwStrength <= 2 ? 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]' : pwStrength <= 4 ? 'bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)]' : 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]'
   const strengthWidth = pwStrength <= 2 ? 'w-1/3' : pwStrength <= 4 ? 'w-2/3' : 'w-full'
 
+  const inputClasses = "w-full bg-black/20 border border-white/10 rounded-xl px-5 py-3.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all shadow-inner"
+  const labelClasses = "block text-xs font-bold tracking-widest text-slate-400 mb-2 uppercase"
+  const cardClasses = "bg-white/[0.02] backdrop-blur-2xl border border-white/10 rounded-3xl p-8 mb-8 shadow-2xl relative overflow-hidden hover:shadow-[0_0_40px_rgba(34,211,238,0.05)] transition-shadow duration-500"
+
   if (loading) return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#0a0f1c] to-indigo-950 flex flex-col items-center justify-center relative selection:bg-cyan-500/30">
       <Navbar />
-      <div className="flex items-center justify-center h-96">
-        <p className="text-gray-400">Loading profile...</p>
+      <div className="flex-1 flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]" />
       </div>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-12">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#0a0f1c] to-indigo-950 text-slate-100 font-sans selection:bg-cyan-500/30 relative pb-12">
       <Navbar />
-      <div className="max-w-2xl mx-auto px-6 py-8">
+
+      <div className="absolute top-20 right-1/4 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[150px] -z-10 pointer-events-none" />
+      <div className="absolute bottom-20 left-1/4 w-[500px] h-[500px] bg-fuchsia-500/10 rounded-full blur-[150px] -z-10 pointer-events-none" />
+
+      <div className="max-w-2xl mx-auto px-6 py-10 relative z-10">
 
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-blue-900">Profile Settings</h1>
-          <p className="text-gray-500 text-sm mt-1">{user?.email}</p>
+        <div className="mb-10 text-center">
+          <h1 className="text-4xl font-extrabold tracking-tight text-white drop-shadow-lg mb-2">Profile Settings</h1>
+          <div className="inline-flex items-center justify-center bg-white/5 border border-white/10 rounded-full px-5 py-1.5 backdrop-blur-md">
+            <span className="text-cyan-400 text-sm font-bold tracking-wide">{user?.email}</span>
+          </div>
         </div>
 
         {/* Profile Info Card */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
-          <h2 className="text-lg font-semibold text-blue-900 mb-4">Personal Information</h2>
-          <div className="space-y-4">
+        <div className={cardClasses}>
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+          <h2 className="text-xl font-bold text-white mb-6 tracking-tight flex items-center gap-3">
+            <span className="text-cyan-400 text-2xl">👤</span> Personal Information
+          </h2>
+          
+          <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className={labelClasses}>Email Address</label>
               <input
                 type="email"
                 value={user?.email || ''}
                 disabled
-                className="w-full border border-gray-200 rounded-lg px-4 py-2 text-sm bg-gray-50 text-gray-400 cursor-not-allowed"
+                className="w-full bg-black/40 border border-white/5 rounded-xl px-5 py-3.5 text-sm text-slate-500 cursor-not-allowed"
               />
+              <p className="text-xs text-slate-500 mt-2 font-medium">Email address cannot be changed.</p>
             </div>
+            
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
+              <label className={labelClasses}>Display Name</label>
               <input
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Your name"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={inputClasses}
               />
             </div>
+            
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Default Currency</label>
+              <label className={labelClasses}>Default Currency</label>
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`${inputClasses} appearance-none`}
               >
                 {CURRENCIES.map(c => (
-                  <option key={c} value={c}>{c}</option>
+                  <option key={c} value={c} className="bg-slate-900">{c}</option>
                 ))}
               </select>
             </div>
+            
             {infoMsg && (
-              <p className={`text-sm ${infoMsg.includes('✓') ? 'text-green-600' : 'text-red-500'}`}>
-                {infoMsg}
-              </p>
+              <div className={`p-4 rounded-xl border ${infoMsg.includes('✓') ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-rose-500/10 border-rose-500/30'}`}>
+                <p className={`text-sm font-bold flex items-center gap-2 ${infoMsg.includes('✓') ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {infoMsg}
+                </p>
+              </div>
             )}
+            
             <button
               type="button"
               onClick={handleUpdateInfo}
               disabled={infoSaving}
-              className="w-full bg-blue-900 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-800 disabled:opacity-50 transition-all"
+              className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white py-3.5 rounded-xl text-sm font-bold uppercase tracking-widest shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:shadow-[0_0_25px_rgba(34,211,238,0.5)] transition-all disabled:opacity-50 mt-4"
             >
               {infoSaving ? 'Saving...' : 'Save Changes'}
             </button>
@@ -203,84 +223,98 @@ export default function Profile() {
         </div>
 
         {/* Change Password Card */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-8">
-          <h2 className="text-lg font-semibold text-blue-900 mb-4">
-            {user?.is_oauth_user ? 'Set Account Password' : 'Change Password'}
+        <div className={cardClasses}>
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+          <h2 className="text-xl font-bold text-white mb-6 tracking-tight flex items-center gap-3">
+            <span className="text-cyan-400 text-2xl">🔒</span> {user?.is_oauth_user ? 'Set Account Password' : 'Change Password'}
           </h2>
-          <div className="space-y-4">
+          
+          <div className="space-y-6">
             {!user?.is_oauth_user && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                <label className={labelClasses}>Current Password</label>
                 <div className="relative">
                   <input
                     type={showOld ? 'text' : 'password'}
                     value={oldPassword}
                     onChange={(e) => setOldPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 pr-16"
+                    className={`${inputClasses} pr-16`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowOld(!showOld)}
-                    className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 text-xs"
+                    className="absolute right-4 top-3.5 text-slate-400 hover:text-white text-xs font-bold transition-colors"
                   >
-                    {showOld ? 'Hide' : 'Show'}
+                    {showOld ? 'HIDE' : 'SHOW'}
                   </button>
                 </div>
               </div>
             )}
+            
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+              <label className={labelClasses}>New Password</label>
               <div className="relative">
                 <input
                   type={showNew ? 'text' : 'password'}
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 pr-16"
+                  className={`${inputClasses} pr-16`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowNew(!showNew)}
-                  className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 text-xs"
+                  className="absolute right-4 top-3.5 text-slate-400 hover:text-white text-xs font-bold transition-colors"
                 >
-                  {showNew ? 'Hide' : 'Show'}
+                  {showNew ? 'HIDE' : 'SHOW'}
                 </button>
               </div>
+              
               {newPassword && (
-                <div className="mt-2">
-                  <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full transition-all ${strengthColor} ${strengthWidth}`} />
+                <div className="mt-4 p-4 bg-black/30 rounded-xl border border-white/5">
+                  <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full transition-all duration-500 ${strengthColor} ${strengthWidth}`} />
                   </div>
-                  <p className={`text-xs font-medium mt-1 ${
-                    pwStrength <= 2 ? 'text-red-500' :
-                    pwStrength <= 4 ? 'text-yellow-500' : 'text-green-600'
+                  <p className={`text-xs font-bold mt-3 tracking-widest uppercase ${
+                    pwStrength <= 2 ? 'text-rose-400' :
+                    pwStrength <= 4 ? 'text-yellow-400' : 'text-emerald-400'
                   }`}>{strengthLabel} password</p>
                 </div>
               )}
             </div>
+            
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+              <label className={labelClasses}>Confirm New Password</label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                className={`w-full border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  confirmPassword && confirmPassword !== newPassword ? 'border-red-400 bg-red-50' : 'border-gray-300'
+                className={`w-full bg-black/20 border rounded-xl px-5 py-3.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 transition-all shadow-inner ${
+                  confirmPassword && confirmPassword !== newPassword 
+                    ? 'border-rose-500/50 focus:ring-rose-500/50 bg-rose-500/5' 
+                    : 'border-white/10 focus:ring-cyan-500/50 focus:border-cyan-400'
                 }`}
               />
+              {confirmPassword && confirmPassword !== newPassword && (
+                <p className="text-xs text-rose-400 mt-2 font-bold tracking-wide">Passwords do not match</p>
+              )}
             </div>
+            
             {pwMsg && (
-              <p className={`text-sm ${pwMsg.includes('✓') ? 'text-green-600' : 'text-red-500'}`}>
-                {pwMsg}
-              </p>
+              <div className={`p-4 rounded-xl border ${pwMsg.includes('✓') ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-rose-500/10 border-rose-500/30'}`}>
+                <p className={`text-sm font-bold flex items-center gap-2 ${pwMsg.includes('✓') ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {pwMsg}
+                </p>
+              </div>
             )}
+            
             <button
               type="button"
               onClick={handleUpdatePassword}
               disabled={pwSaving}
-              className="w-full bg-blue-900 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-800 disabled:opacity-50 transition-all"
+              className="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white py-3.5 rounded-xl text-sm font-bold uppercase tracking-widest transition-all disabled:opacity-50 mt-4"
             >
               {pwSaving ? 'Updating...' : user?.is_oauth_user ? 'Set Password' : 'Change Password'}
             </button>
@@ -288,15 +322,18 @@ export default function Profile() {
         </div>
 
         {/* Danger Zone */}
-        <div className="bg-red-50 rounded-2xl border border-red-100 p-6">
-          <h2 className="text-lg font-semibold text-red-900 mb-1">Danger Zone</h2>
-          <p className="text-sm text-red-600 mb-4 opacity-80">
-            Once you delete your account, there is no going back. Please be certain.
+        <div className="bg-rose-500/5 backdrop-blur-xl border border-rose-500/20 rounded-3xl p-8 shadow-[0_0_30px_rgba(244,63,94,0.05)] relative overflow-hidden group">
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-rose-500/30 to-transparent" />
+          <h2 className="text-xl font-bold text-rose-500 mb-2 flex items-center gap-2 tracking-tight group-hover:text-rose-400 transition-colors">
+            ⚠️ Danger Zone
+          </h2>
+          <p className="text-sm text-rose-400/80 mb-6 font-medium leading-relaxed">
+            Once you delete your account, there is no going back. All your financial data, parsed expenses, and settings will be permanently wiped. Please be certain.
           </p>
           <button
             type="button"
             onClick={handleDeleteAccount}
-            className="w-full bg-white border border-red-200 text-red-600 py-2 rounded-lg text-sm font-medium hover:bg-red-50 transition-all"
+            className="w-full bg-rose-500/10 border border-rose-500/30 text-rose-400 py-3.5 rounded-xl text-sm font-bold uppercase tracking-widest hover:bg-rose-500/20 hover:text-rose-300 hover:shadow-[0_0_20px_rgba(244,63,94,0.3)] transition-all"
           >
             Delete Account Permanently
           </button>
