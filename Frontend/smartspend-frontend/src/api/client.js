@@ -1,0 +1,93 @@
+import axios from 'axios'
+
+const BASE_URL = 'http://127.0.0.1:8000'
+
+// Create axios instance with base URL
+const api = axios.create({
+  baseURL: BASE_URL,
+})
+
+// Automatically attach token to every request
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('access_token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
+// ── Auth ──────────────────────────────────────────────────────────────────
+export const login = (email, password) =>
+  api.post('/auth/login', { email, password })
+
+export const register = (email, password, display_name) =>
+  api.post('/auth/register', { email, password, display_name })
+
+export const logout = (refresh_token) =>
+  api.post('/auth/logout', { refresh_token })
+
+export const googleLogin = (credential) =>
+  api.post('/auth/google', { credential })
+
+// ── Expenses ──────────────────────────────────────────────────────────────
+export const getExpenses = (filters = {}) =>
+  api.get('/expenses', { params: filters })
+
+export const createExpense = (data) =>
+  api.post('/expenses', data)
+
+export const updateExpense = (id, data) =>
+  api.put(`/expenses/${id}`, data)
+
+export const deleteExpense = (id) =>
+  api.delete(`/expenses/${id}`)
+
+// ── Categories ────────────────────────────────────────────────────────────
+export const getCategories = (type = null) =>
+  api.get('/categories', { params: type ? { type } : {} })
+
+export const createCategory = (name, type) =>
+  api.post('/categories', { name, type })
+
+// ── Sync ──────────────────────────────────────────────────────────────────
+export const uploadCSV = (file) => {
+  const formData = new FormData()
+  formData.append('file', file)
+  return api.post('/sync/upload', formData)
+}
+
+export const getSyncLogs = () =>
+  api.get('/sync/logs')
+
+// ── AI ────────────────────────────────────────────────────────────────────
+export const parseExpense = (message, session_id = null) =>
+  api.post('/ai/parse', { message, session_id })
+
+export const confirmExpense = (message, session_id = null) =>
+  api.post('/ai/parse/confirm', { message, session_id })
+
+export const queryExpenses = (message, session_id = null) =>
+  api.post('/ai/query', { message, session_id })
+
+// ── Charts ────────────────────────────────────────────────────────────────
+export const getDashboard = () =>
+  api.get('/charts/dashboard')
+
+export const getMonthly = (year = null) =>
+  api.get('/charts/monthly', { params: year ? { year } : {} })
+
+export const getCategories2 = (type = null, month = null, year = null) =>
+  api.get('/charts/categories', { params: { type, month, year } })
+
+export const getTrend = (months = 6) =>
+  api.get('/charts/trend', { params: { months } })
+
+// ── Profile ───────────────────────────────────────────────────────────────
+export const getMe = () =>
+  api.get('/auth/me')
+
+export const updateMe = (data) =>
+  api.put('/auth/me', data)
+
+export const deleteAccount = () => 
+    api.delete('/auth/me');
