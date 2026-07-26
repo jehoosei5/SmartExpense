@@ -1,0 +1,25 @@
+Budget Tracking,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,,,,,,,,,
+,Date,Type ,Category,Amount,Details,Balance,Effective Date,Payment Method,Source
+,26-Dec-25,Income,Employment (NSS),,,0,1-Jan-26,MoMo,excel
+,,,,,,0,0-Jan-00,,excel
+,1-Jan-26,Income,Employment (NSS),715,,715,1-Jan-26,MoMo,excel
+,2-Jan-26,Savings,Emergency Fund,155,,560,2-Jan-26,MoMo,excel
+,3-Jan-26,Expenses,Food,200,,360,3-Jan-26,Card,excel
+,4-Jan-26,Expenses,Transportation,300,,60,4-Jan-26,Cash,excel
+,1-Feb-26,Income,Employment (NSS),715,,775,1-Feb-26,MoMo,excel
+,2-Feb-26,Expenses,Food,200,,575,2-Feb-26,Cash,excel
+,3-Feb-26,Expenses,Transportation,300,,275,3-Feb-26,Cash,excel
+,4-Feb-26,Savings,Emergency Fund,140,,135,4-Feb-26,MoMo,excel
+,5-Feb-26,Expenses,Body Care & Medicine,130,,5,5-Feb-26,Cash,excel
+,6-Feb-26,Expenses,Utilities,20,,-15,6-Feb-26,Cash,excel
+,27-Feb-26,Expenses,Clothing,50,,5,27-Feb-26,MoMo,excel
+,20-Feb-26,Income,Side Hustle,70,,55,20-Feb-26,,excel

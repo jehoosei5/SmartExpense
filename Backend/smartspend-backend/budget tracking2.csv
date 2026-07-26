@@ -1,0 +1,1 @@
+curl -X POST "http://127.0.0.1:8000/sync/upload" -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlNjY1MjY4Yy1lMTY3LTRkYWUtODdmMy1lZWYzN2RhNTE3ZjkiLCJleHAiOjE3NzIzOTc2NjEsInR5cGUiOiJhY2Nlc3MifQ.uPvIqBqVG2ljMGiCXTfEVJaQPmGI-WNuvEymRsuAgNA" -F "file=@D:\SmartAi expense\Backend\smartspend-backend\budget tracking2.csv"

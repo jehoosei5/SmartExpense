@@ -1,0 +1,33 @@
+# Web framework
+fastapi         
+uvicorn[standard]
+
+# Database
+sqlalchemy        
+pymysql            
+cryptography    
+
+# Data validation
+pydantic           
+pydantic-settings 
+pydantic[email]  
+
+# Auth & Security
+python-jose[cryptography]  
+passlib[bcrypt]         
+
+# AI
+openai         
+
+# File handling
+python-multipart   
+pandas         
+
+# Environment
+python-dotenv     
+
+google-auth
+requests
+
+# Rate Limiting
+slowapi
