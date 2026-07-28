@@ -60,9 +60,11 @@ app.include_router(charts.router)
 app.include_router(categories.router)
 
 @app.get("/")
+@app.head("/")
 def root():
     return {"message": "SmartSpend AI API is running"}
 
 @app.get("/health")
+@app.head("/health")
 def health_check():
     return {"status": "ok"}
