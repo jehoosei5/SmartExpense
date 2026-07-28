@@ -65,13 +65,13 @@ export default function Sync() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#0a0f1c] to-indigo-950 text-slate-100 font-sans selection:bg-cyan-500/30 relative">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#0a0f1c] to-indigo-950 text-slate-100 font-sans selection:bg-cyan-500/30 relative overflow-x-hidden">
       <Navbar />
 
-      <div className="absolute top-20 right-20 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
-      <div className="absolute bottom-20 left-20 w-96 h-96 bg-fuchsia-500/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
+      <div className="absolute top-20 right-20 w-64 h-64 md:w-96 md:h-96 bg-cyan-500/10 rounded-full blur-[80px] md:blur-[120px] -z-10 pointer-events-none" />
+      <div className="absolute bottom-20 left-20 w-64 h-64 md:w-96 md:h-96 bg-fuchsia-500/10 rounded-full blur-[80px] md:blur-[120px] -z-10 pointer-events-none" />
 
-      <div className="max-w-4xl mx-auto px-6 py-10 relative z-10">
+      <div className="max-w-4xl mx-auto px-4 py-6 md:px-6 md:py-10 relative z-10">
 
         {/* Header */}
         <div className="mb-8">
@@ -92,12 +92,11 @@ export default function Sync() {
           </ol>
         </div>
 
-        {/* Upload Area */}
         <div
           onDragOver={e => { e.preventDefault(); setDragOver(true) }}
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-3xl p-12 text-center mb-8 transition-all duration-300 backdrop-blur-sm ${
+          className={`border-2 border-dashed rounded-3xl p-6 md:p-12 text-center mb-8 transition-all duration-300 backdrop-blur-sm ${
             dragOver
               ? 'border-cyan-400 bg-cyan-500/10 shadow-[0_0_30px_rgba(34,211,238,0.2)]'
               : 'border-white/20 bg-white/[0.02] hover:border-cyan-400/50 hover:bg-white/[0.04]'
@@ -143,7 +142,7 @@ export default function Sync() {
               </span>
               <h3 className="font-extrabold text-white text-xl tracking-tight">Sync Complete</h3>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
               <div className="text-center bg-black/20 rounded-xl p-4 border border-white/5">
                 <p className="text-3xl font-extrabold text-white drop-shadow-md">{result.total_rows}</p>
                 <p className="text-xs text-slate-400 mt-2 font-semibold uppercase tracking-widest">Total Rows</p>

@@ -224,19 +224,19 @@ export default function Expenses() {
   const labelClasses = "block text-xs font-semibold tracking-wider text-slate-400 mb-1.5 uppercase"
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#0a0f1c] to-indigo-950 text-slate-100 font-sans selection:bg-cyan-500/30 relative">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#0a0f1c] to-indigo-950 text-slate-100 font-sans selection:bg-cyan-500/30 relative overflow-x-hidden">
       <Navbar />
 
-      <div className="absolute top-20 left-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-fuchsia-500/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
+      <div className="absolute top-20 left-10 w-64 h-64 md:w-96 md:h-96 bg-cyan-500/10 rounded-full blur-[80px] md:blur-[100px] -z-10 pointer-events-none" />
+      <div className="absolute bottom-20 right-10 w-64 h-64 md:w-96 md:h-96 bg-fuchsia-500/10 rounded-full blur-[80px] md:blur-[120px] -z-10 pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-6 py-10 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 py-6 md:px-6 md:py-10 relative z-10">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-4xl font-extrabold tracking-tight text-white drop-shadow-lg">Transactions</h1>
-            <p className="text-cyan-400 text-sm mt-2 font-semibold tracking-wide drop-shadow-md">
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white drop-shadow-lg">Transactions</h1>
+            <p className="text-cyan-400 text-sm mt-1 md:mt-2 font-semibold tracking-wide drop-shadow-md">
               {expenses.length} records found
             </p>
           </div>
@@ -259,7 +259,7 @@ export default function Expenses() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-5 mb-8 grid grid-cols-2 md:grid-cols-5 gap-4 shadow-xl">
+        <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-4 md:p-5 mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 shadow-xl">
           <select value={filterType} onChange={e => setFilterType(e.target.value)} className={inputClasses}>
             <option value="" className="bg-slate-900">All Types</option>
             {TYPES.map(t => <option key={t} value={t} className="bg-slate-900">{t}</option>)}
@@ -385,13 +385,13 @@ export default function Expenses() {
       {/* Add/Edit Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-          <div className="bg-slate-900 border border-white/10 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.5)] p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto relative">
+          <div className="bg-slate-900 border border-white/10 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.5)] p-5 md:p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto relative">
             <h2 className="text-2xl font-bold text-white mb-6 tracking-tight">
               {editingId ? 'Edit Transaction' : 'Add Transaction'}
             </h2>
 
             <div className="space-y-5">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className={labelClasses}>Date</label>
                   <input
@@ -413,7 +413,7 @@ export default function Expenses() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className={labelClasses}>Category</label>
                   <select
@@ -500,7 +500,7 @@ export default function Expenses() {
       {/* Delete Confirmation Modal */}
       {deletingId && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-          <div className="bg-slate-900 border border-rose-500/30 rounded-3xl shadow-[0_0_40px_rgba(244,63,94,0.3)] p-8 w-full max-w-sm text-center">
+          <div className="bg-slate-900 border border-rose-500/30 rounded-3xl shadow-[0_0_40px_rgba(244,63,94,0.3)] p-6 md:p-8 w-full max-w-sm text-center">
             <h2 className="text-xl font-bold text-white mb-2">Delete Transaction?</h2>
             <p className="text-slate-400 text-sm mb-8">This action cannot be undone.</p>
             <div className="flex gap-4">
@@ -526,7 +526,7 @@ export default function Expenses() {
       {/* Manage Categories Modal */}
       {showCatModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-          <div className="bg-slate-900 border border-white/10 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.5)] p-8 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col relative">
+          <div className="bg-slate-900 border border-white/10 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.5)] p-4 md:p-8 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col relative">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-white tracking-tight">Manage Categories</h2>
               <button onClick={() => setShowCatModal(false)} className="text-slate-400 hover:text-white transition-colors">
@@ -537,7 +537,7 @@ export default function Expenses() {
             {/* Add Category Form */}
             <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-6 shrink-0">
               <h3 className="text-sm font-bold tracking-wider uppercase text-slate-300 mb-3">Add Custom Category</h3>
-              <div className="flex gap-4 items-end">
+              <div className="flex flex-col md:flex-row gap-4 md:items-end">
                 <div className="flex-1">
                   <label className={labelClasses}>Type</label>
                   <select value={newCatType} onChange={e => setNewCatType(e.target.value)} className={inputClasses}>

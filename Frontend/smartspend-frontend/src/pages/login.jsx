@@ -120,10 +120,10 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#0a0f1c] to-indigo-950 flex items-center justify-center px-4 relative overflow-hidden selection:bg-cyan-500/30 font-sans">
       
       {/* Background Ambient Glows */}
-      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-cyan-500/20 rounded-full blur-[120px] -z-10 pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-fuchsia-500/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
+      <div className="absolute top-0 left-1/4 w-64 h-64 md:w-[500px] md:h-[500px] bg-cyan-500/20 rounded-full blur-[80px] md:blur-[120px] -z-10 pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-64 h-64 md:w-[500px] md:h-[500px] bg-fuchsia-500/10 rounded-full blur-[80px] md:blur-[120px] -z-10 pointer-events-none" />
 
-      <div className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl p-10 w-full max-w-md relative z-10 transition-all duration-500 hover:shadow-[0_0_40px_rgba(34,211,238,0.1)]">
+      <div className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl p-6 sm:p-10 w-full max-w-md relative z-10 transition-all duration-500 hover:shadow-[0_0_40px_rgba(34,211,238,0.1)]">
         
         {/* Subtle top glare effect */}
         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />

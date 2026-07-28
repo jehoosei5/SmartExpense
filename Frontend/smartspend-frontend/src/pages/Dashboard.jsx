@@ -101,13 +101,13 @@ export default function Dashboard() {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#0a0f1c] to-indigo-950 text-slate-100 font-sans selection:bg-cyan-500/30">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#0a0f1c] to-indigo-950 text-slate-100 font-sans selection:bg-cyan-500/30 overflow-x-hidden">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-6 py-10 relative">
+      <div className="max-w-7xl mx-auto px-4 py-6 md:px-6 md:py-10 relative">
         {/* Background Ambient Glows */}
-        <div className="absolute top-20 left-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-fuchsia-500/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
+        <div className="absolute top-20 left-10 w-64 h-64 md:w-96 md:h-96 bg-cyan-500/10 rounded-full blur-[80px] md:blur-[100px] -z-10 pointer-events-none" />
+        <div className="absolute bottom-20 right-10 w-64 h-64 md:w-96 md:h-96 bg-fuchsia-500/10 rounded-full blur-[80px] md:blur-[120px] -z-10 pointer-events-none" />
 
         {/* Header */}
         <div className="mb-10">
@@ -124,7 +124,7 @@ export default function Dashboard() {
           <div className="h-px bg-gradient-to-l from-cyan-500 to-transparent flex-1 opacity-30" />
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12">
           <StatCard label="Income"   amount={summary.current_month_income}   color="green" />
           <StatCard label="Expenses" amount={summary.current_month_expenses} color="red"   />
           <StatCard label="Savings"  amount={summary.current_month_savings}  color="purple"/>
@@ -145,7 +145,7 @@ export default function Dashboard() {
           <div className="h-px bg-gradient-to-l from-indigo-500 to-transparent flex-1 opacity-30" />
         </div>
         
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12">
           <StatCard label="Total Income"    amount={summary.total_income}    color="green"  sub={`${summary.total_transactions} transactions`} />
           <StatCard label="Total Expenses"  amount={summary.total_expenses}  color="red"    />
           <StatCard label="Total Savings"   amount={summary.total_savings}   color="purple" />

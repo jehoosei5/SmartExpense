@@ -132,7 +132,7 @@ export default function Profile() {
 
   const inputClasses = "w-full bg-black/20 border border-white/10 rounded-xl px-5 py-3.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all shadow-inner"
   const labelClasses = "block text-xs font-bold tracking-widest text-slate-400 mb-2 uppercase"
-  const cardClasses = "bg-white/[0.02] backdrop-blur-2xl border border-white/10 rounded-3xl p-8 mb-8 shadow-2xl relative overflow-hidden hover:shadow-[0_0_40px_rgba(34,211,238,0.05)] transition-shadow duration-500"
+  const cardClasses = "bg-white/[0.02] backdrop-blur-2xl border border-white/10 rounded-3xl p-5 md:p-8 mb-8 shadow-2xl relative overflow-hidden hover:shadow-[0_0_40px_rgba(34,211,238,0.05)] transition-shadow duration-500"
 
   if (loading) return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#0a0f1c] to-indigo-950 flex flex-col items-center justify-center relative selection:bg-cyan-500/30">
@@ -144,13 +144,13 @@ export default function Profile() {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#0a0f1c] to-indigo-950 text-slate-100 font-sans selection:bg-cyan-500/30 relative pb-12">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#0a0f1c] to-indigo-950 text-slate-100 font-sans selection:bg-cyan-500/30 relative pb-12 overflow-x-hidden">
       <Navbar />
 
-      <div className="absolute top-20 right-1/4 w-[600px] h-[600px] bg-cyan-500/10 rounded-full blur-[150px] -z-10 pointer-events-none" />
-      <div className="absolute bottom-20 left-1/4 w-[500px] h-[500px] bg-fuchsia-500/10 rounded-full blur-[150px] -z-10 pointer-events-none" />
+      <div className="absolute top-20 right-1/4 w-64 h-64 md:w-[600px] md:h-[600px] bg-cyan-500/10 rounded-full blur-[80px] md:blur-[150px] -z-10 pointer-events-none" />
+      <div className="absolute bottom-20 left-1/4 w-64 h-64 md:w-[500px] md:h-[500px] bg-fuchsia-500/10 rounded-full blur-[80px] md:blur-[150px] -z-10 pointer-events-none" />
 
-      <div className="max-w-2xl mx-auto px-6 py-10 relative z-10">
+      <div className="max-w-2xl mx-auto px-4 py-6 md:px-6 md:py-10 relative z-10">
 
         {/* Header */}
         <div className="mb-10 text-center">
@@ -322,7 +322,7 @@ export default function Profile() {
         </div>
 
         {/* Danger Zone */}
-        <div className="bg-rose-500/5 backdrop-blur-xl border border-rose-500/20 rounded-3xl p-8 shadow-[0_0_30px_rgba(244,63,94,0.05)] relative overflow-hidden group">
+        <div className="bg-rose-500/5 backdrop-blur-xl border border-rose-500/20 rounded-3xl p-6 md:p-8 shadow-[0_0_30px_rgba(244,63,94,0.05)] relative overflow-hidden group">
           <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-rose-500/30 to-transparent" />
           <h2 className="text-xl font-bold text-rose-500 mb-2 flex items-center gap-2 tracking-tight group-hover:text-rose-400 transition-colors">
             ⚠️ Danger Zone

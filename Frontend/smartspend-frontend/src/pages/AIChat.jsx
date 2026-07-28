@@ -105,13 +105,13 @@ export default function AIChat() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#0a0f1c] to-indigo-950 flex flex-col relative font-sans selection:bg-cyan-500/30">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#0a0f1c] to-indigo-950 flex flex-col relative font-sans selection:bg-cyan-500/30 overflow-x-hidden">
       <Navbar />
 
-      <div className="absolute top-1/4 left-0 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[150px] -z-10 pointer-events-none" />
-      <div className="absolute bottom-1/4 right-0 w-[500px] h-[500px] bg-fuchsia-500/10 rounded-full blur-[150px] -z-10 pointer-events-none" />
+      <div className="absolute top-1/4 left-0 w-64 h-64 md:w-[500px] md:h-[500px] bg-cyan-500/10 rounded-full blur-[80px] md:blur-[150px] -z-10 pointer-events-none" />
+      <div className="absolute bottom-1/4 right-0 w-64 h-64 md:w-[500px] md:h-[500px] bg-fuchsia-500/10 rounded-full blur-[80px] md:blur-[150px] -z-10 pointer-events-none" />
 
-      <div className="max-w-4xl mx-auto w-full px-6 py-8 flex flex-col flex-1 relative z-10">
+      <div className="max-w-4xl mx-auto w-full px-4 py-4 md:px-6 md:py-8 flex flex-col flex-1 relative z-10">
 
         {/* Header + Reset */}
         <div className="flex items-center justify-between mb-8">
@@ -177,7 +177,7 @@ export default function AIChat() {
                       </div>
                       
                       {pendingParse?.[msg.originalMessage]?.[idx] && (
-                        <div className="flex gap-3">
+                        <div className="flex flex-col sm:flex-row gap-3">
                           <button
                             type="button"
                             onClick={() => handleConfirm(parsedItem, msg.originalMessage, idx)}
@@ -253,7 +253,7 @@ export default function AIChat() {
         </div>
 
         {/* Input */}
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <input
             type="text"
             value={input}
