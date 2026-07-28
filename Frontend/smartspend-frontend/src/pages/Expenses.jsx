@@ -116,7 +116,10 @@ export default function Expenses() {
       setEditingId(null)
       loadExpenses()
     } catch (err) {
-      setFormError(err.response?.data?.detail || 'Failed to save')
+      const detail = err.response?.data?.detail;
+      const errorMsg = typeof detail === 'string' ? detail : 
+                       (Array.isArray(detail) ? detail.map(d => d.msg).join(', ') : 'Failed to save');
+      setFormError(errorMsg);
     } finally {
       setSaving(false)
     }
@@ -144,7 +147,10 @@ export default function Expenses() {
       setNewCatName('')
       loadCategories()
     } catch (err) {
-      setCatError(err.response?.data?.detail || 'Failed to add category')
+      const detail = err.response?.data?.detail;
+      const errorMsg = typeof detail === 'string' ? detail : 
+                       (Array.isArray(detail) ? detail.map(d => d.msg).join(', ') : 'Failed to add category');
+      setCatError(errorMsg);
     } finally {
       setCatSaving(false)
     }

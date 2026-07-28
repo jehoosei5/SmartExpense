@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from datetime import date, datetime
+from datetime import date as dt_date, datetime
 from typing import Optional
 from enum import Enum
 
@@ -21,7 +21,7 @@ class Source(str, Enum):
 
 # What the client sends to CREATE an expense
 class ExpenseCreate(BaseModel):
-    date:           date
+    date:           dt_date
     type:           ExpenseType
     category:       str
     amount:         float
@@ -34,7 +34,7 @@ class ExpenseCreate(BaseModel):
 # What the client sends to UPDATE an expense
 # Everything is optional — only send what you want to change
 class ExpenseUpdate(BaseModel):
-    date:           Optional[date] = None
+    date:           Optional[dt_date] = None
     type:           Optional[ExpenseType] = None
     category:       Optional[str] = None
     amount:         Optional[float] = None
@@ -47,7 +47,7 @@ class ExpenseUpdate(BaseModel):
 class ExpenseResponse(BaseModel):
     id:             str
     user_id:        str
-    date:           date
+    date:           dt_date
     type:           str
     category:       str
     amount:         float
