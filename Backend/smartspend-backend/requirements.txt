@@ -15,7 +15,8 @@ pydantic[email]
 
 # Auth & Security
 python-jose[cryptography]  
-passlib[bcrypt]         
+passlib[bcrypt]
+bcrypt==4.3.0         
 
 # AI
 openai         
