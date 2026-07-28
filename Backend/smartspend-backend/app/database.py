@@ -3,16 +3,25 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from app.config import settings
 from urllib.parse import quote_plus
+import os
 
-# quote_plus encodes special characters like @ in the password
-password = quote_plus(settings.DB_PASSWORD)
+# Check if we are running on Render (or any cloud) with a DATABASE_URL
+database_url_env = os.environ.get("DATABASE_URL")
 
-# Build the MySQL connection URL
-DATABASE_URL = (
-    f"mysql+pymysql://{settings.DB_USER}:{password}"
-    f"@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
-    f"?charset=utf8mb4"
-)
+if database_url_env:
+    # Render provides postgres:// but SQLAlchemy needs postgresql://
+    if database_url_env.startswith("postgres://"):
+        DATABASE_URL = database_url_env.replace("postgres://", "postgresql://", 1)
+    else:
+        DATABASE_URL = database_url_env
+else:
+    # Fallback to local MySQL config
+    password = quote_plus(settings.DB_PASSWORD)
+    DATABASE_URL = (
+        f"mysql+pymysql://{settings.DB_USER}:{password}"
+        f"@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
+        f"?charset=utf8mb4"
+    )
 
 # Engine = the actual connection to MySQL
 engine = create_engine(

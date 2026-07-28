@@ -5,6 +5,7 @@ uvicorn[standard]
 # Database
 sqlalchemy        
 pymysql            
+psycopg2-binary
 cryptography    
 
 # Data validation
@@ -31,3 +32,6 @@ requests
 
 # Rate Limiting
 slowapi
+
+# Production Server
+gunicorn

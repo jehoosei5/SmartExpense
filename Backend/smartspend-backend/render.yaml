@@ -1,0 +1,28 @@
+services:
+  # The PostgreSQL Database
+  - type: psql
+    name: smartspend-db
+    plan: free
+    region: ohio
+
+  # The FastAPI Web Service
+  - type: web
+    name: smartspend-api
+    env: python
+    region: ohio
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: smartspend-db
+          property: connectionString
+      - key: APP_ENV
+        value: production
+      # The remaining environment variables need to be set manually in the Render dashboard:
+      # - SECRET_KEY
+      # - AZURE_OPENAI_API_KEY
+      # - AZURE_OPENAI_ENDPOINT
+      # - GOOGLE_CLIENT_ID
+      # - CORS_ORIGINS
