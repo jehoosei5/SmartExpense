@@ -1,10 +1,6 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Any
 from datetime import date
-
-class ParseRequest(BaseModel):
-    message: str
-    session_id: Optional[str] = None
 
 class ParsedExpense(BaseModel):
     date:           date
@@ -17,16 +13,15 @@ class ParsedExpense(BaseModel):
     notes:          Optional[str] = None
     confidence:     str  # "high", "medium", "low"
 
-class ParseResponse(BaseModel):
-    parsed:  ParsedExpense
-    message: str  # human readable summary of what was parsed
-
-class QueryRequest(BaseModel):
-    message:    str
+class UnifiedChatRequest(BaseModel):
+    message: str
     session_id: Optional[str] = None
 
-class QueryResponse(BaseModel):
-    answer:      str
+class UnifiedChatResponse(BaseModel):
+    type:        str  # "text", "parse", "query"
+    content:     str  # human readable response
+    session_id:  Optional[str] = None
+    parsed_list: Optional[list[ParsedExpense]] = None
     data:        Optional[list] = None
     total:       Optional[float] = None
-    chart_hint:  Optional[str] = None  # "bar", "pie", "line" — suggests a chart type
+    chart_hint:  Optional[str] = None

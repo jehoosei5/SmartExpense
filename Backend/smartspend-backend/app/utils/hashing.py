@@ -2,12 +2,12 @@ import hashlib
 
 def generate_sync_hash(
     user_id: str,
-    row_index: str,
     date: str,
     type: str,
     category: str,
     amount: str,
-    details: str = ""
+    details: str = "",
+    row_index: str = "0"
 ) -> str:
     """
     Generate a unique fingerprint for an expense record.

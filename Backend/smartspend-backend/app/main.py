@@ -10,9 +10,28 @@ from slowapi.errors import RateLimitExceeded
 from app.utils.rate_limit import limiter
 from app.config import settings
 
+from app.models.category import Category
+from app.database import SessionLocal
+
 try:
-    "Creating database tables..."
+    print("Creating database tables...")
     Base.metadata.create_all(bind=engine)
+    
+    # Seed default categories if none exist
+    db = SessionLocal()
+    if db.query(Category).filter(Category.user_id == None).count() == 0:
+        defaults = [
+            ("Food", "Expenses"), ("Transportation", "Expenses"), ("Utilities", "Expenses"),
+            ("Clothing", "Expenses"), ("Body Care & Medicine", "Expenses"), ("Entertainment", "Expenses"),
+            ("Media", "Expenses"), ("Education", "Expenses"), ("Other", "Expenses"),
+            ("Employment (NSS)", "Income"), ("Side Hustle", "Income"), ("Dividend", "Income"),
+            ("Freelance", "Income"), ("Mini Business", "Income"), ("Other", "Income"),
+            ("Emergency Fund", "Savings"), ("Future Account", "Savings"), ("Investment", "Savings"), ("Other", "Savings")
+        ]
+        for name, ctype in defaults:
+            db.add(Category(name=name, type=ctype, is_default=1, user_id=None))
+        db.commit()
+    db.close()
 except Exception as e:
     print(f"Error creating database tables: {e}")
     

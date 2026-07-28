@@ -6,27 +6,26 @@ from app.utils.security import get_current_user
 from app.models.user import User
 from app.models.expense import Expense
 from app.schemas.ai import (
-    ParseRequest,
-    ParseResponse,
-    QueryRequest,
-    QueryResponse
+    UnifiedChatRequest,
+    UnifiedChatResponse,
+    ParsedExpense
 )
 from app.schemas.expense import ExpenseCreate
-from app.services.ai_service import parse_expense, query_expenses
+from app.services.ai_service import handle_chat_message
 from app.services.expense_service import create_expense
 
 router = APIRouter(prefix="/ai", tags=["AI Chat"])
 
 
-@router.post("/parse", response_model=ParseResponse)
+@router.post("/chat", response_model=UnifiedChatResponse)
 @limiter.limit("10/minute")
-def parse(
+def chat(
     request: Request,
-    data: ParseRequest,
+    data: UnifiedChatRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    parsed, summary, session_id, error = parse_expense(
+    result, error = handle_chat_message(
         db=db,
         message=data.message,
         user_id=current_user.id,
@@ -39,36 +38,21 @@ def parse(
             detail=error
         )
 
-    return ParseResponse(parsed=parsed, message=summary)
+    return UnifiedChatResponse(**result)
 
 
-@router.post("/parse/confirm")
+@router.post("/chat/confirm")
 @limiter.limit("10/minute")
 def confirm_parsed_expense(
     request: Request,
-    data: ParseRequest,
+    parsed: ParsedExpense,
+    session_id: str = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
-    After /parse shows the user what was extracted,
-    this endpoint saves it to the database.
-    The client sends the same message again with confirmed=true
-    or sends the parsed fields directly.
+    Saves an AI-parsed expense directly without re-querying the LLM.
     """
-    parsed, summary, session_id, error = parse_expense(
-        db=db,
-        message=data.message,
-        user_id=current_user.id,
-        session_id=data.session_id
-    )
-
-    if error:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=error
-        )
-
     # Save to database as ai_chat source
     expense_data = ExpenseCreate(
         date=parsed.date,
@@ -76,9 +60,9 @@ def confirm_parsed_expense(
         category=parsed.category,
         amount=parsed.amount,
         currency=parsed.currency,
-        details=parsed.details,
-        payment_method=parsed.payment_method,
-        notes=parsed.notes,
+        details=parsed.details if parsed.details else None,
+        payment_method=parsed.payment_method if parsed.payment_method else "Cash",
+        notes=parsed.notes if parsed.notes else None,
         source="ai_chat"
     )
 
@@ -91,39 +75,10 @@ def confirm_parsed_expense(
         )
 
     return {
-        "message": f"Saved! {summary}",
+        "message": "Expense saved successfully!",
         "expense_id": expense.id,
         "session_id": session_id
     }
-
-
-@router.post("/query", response_model=QueryResponse)
-@limiter.limit("10/minute")
-def query(
-    request: Request,
-    data: QueryRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    result, session_id, error = query_expenses(
-        db=db,
-        message=data.message,
-        user_id=current_user.id,
-        session_id=data.session_id
-    )
-
-    if error:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=error
-        )
-
-    return QueryResponse(
-        answer=result["answer"],
-        data=result["data"],
-        total=result["total"],
-        chart_hint=result["chart_hint"]
-    )
 
 
 @router.get("/sessions")
