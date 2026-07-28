@@ -73,14 +73,14 @@ export const confirmChatMessage = (parsed, session_id = null) =>
   api.post('/ai/chat/confirm', parsed, { params: { session_id } })
 
 // ── Charts ────────────────────────────────────────────────────────────────
-export const getDashboard = () =>
-  api.get('/charts/dashboard')
+export const getDashboard = (start_date = null, end_date = null) =>
+  api.get('/charts/dashboard', { params: { start_date, end_date } })
 
 export const getMonthly = (year = null) =>
   api.get('/charts/monthly', { params: year ? { year } : {} })
 
-export const getCategories2 = (type = null, month = null, year = null) =>
-  api.get('/charts/categories', { params: { type, month, year } })
+export const getCategories2 = (type = null, start_date = null, end_date = null) =>
+  api.get('/charts/categories', { params: { type, start_date, end_date } })
 
 export const getTrend = (months = 6) =>
   api.get('/charts/trend', { params: { months } })

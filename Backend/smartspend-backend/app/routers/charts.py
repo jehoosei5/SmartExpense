@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from typing import Optional
+from datetime import date
 from app.database import get_db
 from app.utils.security import get_current_user
 from app.models.user import User
@@ -34,10 +35,12 @@ def category_breakdown(
     type:  Optional[str] = Query(None),
     month: Optional[int] = Query(None),
     year:  Optional[int] = Query(None),
+    start_date: Optional[date] = Query(None),
+    end_date:   Optional[date] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return get_category_breakdown(db, current_user.id, type, month, year)
+    return get_category_breakdown(db, current_user.id, type, month, year, start_date, end_date)
 
 
 @router.get("/trend", response_model=list[TrendPoint])
@@ -51,7 +54,9 @@ def trend(
 
 @router.get("/dashboard", response_model=DashboardSummary)
 def dashboard(
+    start_date: Optional[date] = Query(None),
+    end_date:   Optional[date] = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return get_dashboard_summary(db, current_user.id)
+    return get_dashboard_summary(db, current_user.id, start_date, end_date)

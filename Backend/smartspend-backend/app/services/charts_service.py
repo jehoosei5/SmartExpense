@@ -60,7 +60,9 @@ def get_category_breakdown(
     user_id: str,
     type: Optional[str] = None,
     month: Optional[int] = None,
-    year: Optional[int] = None
+    year: Optional[int] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None
 ):
     query = db.query(
         Expense.category,
@@ -75,6 +77,10 @@ def get_category_breakdown(
         query = query.filter(extract("month", Expense.date) == month)
     if year:
         query = query.filter(extract("year", Expense.date) == year)
+    if start_date:
+        query = query.filter(Expense.date >= start_date)
+    if end_date:
+        query = query.filter(Expense.date <= end_date)
 
     rows = query.group_by(
         Expense.category,
@@ -153,85 +159,65 @@ def get_trend(db: Session, user_id: str, months: int = 6):
     return sorted_periods[-months:]
 
 
-def get_dashboard_summary(db: Session, user_id: str):
-    today = date.today()
-    current_month = today.month
-    current_year = today.year
-
-    # ── All time totals ───────────────────────────────────────────────────────
-    all_time = db.query(
+def get_dashboard_summary(
+    db: Session, 
+    user_id: str,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None
+):
+    query = db.query(
         Expense.type,
         func.sum(Expense.amount).label("total"),
         func.count(Expense.id).label("count")
-    ).filter(
-        Expense.user_id == user_id
-    ).group_by(Expense.type).all()
+    ).filter(Expense.user_id == user_id)
 
-    total_income   = 0.0
-    total_expenses = 0.0
-    total_savings  = 0.0
-    total_count    = 0
+    if start_date:
+        query = query.filter(Expense.date >= start_date)
+    if end_date:
+        query = query.filter(Expense.date <= end_date)
 
-    for row in all_time:
-        total_count += row.count
+    stats = query.group_by(Expense.type).all()
+
+    income   = 0.0
+    expenses = 0.0
+    savings  = 0.0
+    transactions = 0
+
+    for row in stats:
+        transactions += row.count
         if row.type == "Income":
-            total_income = float(row.total)
+            income = float(row.total)
         elif row.type == "Expenses":
-            total_expenses = float(row.total)
+            expenses = float(row.total)
         elif row.type == "Savings":
-            total_savings = float(row.total)
+            savings = float(row.total)
 
-    # ── Current month totals ──────────────────────────────────────────────────
-    this_month = db.query(
-        Expense.type,
-        func.sum(Expense.amount).label("total"),
-        func.count(Expense.id).label("count")
-    ).filter(
-        Expense.user_id == user_id,
-        extract("month", Expense.date) == current_month,
-        extract("year", Expense.date) == current_year
-    ).group_by(Expense.type).all()
-
-    month_income   = 0.0
-    month_expenses = 0.0
-    month_savings  = 0.0
-    month_count    = 0
-
-    for row in this_month:
-        month_count += row.count
-        if row.type == "Income":
-            month_income = float(row.total)
-        elif row.type == "Expenses":
-            month_expenses = float(row.total)
-        elif row.type == "Savings":
-            month_savings = float(row.total)
-
-    # ── Top spending category this month ──────────────────────────────────────
-    top = db.query(
+    # Top spending category in this range
+    top_query = db.query(
         Expense.category,
         func.sum(Expense.amount).label("total")
     ).filter(
         Expense.user_id == user_id,
-        Expense.type == "Expenses",
-        extract("month", Expense.date) == current_month,
-        extract("year", Expense.date) == current_year
-    ).group_by(
+        Expense.type == "Expenses"
+    )
+
+    if start_date:
+        top_query = top_query.filter(Expense.date >= start_date)
+    if end_date:
+        top_query = top_query.filter(Expense.date <= end_date)
+
+    top = top_query.group_by(
         Expense.category
     ).order_by(
         func.sum(Expense.amount).desc()
     ).first()
 
     return {
-        "current_month_income":    month_income,
-        "current_month_expenses":  month_expenses,
-        "current_month_savings":   month_savings,
-        "current_month_balance":   month_income - month_expenses - month_savings,
-        "total_income":            total_income,
-        "total_expenses":          total_expenses,
-        "total_savings":           total_savings,
-        "total_balance":           total_income - total_expenses - total_savings,
-        "total_transactions":      total_count,
-        "this_month_transactions": month_count,
-        "top_category":            top.category if top else None,
-        "top_category_amount":     float(top.total) if top else None
+        "income":       income,
+        "expenses":     expenses,
+        "savings":      savings,
+        "balance":      income - expenses - savings,
+        "transactions": transactions,
+        "top_category":        top.category if top else None,
+        "top_category_amount": float(top.total) if top else None
     }
