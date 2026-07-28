@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
-import { parseExpense, confirmExpense, queryExpenses } from '../api/client'
+import { sendChatMessage, confirmChatMessage } from '../api/client'
 
 const WELCOME = {
   role: 'assistant',
   type: 'text',
-  content: "Hi! I'm your SmartSpend AI assistant. You can:\n• Tell me about an expense: 'I spent GH₵45 on food today'\n• Ask me questions: 'How much did I spend on food this month?'"
+  content: "Hi! I'm your SmartSpend AI assistant. You can:\n• Tell me about an expense: 'I spent GH₵45 on food today'\n• Ask me questions: 'How much did I spend on food this month?'\n• Or just say hello!"
 }
 
 export default function AIChat() {
@@ -18,11 +18,10 @@ export default function AIChat() {
       return saved ? JSON.parse(saved) : [WELCOME]
     } catch { return [WELCOME] }
   })
-  const [input, setInput]             = useState('')
-  const [sessionId, setSessionId]     = useState(() => sessionStorage.getItem('chat_session_id'))
-  const [mode, setMode]               = useState('parse')
-  const [loading, setLoading]         = useState(false)
-  const [pendingParse, setPendingParse] = useState(null)
+  const [input, setInput]               = useState('')
+  const [sessionId, setSessionId]       = useState(() => sessionStorage.getItem('chat_session_id'))
+  const [loading, setLoading]           = useState(false)
+  const [pendingParse, setPendingParse] = useState({})
 
   function addMessage(role, type, content, extra = {}) {
     setMessages(prev => {
@@ -37,7 +36,7 @@ export default function AIChat() {
     sessionStorage.removeItem('chat_session_id')
     setMessages([WELCOME])
     setSessionId(null)
-    setPendingParse(null)
+    setPendingParse({})
   }
 
   async function handleSend() {
@@ -48,25 +47,25 @@ export default function AIChat() {
     setLoading(true)
 
     try {
-      if (mode === 'parse') {
-        const res = await parseExpense(userMessage, sessionId)
-        const { parsed, message } = res.data
-        if (res.data.session_id) {
-          setSessionId(res.data.session_id)
-          sessionStorage.setItem('chat_session_id', res.data.session_id)
-        }
-        addMessage('assistant', 'parse', message, { parsed, originalMessage: userMessage })
-        setPendingParse({ message: userMessage, parsed })
-
-      } else {
-        const res = await queryExpenses(userMessage, sessionId)
-        const { answer, data, total, chart_hint } = res.data
-        if (res.data.session_id) {
-          setSessionId(res.data.session_id)
-          sessionStorage.setItem('chat_session_id', res.data.session_id)
-        }
-        addMessage('assistant', 'query', answer, { data, total, chart_hint })
+      const res = await sendChatMessage(userMessage, sessionId)
+      
+      if (res.data.session_id) {
+        setSessionId(res.data.session_id)
+        sessionStorage.setItem('chat_session_id', res.data.session_id)
       }
+
+      const { type, content, parsed_list, data, total, chart_hint } = res.data
+
+      if (type === 'parse') {
+        addMessage('assistant', 'parse', content, { parsed_list, originalMessage: userMessage })
+        setPendingParse(prev => ({ ...prev, [userMessage]: parsed_list.map(() => true) }))
+      } else if (type === 'query') {
+        addMessage('assistant', 'query', content, { data, total, chart_hint })
+      } else {
+        // general text response
+        addMessage('assistant', 'text', content)
+      }
+
     } catch (err) {
       if (err.response?.status === 401) {
         localStorage.clear()
@@ -79,12 +78,16 @@ export default function AIChat() {
     }
   }
 
-  async function handleConfirm(originalMessage) {
+  async function handleConfirm(parsedData, originalMessage, idx) {
     setLoading(true)
     try {
-      const res = await confirmExpense(originalMessage, sessionId)
+      const res = await confirmChatMessage(parsedData, sessionId)
       addMessage('assistant', 'text', '✅ ' + res.data.message)
-      setPendingParse(null)
+      setPendingParse(prev => {
+        const arr = [...(prev[originalMessage] || [])]
+        arr[idx] = false
+        return { ...prev, [originalMessage]: arr }
+      })
     } catch (err) {
       addMessage('assistant', 'text', err.response?.data?.detail || 'Failed to save.')
     } finally {
@@ -92,9 +95,13 @@ export default function AIChat() {
     }
   }
 
-  function handleDiscard() {
-    setPendingParse(null)
-    addMessage('assistant', 'text', 'No problem — the expense was not saved. Feel free to try again.')
+  function handleDiscard(originalMessage, idx) {
+    setPendingParse(prev => {
+      const arr = [...(prev[originalMessage] || [])]
+      arr[idx] = false
+      return { ...prev, [originalMessage]: arr }
+    })
+    addMessage('assistant', 'text', 'Discarded.')
   }
 
   return (
@@ -106,41 +113,19 @@ export default function AIChat() {
 
       <div className="max-w-4xl mx-auto w-full px-6 py-8 flex flex-col flex-1 relative z-10">
 
-        {/* Header + Mode Toggle + Reset */}
+        {/* Header + Reset */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-extrabold text-white drop-shadow-md">AI Chat</h1>
             <p className="text-cyan-400 font-semibold tracking-wide text-sm mt-1">Talk to your finances</p>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex bg-white/5 backdrop-blur-md rounded-xl p-1.5 border border-white/5">
-              <button
-                type="button"
-                onClick={() => setMode('parse')}
-                className={`px-5 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
-                  mode === 'parse' ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.2)] border border-cyan-500/30' : 'text-slate-500 hover:text-slate-300'
-                }`}
-              >
-                Add Expense
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode('query')}
-                className={`px-5 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
-                  mode === 'query' ? 'bg-fuchsia-500/20 text-fuchsia-400 shadow-[0_0_15px_rgba(217,70,239,0.2)] border border-fuchsia-500/30' : 'text-slate-500 hover:text-slate-300'
-                }`}
-              >
-                Ask Question
-              </button>
-            </div>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="text-sm font-semibold text-slate-500 hover:text-rose-400 transition-colors uppercase tracking-widest"
-            >
-              Reset Chat
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="text-sm font-semibold text-slate-500 hover:text-rose-400 transition-colors uppercase tracking-widest"
+          >
+            Reset Chat
+          </button>
         </div>
 
         {/* Chat Window */}
@@ -166,46 +151,52 @@ export default function AIChat() {
               {msg.role === 'assistant' && msg.type === 'parse' && (
                 <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-2xl rounded-tl-sm p-5 max-w-md w-full shadow-[0_0_20px_rgba(34,211,238,0.1)]">
                   <p className="text-sm text-cyan-300 font-semibold mb-4">{msg.content}</p>
-                  <div className="bg-black/30 rounded-xl border border-white/10 p-4 space-y-2 text-sm text-slate-300 mb-4">
-                    <div className="flex justify-between"><span className="text-slate-500 font-medium">Date</span><span>{msg.parsed?.date}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-500 font-medium">Type</span><span>{msg.parsed?.type}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-500 font-medium">Category</span><span>{msg.parsed?.category}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-500 font-medium">Amount</span><span className="font-bold text-cyan-400 drop-shadow-md">GH₵{msg.parsed?.amount}</span></div>
-                    {msg.parsed?.details && (
-                      <div className="flex justify-between"><span className="text-slate-500 font-medium">Details</span><span>{msg.parsed.details}</span></div>
-                    )}
-                    {msg.parsed?.payment_method && (
-                      <div className="flex justify-between"><span className="text-slate-500 font-medium">Payment</span><span>{msg.parsed.payment_method}</span></div>
-                    )}
-                    <div className="flex justify-between pt-2 border-t border-white/10 mt-2">
-                      <span className="text-slate-500 font-medium">Confidence</span>
-                      <span className={`font-bold tracking-wide uppercase text-xs mt-0.5 ${
-                        msg.parsed?.confidence === 'high' ? 'text-emerald-400' :
-                        msg.parsed?.confidence === 'medium' ? 'text-yellow-400' : 'text-rose-400'
-                      }`}>
-                        {msg.parsed?.confidence}
-                      </span>
+                  
+                  {msg.parsed_list?.map((parsedItem, idx) => (
+                    <div key={idx} className="mb-6 last:mb-0">
+                      <div className="bg-black/30 rounded-xl border border-white/10 p-4 space-y-2 text-sm text-slate-300 mb-4">
+                        <div className="flex justify-between"><span className="text-slate-500 font-medium">Date</span><span>{parsedItem.date}</span></div>
+                        <div className="flex justify-between"><span className="text-slate-500 font-medium">Type</span><span>{parsedItem.type}</span></div>
+                        <div className="flex justify-between"><span className="text-slate-500 font-medium">Category</span><span>{parsedItem.category}</span></div>
+                        <div className="flex justify-between"><span className="text-slate-500 font-medium">Amount</span><span className="font-bold text-cyan-400 drop-shadow-md">GH₵{parsedItem.amount}</span></div>
+                        {parsedItem.details && (
+                          <div className="flex justify-between"><span className="text-slate-500 font-medium">Details</span><span>{parsedItem.details}</span></div>
+                        )}
+                        {parsedItem.payment_method && (
+                          <div className="flex justify-between"><span className="text-slate-500 font-medium">Payment</span><span>{parsedItem.payment_method}</span></div>
+                        )}
+                        <div className="flex justify-between pt-2 border-t border-white/10 mt-2">
+                          <span className="text-slate-500 font-medium">Confidence</span>
+                          <span className={`font-bold tracking-wide uppercase text-xs mt-0.5 ${
+                            parsedItem.confidence === 'high' ? 'text-emerald-400' :
+                            parsedItem.confidence === 'medium' ? 'text-yellow-400' : 'text-rose-400'
+                          }`}>
+                            {parsedItem.confidence}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {pendingParse?.[msg.originalMessage]?.[idx] && (
+                        <div className="flex gap-3">
+                          <button
+                            type="button"
+                            onClick={() => handleConfirm(parsedItem, msg.originalMessage, idx)}
+                            disabled={loading}
+                            className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 text-white py-2 rounded-lg text-sm font-bold shadow-[0_0_15px_rgba(34,211,238,0.3)] hover:shadow-[0_0_20px_rgba(34,211,238,0.5)] transition-all disabled:opacity-50"
+                          >
+                            Save Expense
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDiscard(msg.originalMessage, idx)}
+                            className="flex-1 bg-white/5 border border-white/10 text-slate-300 py-2 rounded-lg text-sm font-bold hover:bg-white/10 transition-all"
+                          >
+                            Discard
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  {pendingParse?.message === msg.originalMessage && (
-                    <div className="flex gap-3">
-                      <button
-                        type="button"
-                        onClick={() => handleConfirm(msg.originalMessage)}
-                        disabled={loading}
-                        className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 text-white py-2 rounded-lg text-sm font-bold shadow-[0_0_15px_rgba(34,211,238,0.3)] hover:shadow-[0_0_20px_rgba(34,211,238,0.5)] transition-all disabled:opacity-50"
-                      >
-                        Save Expense
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleDiscard}
-                        className="flex-1 bg-white/5 border border-white/10 text-slate-300 py-2 rounded-lg text-sm font-bold hover:bg-white/10 transition-all"
-                      >
-                        Discard
-                      </button>
-                    </div>
-                  )}
+                  ))}
                 </div>
               )}
 
@@ -268,10 +259,7 @@ export default function AIChat() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSend()}
-            placeholder={mode === 'parse'
-              ? "e.g. I spent GH₵45 on food today"
-              : "e.g. How much did I spend this month?"
-            }
+            placeholder="Type anything... e.g. I spent GH₵45 on food, or How much did I spend this month?"
             className="flex-1 bg-black/30 border border-white/10 rounded-2xl px-6 py-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all shadow-inner"
           />
           <button

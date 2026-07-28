@@ -60,14 +60,11 @@ export const getSyncLogs = () =>
   api.get('/sync/logs')
 
 // ── AI ────────────────────────────────────────────────────────────────────
-export const parseExpense = (message, session_id = null) =>
-  api.post('/ai/parse', { message, session_id })
+export const sendChatMessage = (message, session_id = null) =>
+  api.post('/ai/chat', { message, session_id })
 
-export const confirmExpense = (message, session_id = null) =>
-  api.post('/ai/parse/confirm', { message, session_id })
-
-export const queryExpenses = (message, session_id = null) =>
-  api.post('/ai/query', { message, session_id })
+export const confirmChatMessage = (parsed, session_id = null) =>
+  api.post('/ai/chat/confirm', parsed, { params: { session_id } })
 
 // ── Charts ────────────────────────────────────────────────────────────────
 export const getDashboard = () =>

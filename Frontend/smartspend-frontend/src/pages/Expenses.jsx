@@ -79,11 +79,20 @@ export default function Expenses() {
       return
     }
     setSaving(true)
+    
+    // Clean up empty strings to null for optional enum fields
+    const payload = {
+      ...form,
+      payment_method: form.payment_method || null,
+      details: form.details || null,
+      notes: form.notes || null
+    }
+
     try {
       if (editingId) {
-        await updateExpense(editingId, form)
+        await updateExpense(editingId, payload)
       } else {
-        await createExpense(form)
+        await createExpense(payload)
       }
       setShowForm(false)
       setForm(EMPTY_FORM)
@@ -123,6 +132,7 @@ export default function Expenses() {
   }
 
   const filteredCategories = categories.filter(c => !form.type || c.type === form.type)
+  const filterBarCategories = categories.filter(c => !filterType || c.type === filterType)
 
   const typeColors = {
     Expenses: 'bg-rose-500/20 text-rose-400 border border-rose-500/30',
@@ -175,9 +185,32 @@ export default function Expenses() {
             {TYPES.map(t => <option key={t} value={t} className="bg-slate-900">{t}</option>)}
           </select>
 
-          <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} className={inputClasses}>
+          <select 
+            value={filterCategory} 
+            onChange={e => setFilterCategory(e.target.value)} 
+            className={inputClasses}
+            disabled={filterBarCategories.length === 0}
+          >
             <option value="" className="bg-slate-900">All Categories</option>
-            {categories.map(c => <option key={c.id} value={c.name} className="bg-slate-900">{c.name}</option>)}
+            {filterType ? (
+              // If a type is selected, just show the categories normally
+              filterBarCategories.map(c => (
+                <option key={c.id} value={c.name} className="bg-slate-900">{c.name}</option>
+              ))
+            ) : (
+              // If no type is selected, group them by type
+              TYPES.map(type => {
+                const typeCategories = filterBarCategories.filter(c => c.type === type);
+                if (typeCategories.length === 0) return null;
+                return (
+                  <optgroup key={type} label={type} className="bg-slate-800 text-cyan-400 font-bold uppercase tracking-wider text-xs">
+                    {typeCategories.map(c => (
+                      <option key={c.id} value={c.name} className="bg-slate-900 text-white font-normal normal-case tracking-normal text-sm">{c.name}</option>
+                    ))}
+                  </optgroup>
+                );
+              })
+            )}
           </select>
 
           <select value={filterMonth} onChange={e => setFilterMonth(e.target.value)} className={inputClasses}>
