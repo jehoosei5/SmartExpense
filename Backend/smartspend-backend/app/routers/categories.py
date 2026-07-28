@@ -4,8 +4,8 @@ from typing import Optional
 from app.database import get_db
 from app.utils.security import get_current_user
 from app.models.user import User
-from app.schemas.category import CategoryCreate, CategoryResponse
-from app.services.category_service import get_categories, create_category, delete_category
+from app.schemas.category import CategoryCreate, CategoryResponse, CategoryReorderRequest
+from app.services.category_service import get_categories, create_category, delete_category, reorder_categories
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
 
@@ -46,3 +46,17 @@ def delete(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=error
         )
+
+@router.put("/reorder", status_code=200)
+def reorder(
+    data: CategoryReorderRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    success, error = reorder_categories(db, data.categories, current_user.id)
+    if error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error
+        )
+    return {"message": "Categories reordered successfully"}

@@ -10,6 +10,7 @@ class Category(Base):
     name       = Column(String(100), nullable=False)
     type       = Column(Enum("Expenses", "Income", "Savings"), nullable=False)
     is_default = Column(Integer, nullable=False, default=0)
+    position   = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, server_default=func.now())
 
     

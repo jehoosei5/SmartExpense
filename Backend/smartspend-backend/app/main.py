@@ -19,7 +19,7 @@ try:
     
     # Seed default categories if none exist
     db = SessionLocal()
-    if db.query(Category).filter(Category.user_id == None).count() == 0:
+    if db.query(Category).count() == 0:
         defaults = [
             ("Food", "Expenses"), ("Transportation", "Expenses"), ("Utilities", "Expenses"),
             ("Clothing", "Expenses"), ("Body Care & Medicine", "Expenses"), ("Entertainment", "Expenses"),

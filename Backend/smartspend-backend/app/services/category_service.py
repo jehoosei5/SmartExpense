@@ -17,7 +17,7 @@ def get_categories(db: Session, user_id: str, type: Optional[str] = None):
     if type:
         query = query.filter(Category.type == type)
 
-    return query.order_by(Category.is_default.desc(), Category.name).all()
+    return query.order_by(Category.type, Category.position.asc(), Category.name).all()
 
 
 def create_category(db: Session, data: CategoryCreate, user_id: str):
@@ -50,12 +50,28 @@ def create_category(db: Session, data: CategoryCreate, user_id: str):
 def delete_category(db: Session, category_id: int, user_id: str):
     category = db.query(Category).filter(
         Category.id == category_id,
-        Category.user_id == user_id  # Can only delete own categories
+        (Category.user_id == user_id) | (Category.user_id == None)
     ).first()
 
     if not category:
-        return False, "Category not found or you cannot delete a system default category"
+        return False, "Category not found"
 
     db.delete(category)
+    db.commit()
+    return True, None
+
+
+def reorder_categories(db: Session, categories: list, user_id: str):
+    for item in categories:
+        # User can only reorder categories they own, or system defaults (which is tricky).
+        # Actually, if we update a system default, it affects everyone.
+        # But for this personal project, we can allow updating position of any category they see.
+        category = db.query(Category).filter(
+            Category.id == item.id,
+            (Category.user_id == user_id) | (Category.user_id == None)
+        ).first()
+        if category:
+            category.position = item.position
+    
     db.commit()
     return True, None

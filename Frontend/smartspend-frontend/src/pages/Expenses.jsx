@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
-import { getExpenses, createExpense, updateExpense, deleteExpense, getCategories } from '../api/client'
+import { getExpenses, createExpense, updateExpense, deleteExpense, getCategories, createCategory, deleteCategory, reorderCategories } from '../api/client'
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 
 const TYPES = ['Expenses', 'Income', 'Savings']
 const PAYMENT_METHODS = ['Cash', 'MoMo', 'Card', 'Bank Transfer']
@@ -42,6 +43,13 @@ export default function Expenses() {
   // Delete confirm
   const [deletingId, setDeletingId] = useState(null)
 
+  // Manage Categories Modal
+  const [showCatModal, setShowCatModal]       = useState(false)
+  const [newCatName, setNewCatName]           = useState('')
+  const [newCatType, setNewCatType]           = useState('Expenses')
+  const [catError, setCatError]               = useState('')
+  const [catSaving, setCatSaving]             = useState(false)
+
   useEffect(() => { loadAll() }, [])
 
   async function loadAll() {
@@ -59,6 +67,15 @@ export default function Expenses() {
       }
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function loadCategories() {
+    try {
+      const res = await getCategories()
+      setCategories(res.data)
+    } catch (err) {
+      console.error(err)
     }
   }
 
@@ -115,6 +132,60 @@ export default function Expenses() {
     }
   }
 
+  async function handleAddCategory() {
+    setCatError('')
+    if (!newCatName.trim()) {
+      setCatError('Category name is required')
+      return
+    }
+    setCatSaving(true)
+    try {
+      await createCategory(newCatName, newCatType)
+      setNewCatName('')
+      loadCategories()
+    } catch (err) {
+      setCatError(err.response?.data?.detail || 'Failed to add category')
+    } finally {
+      setCatSaving(false)
+    }
+  }
+
+  async function handleDeleteCategory(id) {
+    try {
+      await deleteCategory(id)
+      loadCategories()
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  function handleDragEnd(result) {
+    if (!result.destination) return
+
+    const sourceIndex = result.source.index
+    const destinationIndex = result.destination.index
+    const type = result.source.droppableId
+
+    if (sourceIndex === destinationIndex && result.source.droppableId === result.destination.droppableId) return
+    if (result.source.droppableId !== result.destination.droppableId) return // Disable dragging across different types for now
+
+    // Reorder local state
+    const typeCats = categories.filter(c => c.type === type).sort((a,b) => a.position - b.position)
+    const otherCats = categories.filter(c => c.type !== type)
+    
+    const [reorderedItem] = typeCats.splice(sourceIndex, 1)
+    typeCats.splice(destinationIndex, 0, reorderedItem)
+
+    // Update positions
+    const updatedTypeCats = typeCats.map((c, index) => ({ ...c, position: index }))
+    
+    setCategories([...otherCats, ...updatedTypeCats])
+
+    // Save to backend
+    const payload = updatedTypeCats.map(c => ({ id: c.id, position: c.position }))
+    reorderCategories(payload).catch(err => console.error('Failed to save category order', err))
+  }
+
   function handleEdit(expense) {
     setForm({
       date:           expense.date,
@@ -169,13 +240,22 @@ export default function Expenses() {
               {expenses.length} records found
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => { setShowForm(true); setEditingId(null); setForm(EMPTY_FORM) }}
-            className="bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 px-5 py-2.5 rounded-xl text-sm font-bold shadow-[0_0_15px_rgba(34,211,238,0.2)] hover:bg-cyan-500/30 hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all"
-          >
-            + Add Transaction
-          </button>
+          <div className="flex gap-4">
+            <button
+              type="button"
+              onClick={() => setShowCatModal(true)}
+              className="bg-white/5 border border-white/10 text-slate-300 px-5 py-2.5 rounded-xl text-sm font-bold shadow-md hover:bg-white/10 hover:shadow-lg transition-all"
+            >
+              ⚙️ Manage Categories
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShowForm(true); setEditingId(null); setForm(EMPTY_FORM) }}
+              className="bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 px-5 py-2.5 rounded-xl text-sm font-bold shadow-[0_0_15px_rgba(34,211,238,0.2)] hover:bg-cyan-500/30 hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all"
+            >
+              + Add Transaction
+            </button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -438,6 +518,106 @@ export default function Expenses() {
               >
                 Cancel
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manage Categories Modal */}
+      {showCatModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="bg-slate-900 border border-white/10 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.5)] p-8 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col relative">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-white tracking-tight">Manage Categories</h2>
+              <button onClick={() => setShowCatModal(false)} className="text-slate-400 hover:text-white transition-colors">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+
+            {/* Add Category Form */}
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-6 shrink-0">
+              <h3 className="text-sm font-bold tracking-wider uppercase text-slate-300 mb-3">Add Custom Category</h3>
+              <div className="flex gap-4 items-end">
+                <div className="flex-1">
+                  <label className={labelClasses}>Type</label>
+                  <select value={newCatType} onChange={e => setNewCatType(e.target.value)} className={inputClasses}>
+                    {TYPES.map(t => <option key={t} value={t} className="bg-slate-900">{t}</option>)}
+                  </select>
+                </div>
+                <div className="flex-[2]">
+                  <label className={labelClasses}>Category Name</label>
+                  <input
+                    type="text"
+                    value={newCatName}
+                    onChange={e => setNewCatName(e.target.value)}
+                    placeholder="e.g. Netflix Subscription"
+                    className={inputClasses}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddCategory}
+                  disabled={catSaving}
+                  className="bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 h-11 px-6 rounded-xl text-sm font-bold hover:bg-emerald-500/30 transition-all shadow-[0_0_15px_rgba(16,185,129,0.2)] disabled:opacity-50"
+                >
+                  {catSaving ? '...' : '+ Add'}
+                </button>
+              </div>
+              {catError && <p className="text-rose-400 text-xs font-semibold mt-2">{catError}</p>}
+            </div>
+
+            {/* Categories List */}
+            <div className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar">
+              <DragDropContext onDragEnd={handleDragEnd}>
+                {TYPES.map(type => {
+                  const cats = categories.filter(c => c.type === type).sort((a, b) => a.position - b.position)
+                  if (cats.length === 0) return null
+                  return (
+                    <div key={type}>
+                      <h3 className={`text-sm font-bold tracking-wider uppercase mb-3 ${typeColors[type].split(' ')[1]}`}>{type}</h3>
+                      <Droppable droppableId={type}>
+                        {(provided) => (
+                          <div 
+                            {...provided.droppableProps} 
+                            ref={provided.innerRef}
+                            className="flex flex-col gap-2"
+                          >
+                            {cats.map((c, index) => (
+                              <Draggable key={c.id.toString()} draggableId={c.id.toString()} index={index}>
+                                {(provided) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    className="bg-black/30 border border-white/5 rounded-xl px-4 py-3 flex justify-between items-center group"
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <div {...provided.dragHandleProps} className="text-slate-500 hover:text-white cursor-grab active:cursor-grabbing">
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8h16M4 16h16"></path></svg>
+                                      </div>
+                                      <div>
+                                        <p className="text-sm text-slate-200 font-medium">{c.name}</p>
+                                      </div>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteCategory(c.id)}
+                                      className="text-rose-400 hover:text-rose-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                                      title="Delete category"
+                                    >
+                                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
+                            {provided.placeholder}
+                          </div>
+                        )}
+                      </Droppable>
+                    </div>
+                  )
+                })}
+              </DragDropContext>
             </div>
           </div>
         </div>

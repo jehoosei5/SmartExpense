@@ -49,6 +49,12 @@ export const getCategories = (type = null) =>
 export const createCategory = (name, type) =>
   api.post('/categories', { name, type })
 
+export const deleteCategory = (id) =>
+  api.delete(`/categories/${id}`)
+
+export const reorderCategories = (categories) =>
+  api.put('/categories/reorder', { categories })
+
 // ── Sync ──────────────────────────────────────────────────────────────────
 export const uploadCSV = (file) => {
   const formData = new FormData()
