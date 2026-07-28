@@ -13,7 +13,7 @@ class SyncLog(Base):
     inserted_rows = Column(Integer, default=0)
     skipped_rows  = Column(Integer, default=0)
     failed_rows   = Column(Integer, default=0)
-    status        = Column(Enum("success", "partial", "failed"), default="success")
+    status        = Column(Enum("success", "partial", "failed", name="sync_status_enum"), default="success")
     error_details = Column(Text, nullable=True)
 
     user          = relationship("User", back_populates="sync_logs")

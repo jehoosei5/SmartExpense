@@ -21,7 +21,7 @@ class AIChatMessage(Base):
 
     id           = Column(Integer, primary_key=True, autoincrement=True)
     session_id   = Column(String(36), ForeignKey("ai_chat_sessions.id", ondelete="CASCADE"), nullable=False)
-    role         = Column(Enum("user", "assistant"), nullable=False)
+    role         = Column(Enum("user", "assistant", name="chat_role_enum"), nullable=False)
     content      = Column(Text, nullable=False)
     expense_id   = Column(String(36), ForeignKey("expenses.id", ondelete="SET NULL"), nullable=True)
     chart_type   = Column(String(50), nullable=True)
