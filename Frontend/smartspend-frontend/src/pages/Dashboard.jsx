@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { getDashboard, getMonthly, getCategories2, getExpenses } from '../api/client'
 import {
-  ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   PieChart, Pie, Cell, ResponsiveContainer
 } from 'recharts'
 
@@ -13,43 +13,58 @@ const COLORS_EXP = ['#fb7185', '#f43f5e', '#e11d48', '#be123c', '#fda4af']
 const COLORS_SAV = ['#e879f9', '#d946ef', '#c026d3', '#a21caf', '#f0abfc']
 
 function DonutChartCard({ title, data, colors, type }) {
+  const total = data.reduce((sum, item) => sum + Number(item.total), 0)
+
   return (
-    <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-2xl relative overflow-hidden flex flex-col">
-      <h3 className="font-bold text-base text-white mb-2 flex items-center gap-2">
+    <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl relative overflow-hidden flex flex-col flex-1 min-h-[180px]">
+      <h3 className="font-bold text-sm text-white mb-3 flex items-center gap-2 uppercase tracking-wider">
         <span className="w-2 h-2 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" style={{ backgroundColor: colors[0] }} />
         {title}
       </h3>
       {data.length === 0 ? (
-        <p className="text-slate-500 text-sm flex-1 flex items-center justify-center min-h-[220px]">No {type} data</p>
+        <p className="text-slate-500 text-xs flex-1 flex items-center justify-center">No {type} data</p>
       ) : (
-        <div className="h-[220px] w-full mt-2">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={data}
-                dataKey="total"
-                nameKey="category"
-                cx="35%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={85}
-                paddingAngle={5}
-                stroke="none"
-              >
-                {data.map((_, i) => (
-                  <Cell key={i} fill={colors[i % colors.length]} className="drop-shadow-md outline-none" />
-                ))}
-              </Pie>
-              <Tooltip content={<CustomTooltip />} />
-              <Legend 
-                layout="vertical" 
-                verticalAlign="middle" 
-                align="right"
-                iconType="circle"
-                wrapperStyle={{ fontSize: '12px', color: '#94a3b8' }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+        <div className="flex items-center justify-between flex-1 gap-2">
+          <div className="w-[120px] h-[120px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={data}
+                  dataKey="total"
+                  nameKey="category"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={35}
+                  outerRadius={55}
+                  paddingAngle={2}
+                  stroke="none"
+                >
+                  {data.map((_, i) => (
+                    <Cell key={i} fill={colors[i % colors.length]} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          
+          <div className="flex-1 flex flex-col justify-center gap-1.5 overflow-hidden">
+            {data.slice(0, 4).map((item, i) => (
+              <div key={i} className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-1.5 truncate pr-2">
+                  <div className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: colors[i % colors.length] }} />
+                  <span className="text-slate-300 truncate" title={item.category}>{item.category}</span>
+                </div>
+                <span className="text-white font-medium shrink-0">{Number(item.total).toLocaleString()}</span>
+              </div>
+            ))}
+            {data.length > 4 && (
+              <div className="text-xs text-slate-500 italic ml-3.5">+ {data.length - 4} more</div>
+            )}
+            <div className="flex items-center justify-between text-xs font-bold mt-2 pt-2 border-t border-white/10">
+              <span className="text-slate-400">Total</span>
+              <span className="text-white">{total.toLocaleString()}</span>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -68,11 +83,9 @@ function StatCard({ label, amount, color = 'blue', sub = '', onClick }) {
       onClick={onClick}
       className={`relative overflow-hidden rounded-2xl p-6 bg-white/[0.03] backdrop-blur-xl border ${styles[color]} transition-all duration-300 hover:-translate-y-1.5 hover:bg-white/[0.06] hover:shadow-2xl group ${onClick ? 'cursor-pointer' : ''}`}
     >
-      {/* Subtle top glare effect */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      
       <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">{label}</p>
-      <p className="text-3xl font-bold mt-2 tracking-tight drop-shadow-md">
+      <p className="text-2xl lg:text-3xl font-bold mt-2 tracking-tight drop-shadow-md">
         GH₵{Number(amount || 0).toLocaleString('en-GH', { minimumFractionDigits: 2 })}
       </p>
       {sub && <p className="text-xs mt-3 text-slate-500 font-medium">{sub}</p>}
@@ -80,16 +93,115 @@ function StatCard({ label, amount, color = 'blue', sub = '', onClick }) {
   )
 }
 
-const CustomTooltip = ({ active, payload, label }) => {
+function BreakdownGroup({ type, items, headerColorClass, headerBgClass, rowColorClass, excessColorClass, excessBgClass }) {
+  if (items.length === 0) return null
+
+  const totals = items.reduce((acc, c) => {
+    acc.tracked += c.total
+    acc.budgeted += c.budgeted
+    return acc
+  }, { tracked: 0, budgeted: 0 })
+
+  const totalPercent = totals.budgeted > 0 ? ((totals.tracked / totals.budgeted) * 100).toFixed(0) : 0
+  const isIncome = type === 'Income'
+  
+  let totalRemaining = 0
+  let totalExcess = 0
+
+  return (
+    <div className="mb-6">
+      <div className={`px-3 py-1.5 font-bold text-sm uppercase tracking-widest text-white rounded-t-lg ${headerBgClass}`}>
+        {type}
+      </div>
+      <div className="bg-white/[0.02] border border-white/5 rounded-b-lg overflow-x-auto">
+        <table className="w-full text-left text-xs whitespace-nowrap">
+          <thead>
+            <tr className="border-b border-white/5 text-slate-400">
+              <th className="py-2 px-3 font-semibold w-1/3">Category</th>
+              <th className="py-2 px-3 font-semibold text-right">Tracked</th>
+              <th className="py-2 px-3 font-semibold text-right">Budgeted</th>
+              <th className="py-2 px-3 font-semibold text-right">% Compl.</th>
+              <th className="py-2 px-3 font-semibold text-right">Remaining</th>
+              <th className="py-2 px-3 font-semibold text-right">Excess</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/5">
+            {items.map((c, i) => {
+              const percent = c.budgeted > 0 ? ((c.total / c.budgeted) * 100).toFixed(0) : 0
+              
+              let remaining = '-'
+              let excess = '-'
+              
+              if (c.budgeted > 0) {
+                if (isIncome) {
+                  const rem = Math.max(0, c.budgeted - c.total)
+                  const exc = Math.max(0, c.total - c.budgeted)
+                  remaining = rem > 0 ? rem : '-'
+                  excess = exc > 0 ? exc : '-'
+                  if (rem > 0) totalRemaining += rem
+                  if (exc > 0) totalExcess += exc
+                } else {
+                  const rem = Math.max(0, c.budgeted - c.total)
+                  const exc = Math.max(0, c.total - c.budgeted)
+                  remaining = rem > 0 ? rem : '-'
+                  excess = exc > 0 ? exc : '-'
+                  if (rem > 0) totalRemaining += rem
+                  if (exc > 0) totalExcess += exc
+                }
+              }
+
+              return (
+                <tr key={i} className="hover:bg-white/[0.04] transition-colors">
+                  <td className="py-2 px-3 text-white font-medium">{c.category}</td>
+                  <td className="py-2 px-3 text-right text-white">{Number(c.total).toLocaleString()}</td>
+                  <td className="py-2 px-3 text-right text-slate-300">{c.budgeted > 0 ? Number(c.budgeted).toLocaleString() : '-'}</td>
+                  <td className="py-2 px-3 text-right">
+                    {c.budgeted > 0 ? (
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${percent > 100 ? (isIncome ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400') : 'bg-white/10 text-slate-300'}`}>
+                        {percent}%
+                      </span>
+                    ) : '-'}
+                  </td>
+                  <td className="py-2 px-3 text-right text-slate-300">{remaining.toLocaleString()}</td>
+                  <td className={`py-2 px-3 text-right font-bold ${excess !== '-' ? excessColorClass : 'text-slate-500'}`}>
+                    {excess !== '-' ? (
+                      <span className={`px-1.5 py-0.5 rounded ${excessBgClass}`}>{excess.toLocaleString()}</span>
+                    ) : '-'}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+          <tfoot>
+            <tr className="border-t border-white/10 font-bold bg-white/5">
+              <td className="py-2 px-3 text-white">Total</td>
+              <td className={`py-2 px-3 text-right ${rowColorClass}`}>{totals.tracked.toLocaleString()}</td>
+              <td className="py-2 px-3 text-right text-white">{totals.budgeted > 0 ? totals.budgeted.toLocaleString() : '-'}</td>
+              <td className="py-2 px-3 text-right text-white">{totals.budgeted > 0 ? `${totalPercent}%` : '-'}</td>
+              <td className="py-2 px-3 text-right text-white">{totalRemaining > 0 ? totalRemaining.toLocaleString() : '-'}</td>
+              <td className="py-2 px-3 text-right text-white">{totalExcess > 0 ? totalExcess.toLocaleString() : '-'}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+const CustomChartTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-slate-900/90 backdrop-blur-md border border-white/10 p-3 rounded-lg shadow-xl">
-        <p className="text-white font-medium mb-2">{label}</p>
-        {payload.map((entry, index) => (
-          <p key={index} style={{ color: entry.color }} className="text-sm font-semibold">
-            {entry.name}: GH₵{Number(entry.value).toLocaleString()}
-          </p>
-        ))}
+      <div className="bg-slate-900/95 backdrop-blur-md border border-white/10 p-3 rounded-xl shadow-2xl">
+        <p className="text-white font-bold mb-2 pb-2 border-b border-white/10">{label}</p>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+          {payload.map((entry, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+              <span className="text-xs text-slate-300 w-16">{entry.name}</span>
+              <span className="text-sm font-bold text-white">GH₵{Number(entry.value).toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -108,13 +220,18 @@ export default function Dashboard() {
   const [customStart, setCustomStart] = useState('')
   const [customEnd, setCustomEnd] = useState('')
 
+  // Chart Toggles
+  const [showIncome, setShowIncome] = useState(true)
+  const [showExpenses, setShowExpenses] = useState(true)
+  const [showSavings, setShowSavings] = useState(true)
+  const [showBudget, setShowBudget] = useState(true)
+
   // Modal State
   const [modalOpen, setModalOpen] = useState(false)
   const [modalType, setModalType] = useState('')
   const [modalTransactions, setModalTransactions] = useState([])
   const [modalLoading, setModalLoading] = useState(false)
 
-  // Helper to compute date bounds based on filter
   const computeDateRange = () => {
     let startDate = null;
     let endDate = null;
@@ -178,7 +295,7 @@ export default function Dashboard() {
 
         const [s, m, c] = await Promise.all([
           getDashboard(startDate, endDate),
-          getMonthly(), // Historical context
+          getMonthly(),
           getCategories2(null, startDate, endDate)
         ])
         setSummary(s.data)
@@ -218,167 +335,157 @@ export default function Dashboard() {
     </div>
   )
 
+  const incomeCats = catData.filter(d => d.type === 'Income')
+  const expensesCats = catData.filter(d => d.type === 'Expenses')
+  const savingsCats = catData.filter(d => d.type === 'Savings')
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#0a0f1c] to-indigo-950 text-slate-100 font-sans selection:bg-cyan-500/30 overflow-x-hidden">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 py-6 md:px-6 md:py-10 relative">
-        {/* Background Ambient Glows */}
+      <div className="max-w-[1400px] mx-auto px-4 py-6 md:px-6 md:py-8 relative">
         <div className="absolute top-20 left-10 w-64 h-64 md:w-96 md:h-96 bg-cyan-500/10 rounded-full blur-[80px] md:blur-[100px] -z-10 pointer-events-none" />
         <div className="absolute bottom-20 right-10 w-64 h-64 md:w-96 md:h-96 bg-fuchsia-500/10 rounded-full blur-[80px] md:blur-[120px] -z-10 pointer-events-none" />
 
-        {/* Header & Filter Controls */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
-          <div>
-            <h1 className="text-4xl font-extrabold tracking-tight text-white drop-shadow-lg">Dashboard</h1>
-            <p className="text-slate-400 text-sm mt-2 font-medium tracking-wide">AI-Powered Financial Overview</p>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-white/[0.02] p-3 rounded-2xl border border-white/5 backdrop-blur-md">
-            <div className="flex flex-col">
-              <label className="text-xs font-semibold text-slate-400 mb-1 ml-1 uppercase tracking-wider">Time Range</label>
+        {/* Top Header Row (Excel Style) */}
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-8 bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-lg">
+          <div className="flex items-center gap-4 flex-wrap">
+            <h1 className="text-2xl font-extrabold tracking-tight text-white drop-shadow-lg shrink-0">Budget Dashboard</h1>
+            
+            <div className="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-xl border border-white/5 shrink-0">
               <select 
                 value={filterType} 
                 onChange={e => setFilterType(e.target.value)}
-                className="bg-slate-900/50 border border-white/10 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 appearance-none min-w-[160px]"
+                className="bg-transparent border-none text-sm text-white focus:outline-none focus:ring-0 cursor-pointer font-medium pl-2 pr-6 py-1 appearance-none"
               >
                 <option value="today">Today</option>
                 <option value="this_week">This Week</option>
                 <option value="this_month">This Month</option>
                 <option value="last_6_months">Last 6 Months</option>
                 <option value="all_time">All Time</option>
-                <option value="custom">Custom Date Range...</option>
+                <option value="custom">Custom...</option>
               </select>
+              <svg className="w-4 h-4 text-slate-400 -ml-6 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
             </div>
 
             {filterType === 'custom' && (
-              <div className="flex items-center gap-2">
-                <div className="flex flex-col">
-                   <label className="text-xs font-semibold text-slate-400 mb-1 ml-1 uppercase tracking-wider">Start</label>
-                   <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)} className="bg-slate-900/50 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50" />
-                </div>
-                <div className="flex flex-col">
-                   <label className="text-xs font-semibold text-slate-400 mb-1 ml-1 uppercase tracking-wider">End</label>
-                   <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)} className="bg-slate-900/50 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50" />
-                </div>
+              <div className="flex items-center gap-2 shrink-0">
+                 <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)} className="bg-slate-900/50 border border-white/10 rounded-xl px-3 py-1.5 text-sm text-white focus:outline-none" />
+                 <span className="text-slate-500">to</span>
+                 <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)} className="bg-slate-900/50 border border-white/10 rounded-xl px-3 py-1.5 text-sm text-white focus:outline-none" />
               </div>
             )}
           </div>
-        </div>
-
-        {/* Dynamic Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12 relative">
-           {loading && <div className="absolute inset-0 z-10 bg-slate-950/50 backdrop-blur-sm rounded-2xl flex items-center justify-center"><div className="w-8 h-8 border-2 border-cyan-500/50 border-t-cyan-400 rounded-full animate-spin" /></div>}
-          <StatCard label="Income"   amount={summary?.income}   color="green" onClick={() => handleCardClick('Income')} />
-          <StatCard label="Expenses" amount={summary?.expenses} color="red"   sub={`${summary?.transactions || 0} transactions`} onClick={() => handleCardClick('Expenses')} />
-          <StatCard label="Savings"  amount={summary?.savings}  color="purple" onClick={() => handleCardClick('Savings')} />
-          <StatCard
-            label="Net Balance"
-            amount={summary?.balance}
-            color={summary?.balance >= 0 ? 'blue' : 'red'}
-            sub={summary?.balance < 0 ? 'Negative balance' : 'Positive balance'}
-            onClick={() => handleCardClick('Net Balance')}
-          />
-        </div>
-
-        {/* 3 Donut Charts Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <DonutChartCard 
-            title="Income Categories" 
-            type="income" 
-            data={catData.filter(d => d.type === 'Income')} 
-            colors={COLORS_INC} 
-          />
-          <DonutChartCard 
-            title="Expenses Categories" 
-            type="expenses" 
-            data={catData.filter(d => d.type === 'Expenses')} 
-            colors={COLORS_EXP} 
-          />
-          <DonutChartCard 
-            title="Savings Categories" 
-            type="savings" 
-            data={catData.filter(d => d.type === 'Savings')} 
-            colors={COLORS_SAV} 
-          />
-        </div>
-
-        {/* Monthly Trend Chart Row */}
-        <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-7 shadow-2xl relative overflow-hidden mb-8">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent opacity-50" />
-          <h3 className="font-bold text-lg text-white mb-6 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
-            Tracked (Income vs Expenses vs Savings)
-          </h3>
-          {monthly.length === 0 ? (
-            <p className="text-slate-500 text-sm">No data yet</p>
-          ) : (
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={monthly} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                  <XAxis dataKey="month_name" stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 500 }} axisLine={false} tickLine={false} dy={10} />
-                  <YAxis stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} dx={-10} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
-                  <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '14px' }} iconType="circle" />
-                  <Bar dataKey="income"   name="Income"   fill="#10b981" radius={[4,4,0,0]} barSize={12} />
-                  <Bar dataKey="expenses" name="Expenses" fill="#f43f5e" radius={[4,4,0,0]} barSize={12} />
-                  <Bar dataKey="savings"  name="Savings"  fill="#d946ef" radius={[4,4,0,0]} barSize={12} />
-                  <Line type="monotone" dataKey="income_budget" name="Income Budget" stroke="#34d399" strokeWidth={2} strokeDasharray="5 5" dot={false} />
-                  <Line type="monotone" dataKey="expenses_budget" name="Expenses Budget" stroke="#fb7185" strokeWidth={2} strokeDasharray="5 5" dot={false} />
-                  <Line type="monotone" dataKey="savings_budget" name="Savings Budget" stroke="#e879f9" strokeWidth={2} strokeDasharray="5 5" dot={false} />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </div>
-
-        {/* Detailed Breakdown Table */}
-        <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-7 shadow-2xl relative overflow-hidden mb-8">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent opacity-50" />
-          <h3 className="font-bold text-lg text-white mb-6">Detailed Category Breakdown</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[600px]">
-              <thead>
-                <tr className="border-b border-white/10 text-slate-400 text-sm">
-                  <th className="pb-3 font-semibold">Category</th>
-                  <th className="pb-3 font-semibold">Type</th>
-                  <th className="pb-3 font-semibold text-right">Tracked (GH₵)</th>
-                  <th className="pb-3 font-semibold text-right">Budgeted (GH₵)</th>
-                  <th className="pb-3 font-semibold text-right">% Compl.</th>
-                  <th className="pb-3 font-semibold text-right">Remaining (GH₵)</th>
-                </tr>
-              </thead>
-              <tbody className="text-sm">
-                {catData.map((c, i) => {
-                  const percent = c.budgeted > 0 ? ((c.total / c.budgeted) * 100).toFixed(1) : 0
-                  const isIncome = c.type === 'Income'
-                  // For income, positive remaining means we beat the target. For expenses/savings, positive remaining means we have budget left.
-                  const remaining = isIncome ? (c.total - c.budgeted) : (c.budgeted - c.total)
-                  
-                  return (
-                    <tr key={i} className="border-b border-white/5 hover:bg-white/[0.04] transition-colors">
-                      <td className="py-3 text-white font-medium">{c.category}</td>
-                      <td className={`py-3 font-medium ${c.type === 'Income' ? 'text-emerald-400' : c.type === 'Expenses' ? 'text-rose-400' : 'text-fuchsia-400'}`}>{c.type}</td>
-                      <td className="py-3 text-right text-white font-semibold">{Number(c.total).toLocaleString()}</td>
-                      <td className="py-3 text-right text-slate-300">{Number(c.budgeted).toLocaleString()}</td>
-                      <td className="py-3 text-right text-slate-300">
-                        {c.budgeted > 0 ? (
-                          <span className={`px-2 py-1 rounded-md text-xs font-bold ${percent > 100 ? (isIncome ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400') : 'bg-white/10'}`}>
-                            {percent}%
-                          </span>
-                        ) : '-'}
-                      </td>
-                      <td className={`py-3 text-right font-bold ${remaining >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                        {c.budgeted > 0 ? remaining.toLocaleString() : '-'}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+          
+          <div className="flex flex-wrap items-center gap-4 xl:gap-8 shrink-0">
+             <div className="text-center bg-emerald-500/10 border border-emerald-500/20 px-6 py-2 rounded-xl">
+               <p className="text-xs text-emerald-400 uppercase tracking-widest font-bold">Total Income</p>
+               <p className="text-xl font-bold text-white">GH₵{Number(summary?.income || 0).toLocaleString()}</p>
+             </div>
+             <div className="text-center bg-rose-500/10 border border-rose-500/20 px-6 py-2 rounded-xl">
+               <p className="text-xs text-rose-400 uppercase tracking-widest font-bold">Total Expenses</p>
+               <p className="text-xl font-bold text-white">GH₵{Number(summary?.expenses || 0).toLocaleString()}</p>
+             </div>
+             <div className="text-center bg-blue-500/10 border border-blue-500/20 px-6 py-2 rounded-xl">
+               <p className="text-xs text-blue-400 uppercase tracking-widest font-bold">Period Balance</p>
+               <p className="text-xl font-bold text-white">GH₵{Number(summary?.balance || 0).toLocaleString()}</p>
+             </div>
           </div>
         </div>
+
+        {/* 3-Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative">
+          
+          {/* Left Column: Breakdown Table */}
+          <div className="lg:col-span-5 bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-2xl overflow-hidden flex flex-col h-[700px]">
+            <h3 className="font-bold text-base text-white mb-4 uppercase tracking-wider">Category Breakdown</h3>
+            <div className="overflow-y-auto flex-1 custom-scrollbar pr-2">
+              <BreakdownGroup 
+                type="Income" 
+                items={incomeCats} 
+                headerBgClass="bg-emerald-500 text-slate-900" 
+                rowColorClass="text-emerald-400"
+                excessColorClass="text-emerald-400"
+                excessBgClass="bg-emerald-500/20"
+              />
+              <BreakdownGroup 
+                type="Expenses" 
+                items={expensesCats} 
+                headerBgClass="bg-rose-500 text-white" 
+                rowColorClass="text-rose-400"
+                excessColorClass="text-rose-400"
+                excessBgClass="bg-rose-500/20"
+              />
+              <BreakdownGroup 
+                type="Savings" 
+                items={savingsCats} 
+                headerBgClass="bg-fuchsia-500 text-white" 
+                rowColorClass="text-fuchsia-400"
+                excessColorClass="text-fuchsia-400"
+                excessBgClass="bg-fuchsia-500/20"
+              />
+            </div>
+          </div>
+
+          {/* Middle Column: Donut Charts */}
+          <div className="lg:col-span-3 flex flex-col gap-6 h-[700px]">
+            <DonutChartCard title="Income Tracked" type="income" data={incomeCats} colors={COLORS_INC} />
+            <DonutChartCard title="Expenses Tracked" type="expenses" data={expensesCats} colors={COLORS_EXP} />
+            <DonutChartCard title="Savings Tracked" type="savings" data={savingsCats} colors={COLORS_SAV} />
+          </div>
+
+          {/* Right Column: Bar Chart */}
+          <div className="lg:col-span-4 bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-2xl flex flex-col h-[700px]">
+            <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+              <h3 className="font-bold text-base text-white uppercase tracking-wider">Tracked vs Budgeted</h3>
+              
+              {/* Checkboxes like Excel */}
+              <div className="flex flex-wrap gap-3 bg-slate-900/50 p-2 rounded-xl border border-white/5">
+                <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-emerald-400 hover:text-emerald-300">
+                  <input type="checkbox" checked={showIncome} onChange={e => setShowIncome(e.target.checked)} className="accent-emerald-500" /> Income
+                </label>
+                <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-rose-400 hover:text-rose-300">
+                  <input type="checkbox" checked={showExpenses} onChange={e => setShowExpenses(e.target.checked)} className="accent-rose-500" /> Expenses
+                </label>
+                <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-fuchsia-400 hover:text-fuchsia-300">
+                  <input type="checkbox" checked={showSavings} onChange={e => setShowSavings(e.target.checked)} className="accent-fuchsia-500" /> Savings
+                </label>
+                <div className="w-px h-4 bg-white/20 mx-1" />
+                <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-300 hover:text-white">
+                  <input type="checkbox" checked={showBudget} onChange={e => setShowBudget(e.target.checked)} className="accent-slate-500" /> Budget
+                </label>
+              </div>
+            </div>
+
+            {monthly.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center text-slate-500 text-sm">No chart data</div>
+            ) : (
+              <div className="flex-1 w-full mt-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={monthly} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
+                    <XAxis dataKey="month_name" stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} dy={10} />
+                    <YAxis stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} dx={-10} />
+                    <Tooltip content={<CustomChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                    <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '12px' }} iconType="circle" />
+                    
+                    {/* Tracked Bars */}
+                    {showIncome && <Bar dataKey="income" name="Income" fill="#10b981" radius={[2,2,0,0]} barSize={10} />}
+                    {showExpenses && <Bar dataKey="expenses" name="Expenses" fill="#f43f5e" radius={[2,2,0,0]} barSize={10} />}
+                    {showSavings && <Bar dataKey="savings" name="Savings" fill="#d946ef" radius={[2,2,0,0]} barSize={10} />}
+                    
+                    {/* Budgeted Bars (Lighter opacity) */}
+                    {showBudget && showIncome && <Bar dataKey="income_budget" name="Inc. Budget" fill="#10b981" fillOpacity={0.25} stroke="#10b981" strokeDasharray="2 2" radius={[2,2,0,0]} barSize={10} />}
+                    {showBudget && showExpenses && <Bar dataKey="expenses_budget" name="Exp. Budget" fill="#f43f5e" fillOpacity={0.25} stroke="#f43f5e" strokeDasharray="2 2" radius={[2,2,0,0]} barSize={10} />}
+                    {showBudget && showSavings && <Bar dataKey="savings_budget" name="Sav. Budget" fill="#d946ef" fillOpacity={0.25} stroke="#d946ef" strokeDasharray="2 2" radius={[2,2,0,0]} barSize={10} />}
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </div>
+
+        </div>
+
       </div>
 
       {/* Transactions Modal */}
