@@ -61,7 +61,8 @@ def google_login(payload: dict, db: Session = Depends(get_db)):
         idinfo = id_token.verify_oauth2_token(
             payload["credential"],
             google_requests.Request(),
-            settings.GOOGLE_CLIENT_ID
+            settings.GOOGLE_CLIENT_ID,
+            clock_skew_in_seconds=60
         )
 
         email        = idinfo["email"]
