@@ -399,7 +399,7 @@ export default function Dashboard() {
           {/* Left Column: Breakdown Table */}
           <div className="lg:col-span-5 bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-2xl overflow-hidden flex flex-col h-[700px]">
             <h3 className="font-bold text-base text-white mb-4 uppercase tracking-wider">Category Breakdown</h3>
-            <div className="overflow-y-auto flex-1 custom-scrollbar pr-2">
+            <div className="overflow-y-auto flex-1 custom-scrollbar pr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               <BreakdownGroup 
                 type="Income" 
                 items={incomeCats} 
@@ -464,20 +464,22 @@ export default function Dashboard() {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={monthly} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
-                    <XAxis dataKey="month_name" stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} dy={10} />
+                    <XAxis dataKey="month_name" xAxisId="tracked" stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} dy={10} />
+                    <XAxis dataKey="month_name" xAxisId="budget" hide />
+                    
                     <YAxis stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} dx={-10} />
                     <Tooltip content={<CustomChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
                     <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '12px' }} iconType="circle" />
                     
-                    {/* Tracked Bars */}
-                    {showIncome && <Bar dataKey="income" name="Income" fill="#10b981" radius={[2,2,0,0]} barSize={10} />}
-                    {showExpenses && <Bar dataKey="expenses" name="Expenses" fill="#f43f5e" radius={[2,2,0,0]} barSize={10} />}
-                    {showSavings && <Bar dataKey="savings" name="Savings" fill="#d946ef" radius={[2,2,0,0]} barSize={10} />}
-                    
-                    {/* Budgeted Bars (Lighter opacity) */}
-                    {showBudget && showIncome && <Bar dataKey="income_budget" name="Inc. Budget" fill="#10b981" fillOpacity={0.25} stroke="#10b981" strokeDasharray="2 2" radius={[2,2,0,0]} barSize={10} />}
-                    {showBudget && showExpenses && <Bar dataKey="expenses_budget" name="Exp. Budget" fill="#f43f5e" fillOpacity={0.25} stroke="#f43f5e" strokeDasharray="2 2" radius={[2,2,0,0]} barSize={10} />}
-                    {showBudget && showSavings && <Bar dataKey="savings_budget" name="Sav. Budget" fill="#d946ef" fillOpacity={0.25} stroke="#d946ef" strokeDasharray="2 2" radius={[2,2,0,0]} barSize={10} />}
+                    {/* Budgeted Bars (Wider, fainter background bars) */}
+                    {showBudget && showIncome && <Bar xAxisId="budget" dataKey="income_budget" name="Inc. Budget" fill="#10b981" fillOpacity={0.15} radius={[4,4,0,0]} barSize={14} />}
+                    {showBudget && showExpenses && <Bar xAxisId="budget" dataKey="expenses_budget" name="Exp. Budget" fill="#f43f5e" fillOpacity={0.15} radius={[4,4,0,0]} barSize={14} />}
+                    {showBudget && showSavings && <Bar xAxisId="budget" dataKey="savings_budget" name="Sav. Budget" fill="#d946ef" fillOpacity={0.15} radius={[4,4,0,0]} barSize={14} />}
+
+                    {/* Tracked Bars (Thinner, solid foreground bars) */}
+                    {showIncome && <Bar xAxisId="tracked" dataKey="income" name="Income" fill="#10b981" radius={[2,2,0,0]} barSize={6} />}
+                    {showExpenses && <Bar xAxisId="tracked" dataKey="expenses" name="Expenses" fill="#f43f5e" radius={[2,2,0,0]} barSize={6} />}
+                    {showSavings && <Bar xAxisId="tracked" dataKey="savings" name="Savings" fill="#d946ef" radius={[2,2,0,0]} barSize={6} />}
                   </BarChart>
                 </ResponsiveContainer>
               </div>
