@@ -20,9 +20,9 @@ function DonutChartCard({ title, data, colors, type }) {
         {title}
       </h3>
       {data.length === 0 ? (
-        <p className="text-slate-500 text-sm flex-1 flex items-center justify-center">No {type} data</p>
+        <p className="text-slate-500 text-sm flex-1 flex items-center justify-center min-h-[220px]">No {type} data</p>
       ) : (
-        <div className="h-[220px] flex-1">
+        <div className="h-[220px] w-full mt-2">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
