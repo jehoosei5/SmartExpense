@@ -113,8 +113,12 @@ function BreakdownGroup({ type, items, headerColorClass, headerBgClass, rowColor
       <div className={`px-3 py-1.5 font-bold text-sm uppercase tracking-widest text-white rounded-t-lg ${headerBgClass}`}>
         {type}
       </div>
-      <div className="bg-white/[0.02] border border-white/5 rounded-b-lg overflow-x-auto">
-        <table className="w-full text-left text-xs whitespace-nowrap">
+      <style>{`.hide-scroll::-webkit-scrollbar { display: none; }`}</style>
+      <div 
+        className="bg-white/[0.02] border border-white/5 rounded-b-lg overflow-x-auto hide-scroll"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        <table className="w-full text-left text-xs">
           <thead>
             <tr className="border-b border-white/5 text-slate-400">
               <th className="py-2 px-3 font-semibold w-1/3">Category</th>
@@ -399,8 +403,13 @@ export default function Dashboard() {
           {/* Left Column: Breakdown Table */}
           <div className="lg:col-span-5 bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-2xl overflow-hidden flex flex-col h-[700px]">
             <h3 className="font-bold text-base text-white mb-4 uppercase tracking-wider">Category Breakdown</h3>
-            <div className="overflow-y-auto flex-1 custom-scrollbar pr-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              <BreakdownGroup 
+            <div 
+              className="overflow-y-auto flex-1 pr-2" 
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              <style>{`.hide-scroll::-webkit-scrollbar { display: none; }`}</style>
+              <div className="hide-scroll overflow-x-auto">
+                <BreakdownGroup 
                 type="Income" 
                 items={incomeCats} 
                 headerBgClass="bg-emerald-500 text-slate-900" 
@@ -416,14 +425,15 @@ export default function Dashboard() {
                 excessColorClass="text-rose-400"
                 excessBgClass="bg-rose-500/20"
               />
-              <BreakdownGroup 
-                type="Savings" 
-                items={savingsCats} 
-                headerBgClass="bg-fuchsia-500 text-white" 
-                rowColorClass="text-fuchsia-400"
-                excessColorClass="text-fuchsia-400"
-                excessBgClass="bg-fuchsia-500/20"
-              />
+                <BreakdownGroup 
+                  type="Savings" 
+                  items={savingsCats} 
+                  headerBgClass="bg-fuchsia-500 text-white" 
+                  rowColorClass="text-fuchsia-400"
+                  excessColorClass="text-fuchsia-400"
+                  excessBgClass="bg-fuchsia-500/20"
+                />
+              </div>
             </div>
           </div>
 
@@ -462,14 +472,14 @@ export default function Dashboard() {
             ) : (
               <div className="flex-1 w-full mt-2">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={monthly} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
+                  <BarChart data={monthly} margin={{ top: 20, right: 0, left: -20, bottom: 45 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
-                    <XAxis dataKey="month_name" xAxisId="tracked" stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} dy={10} />
+                    <XAxis dataKey="month_name" xAxisId="tracked" stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} dy={15} />
                     <XAxis dataKey="month_name" xAxisId="budget" hide />
                     
                     <YAxis stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} dx={-10} />
                     <Tooltip content={<CustomChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-                    <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '12px' }} iconType="circle" />
+                    <Legend verticalAlign="bottom" wrapperStyle={{ position: 'relative', marginTop: '20px', fontSize: '12px' }} iconType="circle" />
                     
                     {/* Budgeted Bars (Wider, fainter background bars) */}
                     {showBudget && showIncome && <Bar xAxisId="budget" dataKey="income_budget" name="Inc. Budget" fill="#10b981" fillOpacity={0.15} radius={[4,4,0,0]} barSize={14} />}
