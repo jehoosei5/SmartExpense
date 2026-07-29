@@ -94,3 +94,13 @@ export const updateMe = (data) =>
 
 export const deleteAccount = () => 
     api.delete('/auth/me');
+
+// ── Budgets ───────────────────────────────────────────────────────────────
+export const getBudgets = (year = null) =>
+  api.get('/budgets', { params: year ? { year } : {} })
+
+export const setBudget = (category, type, year, month, amount) =>
+  api.post('/budgets', { category, type, year, month, amount })
+
+export const setBudgetBulk = (category, type, year, months) =>
+  api.post('/budgets/bulk', { category, type, year, months })

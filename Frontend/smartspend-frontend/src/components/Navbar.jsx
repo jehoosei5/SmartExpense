@@ -16,6 +16,7 @@ export default function Navbar() {
     { path: '/expenses', label: 'Expenses'  },
     { path: '/chat',     label: 'AI Chat'   },
     { path: '/sync',     label: 'Sync'      },
+    { path: '/budgets',  label: 'Budgets'   },
     { path: '/profile',  label: 'Profile'   }
   ]
 

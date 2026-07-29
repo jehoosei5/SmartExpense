@@ -3,12 +3,58 @@ import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { getDashboard, getMonthly, getCategories2, getExpenses } from '../api/client'
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   PieChart, Pie, Cell, ResponsiveContainer
 } from 'recharts'
 
-// Vibrant cyberpunk/neon color palette for Pie Chart
-const COLORS = ['#38bdf8', '#818cf8', '#c084fc', '#e879f9', '#2dd4bf', '#fb7185']
+// Vibrant cyberpunk/neon color palette for Donut Charts
+const COLORS_INC = ['#34d399', '#10b981', '#059669', '#047857', '#6ee7b7']
+const COLORS_EXP = ['#fb7185', '#f43f5e', '#e11d48', '#be123c', '#fda4af']
+const COLORS_SAV = ['#e879f9', '#d946ef', '#c026d3', '#a21caf', '#f0abfc']
+
+function DonutChartCard({ title, data, colors, type }) {
+  return (
+    <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-2xl relative overflow-hidden flex flex-col">
+      <h3 className="font-bold text-base text-white mb-2 flex items-center gap-2">
+        <span className="w-2 h-2 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" style={{ backgroundColor: colors[0] }} />
+        {title}
+      </h3>
+      {data.length === 0 ? (
+        <p className="text-slate-500 text-sm flex-1 flex items-center justify-center">No {type} data</p>
+      ) : (
+        <div className="h-[220px] flex-1">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                dataKey="total"
+                nameKey="category"
+                cx="35%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={85}
+                paddingAngle={5}
+                stroke="none"
+              >
+                {data.map((_, i) => (
+                  <Cell key={i} fill={colors[i % colors.length]} className="drop-shadow-md outline-none" />
+                ))}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+              <Legend 
+                layout="vertical" 
+                verticalAlign="middle" 
+                align="right"
+                iconType="circle"
+                wrapperStyle={{ fontSize: '12px', color: '#94a3b8' }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </div>
+  )
+}
 
 function StatCard({ label, amount, color = 'blue', sub = '', onClick }) {
   const styles = {
@@ -58,11 +104,9 @@ export default function Dashboard() {
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState('')
 
-  // Date Filter State
   const [filterType, setFilterType] = useState('this_month')
   const [customStart, setCustomStart] = useState('')
   const [customEnd, setCustomEnd] = useState('')
-  const [catType, setCatType] = useState('Expenses')
 
   // Modal State
   const [modalOpen, setModalOpen] = useState(false)
@@ -135,7 +179,7 @@ export default function Dashboard() {
         const [s, m, c] = await Promise.all([
           getDashboard(startDate, endDate),
           getMonthly(), // Historical context
-          getCategories2(catType, startDate, endDate)
+          getCategories2(null, startDate, endDate)
         ])
         setSummary(s.data)
         setMonthly(m.data)
@@ -152,7 +196,7 @@ export default function Dashboard() {
       }
     }
     load()
-  }, [filterType, customStart, customEnd, catType, navigate])
+  }, [filterType, customStart, customEnd, navigate])
 
   if (loading && !summary) return (
     <div className="min-h-screen bg-slate-950 flex flex-col">
@@ -237,110 +281,103 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Top Category */}
-        <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-5 mb-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 shadow-xl transition-all duration-300 hover:bg-white/[0.04]">
-          <div className="flex items-center gap-5">
-            <div className={`border rounded-xl p-3 shadow-lg ${catType === 'Income' ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)]' : catType === 'Expenses' ? 'bg-rose-500/20 border-rose-500/30 text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.3)]' : 'bg-fuchsia-500/20 border-fuchsia-500/30 text-fuchsia-400 shadow-[0_0_15px_rgba(217,70,239,0.3)]'}`}>
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Top {catType} category</p>
-              {catData?.length > 0 ? (
-                <p className="font-bold text-xl text-white mt-1 drop-shadow-md">
-                  {catData[0].category} — <span className={catType === 'Income' ? 'text-emerald-400' : catType === 'Expenses' ? 'text-rose-400' : 'text-fuchsia-400'}>GH₵{Number(catData[0].total).toLocaleString()}</span>
-                </p>
-              ) : (
-                <p className="font-bold text-lg text-slate-500 mt-1">No data</p>
-              )}
-            </div>
-          </div>
-
-          <div className="flex bg-slate-900/50 p-1 rounded-xl border border-white/10 w-full md:w-auto">
-            {['Expenses', 'Income', 'Savings'].map(type => (
-              <button
-                key={type}
-                onClick={() => setCatType(type)}
-                className={`flex-1 md:flex-none px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                  catType === type 
-                    ? 'bg-white/10 text-white shadow-md' 
-                    : 'text-slate-400 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                {type}
-              </button>
-            ))}
-          </div>
+        {/* 3 Donut Charts Row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <DonutChartCard 
+            title="Income Categories" 
+            type="income" 
+            data={catData.filter(d => d.type === 'Income')} 
+            colors={COLORS_INC} 
+          />
+          <DonutChartCard 
+            title="Expenses Categories" 
+            type="expenses" 
+            data={catData.filter(d => d.type === 'Expenses')} 
+            colors={COLORS_EXP} 
+          />
+          <DonutChartCard 
+            title="Savings Categories" 
+            type="savings" 
+            data={catData.filter(d => d.type === 'Savings')} 
+            colors={COLORS_SAV} 
+          />
         </div>
 
-        {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Monthly Trend Chart Row */}
+        <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-7 shadow-2xl relative overflow-hidden mb-8">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent opacity-50" />
+          <h3 className="font-bold text-lg text-white mb-6 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+            Tracked (Income vs Expenses vs Savings)
+          </h3>
+          {monthly.length === 0 ? (
+            <p className="text-slate-500 text-sm">No data yet</p>
+          ) : (
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={monthly} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                  <XAxis dataKey="month_name" stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 500 }} axisLine={false} tickLine={false} dy={10} />
+                  <YAxis stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} dx={-10} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                  <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '14px' }} iconType="circle" />
+                  <Bar dataKey="income"   name="Income"   fill="#10b981" radius={[4,4,0,0]} barSize={12} />
+                  <Bar dataKey="expenses" name="Expenses" fill="#f43f5e" radius={[4,4,0,0]} barSize={12} />
+                  <Bar dataKey="savings"  name="Savings"  fill="#d946ef" radius={[4,4,0,0]} barSize={12} />
+                  <Line type="monotone" dataKey="income_budget" name="Income Budget" stroke="#34d399" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                  <Line type="monotone" dataKey="expenses_budget" name="Expenses Budget" stroke="#fb7185" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                  <Line type="monotone" dataKey="savings_budget" name="Savings Budget" stroke="#e879f9" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
 
-          {/* Monthly Bar Chart */}
-          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-7 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent opacity-50" />
-            <h3 className="font-bold text-lg text-white mb-6 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
-              Historical Monthly Overview
-            </h3>
-            {monthly.length === 0 ? (
-              <p className="text-slate-500 text-sm">No data yet</p>
-            ) : (
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={monthly} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-                    <XAxis dataKey="month_name" stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 500 }} axisLine={false} tickLine={false} dy={10} />
-                    <YAxis stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 12 }} axisLine={false} tickLine={false} dx={-10} />
-                    <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
-                    <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '14px' }} iconType="circle" />
-                    <Bar dataKey="income"   name="Income"   fill="#10b981" radius={[4,4,0,0]} barSize={12} />
-                    <Bar dataKey="expenses" name="Expenses" fill="#f43f5e" radius={[4,4,0,0]} barSize={12} />
-                    <Bar dataKey="savings"  name="Savings"  fill="#d946ef" radius={[4,4,0,0]} barSize={12} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            )}
+        {/* Detailed Breakdown Table */}
+        <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-7 shadow-2xl relative overflow-hidden mb-8">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent opacity-50" />
+          <h3 className="font-bold text-lg text-white mb-6">Detailed Category Breakdown</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[600px]">
+              <thead>
+                <tr className="border-b border-white/10 text-slate-400 text-sm">
+                  <th className="pb-3 font-semibold">Category</th>
+                  <th className="pb-3 font-semibold">Type</th>
+                  <th className="pb-3 font-semibold text-right">Tracked (GH₵)</th>
+                  <th className="pb-3 font-semibold text-right">Budgeted (GH₵)</th>
+                  <th className="pb-3 font-semibold text-right">% Compl.</th>
+                  <th className="pb-3 font-semibold text-right">Remaining (GH₵)</th>
+                </tr>
+              </thead>
+              <tbody className="text-sm">
+                {catData.map((c, i) => {
+                  const percent = c.budgeted > 0 ? ((c.total / c.budgeted) * 100).toFixed(1) : 0
+                  const isIncome = c.type === 'Income'
+                  // For income, positive remaining means we beat the target. For expenses/savings, positive remaining means we have budget left.
+                  const remaining = isIncome ? (c.total - c.budgeted) : (c.budgeted - c.total)
+                  
+                  return (
+                    <tr key={i} className="border-b border-white/5 hover:bg-white/[0.04] transition-colors">
+                      <td className="py-3 text-white font-medium">{c.category}</td>
+                      <td className={`py-3 font-medium ${c.type === 'Income' ? 'text-emerald-400' : c.type === 'Expenses' ? 'text-rose-400' : 'text-fuchsia-400'}`}>{c.type}</td>
+                      <td className="py-3 text-right text-white font-semibold">{Number(c.total).toLocaleString()}</td>
+                      <td className="py-3 text-right text-slate-300">{Number(c.budgeted).toLocaleString()}</td>
+                      <td className="py-3 text-right text-slate-300">
+                        {c.budgeted > 0 ? (
+                          <span className={`px-2 py-1 rounded-md text-xs font-bold ${percent > 100 ? (isIncome ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400') : 'bg-white/10'}`}>
+                            {percent}%
+                          </span>
+                        ) : '-'}
+                      </td>
+                      <td className={`py-3 text-right font-bold ${remaining >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {c.budgeted > 0 ? remaining.toLocaleString() : '-'}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
-
-          {/* Category Pie Chart */}
-          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-7 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-fuchsia-500/50 to-transparent opacity-50" />
-            <h3 className="font-bold text-lg text-white mb-6 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-fuchsia-400 shadow-[0_0_8px_rgba(217,70,239,0.8)]" />
-              {catType} by Category
-            </h3>
-            {catData.length === 0 ? (
-              <p className="text-slate-500 text-sm">No {catType.toLowerCase()} data yet</p>
-            ) : (
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={catData}
-                      dataKey="total"
-                      nameKey="category"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={80}
-                      outerRadius={110}
-                      paddingAngle={5}
-                      stroke="none"
-                      label={({ category, percentage }) => `${category} (${percentage}%)`}
-                      labelLine={false}
-                    >
-                      {catData.map((_, i) => (
-                        <Cell key={i} fill={COLORS[i % COLORS.length]} className="drop-shadow-md outline-none" />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-          </div>
-
         </div>
       </div>
 

@@ -5,6 +5,7 @@ import Expenses from './pages/Expenses'
 import AIChat from './pages/AIChat'
 import Sync from './pages/Sync'
 import Profile from './pages/Profile'
+import Budgets from './pages/Budgets'
 
 // Protected route — redirects to login if no token
 function PrivateRoute({ children }) {
@@ -20,6 +21,7 @@ function App() {
         <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
         <Route path="/expenses" element={<PrivateRoute><Expenses /></PrivateRoute>} />
         <Route path="/chat" element={<PrivateRoute><AIChat /></PrivateRoute>} />
+        <Route path="/budgets" element={<PrivateRoute><Budgets /></PrivateRoute>} />
         <Route path="/sync" element={<PrivateRoute><Sync /></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
       </Routes>

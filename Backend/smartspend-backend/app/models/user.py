@@ -24,6 +24,8 @@ class User(Base):
     chat_sessions  = relationship("AIChatSession", back_populates="user", cascade="all, delete")
     #when a user is deleted, we want to cascade delete their sync logs
     sync_logs      = relationship("SyncLog", back_populates="user", cascade="all, delete")
+    #when a user is deleted, we want to cascade delete their budgets
+    budgets        = relationship("Budget", back_populates="user", cascade="all, delete")
 
     @property
     def is_oauth_user(self) -> bool:

@@ -9,6 +9,9 @@ class MonthlySummary(BaseModel):
     expenses:       float
     savings:        float
     balance:        float
+    income_budget:  float = 0.0
+    expenses_budget: float = 0.0
+    savings_budget:  float = 0.0
 
 class CategoryBreakdown(BaseModel):
     category:       str
@@ -16,6 +19,7 @@ class CategoryBreakdown(BaseModel):
     total:          float
     count:          int
     percentage:     float
+    budgeted:       float = 0.0
 
 class TrendPoint(BaseModel):
     month:          int

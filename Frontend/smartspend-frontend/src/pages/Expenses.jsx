@@ -229,6 +229,17 @@ export default function Expenses() {
   const inputClasses = "w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all"
   const labelClasses = "block text-xs font-semibold tracking-wider text-slate-400 mb-1.5 uppercase"
 
+  // Summary Stats Calculations
+  const todayFormatted = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+  const sortedExpenses = [...expenses].sort((a,b) => new Date(b.date) - new Date(a.date))
+  const lastRecordDate = sortedExpenses.length > 0 ? new Date(sortedExpenses[0].date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'
+  
+  let totalTrackingBalance = 0
+  expenses.forEach(e => {
+    if (e.type === 'Income') totalTrackingBalance += Number(e.amount)
+    else totalTrackingBalance -= Number(e.amount)
+  })
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#0a0f1c] to-indigo-950 text-slate-100 font-sans selection:bg-cyan-500/30 relative overflow-x-hidden">
       <Navbar />
@@ -261,6 +272,28 @@ export default function Expenses() {
             >
               + Add Transaction
             </button>
+          </div>
+        </div>
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-lg flex flex-col items-center justify-center text-center">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Date of Today</p>
+            <p className="text-xl md:text-2xl font-bold text-white">{todayFormatted}</p>
+          </div>
+          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-lg flex flex-col items-center justify-center text-center">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Date of Last Record</p>
+            <p className="text-xl md:text-2xl font-bold text-white">{lastRecordDate}</p>
+          </div>
+          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-lg flex flex-col items-center justify-center text-center">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">No. of Records</p>
+            <p className="text-xl md:text-2xl font-bold text-cyan-400">{expenses.length}</p>
+          </div>
+          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-lg flex flex-col items-center justify-center text-center">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Total Tracking Balance</p>
+            <p className={`text-xl md:text-2xl font-bold ${totalTrackingBalance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+              GH₵{totalTrackingBalance.toLocaleString('en-GH', { minimumFractionDigits: 2 })}
+            </p>
           </div>
         </div>
 

@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import extract, func
 from app.models.expense import Expense
+from app.models.budget import Budget
 from datetime import date
 from calendar import month_name
 from typing import Optional
@@ -22,20 +23,37 @@ def get_monthly_summary(db: Session, user_id: str, year: Optional[int] = None):
         Expense.type
     ).all()
 
+    # Get budgets for this year
+    budget_rows = db.query(
+        Budget.month,
+        Budget.type,
+        func.sum(Budget.amount).label("amount")
+    ).filter(
+        Budget.user_id == user_id,
+        Budget.year == year
+    ).group_by(
+        Budget.month,
+        Budget.type
+    ).all()
+
     # Organize into a dict per month
     months = {}
+    for m in range(1, 13):
+        months[m] = {
+            "month":      m,
+            "month_name": month_name[m],
+            "year":       year,
+            "income":     0.0,
+            "expenses":   0.0,
+            "savings":    0.0,
+            "balance":    0.0,
+            "income_budget": 0.0,
+            "expenses_budget": 0.0,
+            "savings_budget": 0.0
+        }
+
     for row in rows:
         m = int(row.month)
-        if m not in months:
-            months[m] = {
-                "month":      m,
-                "month_name": month_name[m],
-                "year":       year,
-                "income":     0.0,
-                "expenses":   0.0,
-                "savings":    0.0,
-                "balance":    0.0
-            }
         if row.type == "Income":
             months[m]["income"] = float(row.total)
         elif row.type == "Expenses":
@@ -43,16 +61,31 @@ def get_monthly_summary(db: Session, user_id: str, year: Optional[int] = None):
         elif row.type == "Savings":
             months[m]["savings"] = float(row.total)
 
+    for row in budget_rows:
+        m = int(row.month)
+        if row.type == "Income":
+            months[m]["income_budget"] = float(row.amount)
+        elif row.type == "Expenses":
+            months[m]["expenses_budget"] = float(row.amount)
+        elif row.type == "Savings":
+            months[m]["savings_budget"] = float(row.amount)
+    # Remove empty months if there's no data and no budget, 
+    # but to be safe we can just leave it or filter. The original code only added months that had expense data.
+    # We will filter out months that have 0 expenses and 0 budget so we don't show blank months unnecessarily,
+    # unless they are up to the current month.
+    current_month = date.today().month if year == date.today().year else 12
+    active_months = {k: v for k, v in months.items() if k <= current_month or v["income"] > 0 or v["expenses"] > 0 or v["savings"] > 0 or v["income_budget"] > 0 or v["expenses_budget"] > 0 or v["savings_budget"] > 0}
+
     # Calculate balance per month
-    for m in months:
-        months[m]["balance"] = (
-            months[m]["income"] -
-            months[m]["expenses"] -
-            months[m]["savings"]
+    for m in active_months:
+        active_months[m]["balance"] = (
+            active_months[m]["income"] -
+            active_months[m]["expenses"] -
+            active_months[m]["savings"]
         )
 
     # Return sorted by month
-    return sorted(months.values(), key=lambda x: x["month"])
+    return sorted(active_months.values(), key=lambda x: x["month"])
 
 
 def get_category_breakdown(
@@ -85,24 +118,58 @@ def get_category_breakdown(
     rows = query.group_by(
         Expense.category,
         Expense.type
-    ).order_by(func.sum(Expense.amount).desc()).all()
+    ).all()
 
-    if not rows:
-        return []
+    budgets_query = db.query(
+        Budget.type, Budget.category, func.sum(Budget.amount).label("amount")
+    ).filter(Budget.user_id == user_id)
+    
+    if month:
+        budgets_query = budgets_query.filter(Budget.month == month)
+    if year:
+        budgets_query = budgets_query.filter(Budget.year == year)
+    if start_date:
+        start_val = start_date.year * 12 + start_date.month
+        budgets_query = budgets_query.filter(Budget.year * 12 + Budget.month >= start_val)
+    if end_date:
+        end_val = end_date.year * 12 + end_date.month
+        budgets_query = budgets_query.filter(Budget.year * 12 + Budget.month <= end_val)
+        
+    budgets = budgets_query.group_by(Budget.type, Budget.category).all()
+    budget_map = {(b.type, b.category): float(b.amount) for b in budgets}
 
-    # Calculate grand total for percentages
-    grand_total = sum(float(row.total) for row in rows)
-
-    return [
-        {
-            "category":   row.category,
-            "type":       row.type,
-            "total":      float(row.total),
-            "count":      row.count,
-            "percentage": round((float(row.total) / grand_total) * 100, 2)
+    tracked = {}
+    for row in rows:
+        tracked[(row.type, row.category)] = {
+            "total": float(row.total),
+            "count": row.count
         }
-        for row in rows
-    ]
+
+    all_keys = set(tracked.keys()).union(set(budget_map.keys()))
+    
+    # Filter by type if provided (since budget_map might bring in other types)
+    if type:
+        all_keys = {k for k in all_keys if k[0] == type}
+
+    grand_total = sum(t["total"] for t in tracked.values()) or 1.0
+
+    result = []
+    for k in all_keys:
+        ctype, cname = k
+        tot = tracked.get(k, {}).get("total", 0.0)
+        cnt = tracked.get(k, {}).get("count", 0)
+        bud = budget_map.get(k, 0.0)
+        result.append({
+            "category": cname,
+            "type": ctype,
+            "total": tot,
+            "count": cnt,
+            "percentage": round((tot / grand_total) * 100, 2),
+            "budgeted": bud
+        })
+    
+    result.sort(key=lambda x: x["total"], reverse=True)
+    return result
 
 
 def get_trend(db: Session, user_id: str, months: int = 6):
