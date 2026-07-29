@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
-import { getDashboard, getMonthly, getCategories2 } from '../api/client'
+import { getDashboard, getMonthly, getCategories2, getExpenses } from '../api/client'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   PieChart, Pie, Cell, ResponsiveContainer
@@ -10,7 +10,7 @@ import {
 // Vibrant cyberpunk/neon color palette for Pie Chart
 const COLORS = ['#38bdf8', '#818cf8', '#c084fc', '#e879f9', '#2dd4bf', '#fb7185']
 
-function StatCard({ label, amount, color = 'blue', sub = '' }) {
+function StatCard({ label, amount, color = 'blue', sub = '', onClick }) {
   const styles = {
     blue:   'border-white/10 text-white shadow-[0_0_15px_rgba(255,255,255,0.02)]',
     green:  'border-emerald-500/20 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.1)]',
@@ -18,7 +18,10 @@ function StatCard({ label, amount, color = 'blue', sub = '' }) {
     purple: 'border-fuchsia-500/20 text-fuchsia-400 shadow-[0_0_15px_rgba(217,70,239,0.1)]',
   }
   return (
-    <div className={`relative overflow-hidden rounded-2xl p-6 bg-white/[0.03] backdrop-blur-xl border ${styles[color]} transition-all duration-300 hover:-translate-y-1.5 hover:bg-white/[0.06] hover:shadow-2xl group`}>
+    <div 
+      onClick={onClick}
+      className={`relative overflow-hidden rounded-2xl p-6 bg-white/[0.03] backdrop-blur-xl border ${styles[color]} transition-all duration-300 hover:-translate-y-1.5 hover:bg-white/[0.06] hover:shadow-2xl group ${onClick ? 'cursor-pointer' : ''}`}
+    >
       {/* Subtle top glare effect */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       
@@ -61,37 +64,73 @@ export default function Dashboard() {
   const [customEnd, setCustomEnd] = useState('')
   const [catType, setCatType] = useState('Expenses')
 
+  // Modal State
+  const [modalOpen, setModalOpen] = useState(false)
+  const [modalType, setModalType] = useState('')
+  const [modalTransactions, setModalTransactions] = useState([])
+  const [modalLoading, setModalLoading] = useState(false)
+
+  // Helper to compute date bounds based on filter
+  const computeDateRange = () => {
+    let startDate = null;
+    let endDate = null;
+    const now = new Date();
+
+    if (filterType === 'today') {
+      startDate = now.toISOString().split('T')[0];
+      endDate = startDate;
+    } else if (filterType === 'this_week') {
+      const first = now.getDate() - now.getDay();
+      const firstDay = new Date(now.setDate(first));
+      const lastDay = new Date(now.setDate(first + 6));
+      startDate = firstDay.toISOString().split('T')[0];
+      endDate = lastDay.toISOString().split('T')[0];
+    } else if (filterType === 'this_month') {
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      startDate = firstDay.toISOString().split('T')[0];
+      endDate = lastDay.toISOString().split('T')[0];
+    } else if (filterType === 'last_6_months') {
+      const firstDay = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      startDate = firstDay.toISOString().split('T')[0];
+      endDate = lastDay.toISOString().split('T')[0];
+    } else if (filterType === 'custom') {
+      startDate = customStart || null;
+      endDate = customEnd || null;
+    }
+    return { startDate, endDate };
+  }
+
+  const handleCardClick = async (type) => {
+    setModalType(type)
+    setModalOpen(true)
+    setModalLoading(true)
+    setModalTransactions([])
+
+    try {
+      const typeFilter = type === 'Net Balance' ? null : type
+      const { startDate, endDate } = computeDateRange();
+
+      const filters = {}
+      if (typeFilter) filters.type = typeFilter
+      if (startDate) filters.start_date = startDate
+      if (endDate) filters.end_date = endDate
+
+      const res = await getExpenses(filters)
+      setModalTransactions(res.data.expenses)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setModalLoading(false)
+    }
+  }
+
   useEffect(() => {
     async function load() {
       try {
         setLoading(true)
-        let startDate = null;
-        let endDate = null;
-        const now = new Date();
-
-        if (filterType === 'today') {
-          startDate = now.toISOString().split('T')[0];
-          endDate = startDate;
-        } else if (filterType === 'this_week') {
-          const first = now.getDate() - now.getDay();
-          const firstDay = new Date(now.setDate(first));
-          const lastDay = new Date(now.setDate(first + 6));
-          startDate = firstDay.toISOString().split('T')[0];
-          endDate = lastDay.toISOString().split('T')[0];
-        } else if (filterType === 'this_month') {
-          const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-          const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-          startDate = firstDay.toISOString().split('T')[0];
-          endDate = lastDay.toISOString().split('T')[0];
-        } else if (filterType === 'last_6_months') {
-          const firstDay = new Date(now.getFullYear(), now.getMonth() - 5, 1);
-          const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-          startDate = firstDay.toISOString().split('T')[0];
-          endDate = lastDay.toISOString().split('T')[0];
-        } else if (filterType === 'custom') {
-          startDate = customStart || null;
-          endDate = customEnd || null;
-        }
+        const { startDate, endDate } = computeDateRange();
 
         const [s, m, c] = await Promise.all([
           getDashboard(startDate, endDate),
@@ -186,14 +225,15 @@ export default function Dashboard() {
         {/* Dynamic Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12 relative">
            {loading && <div className="absolute inset-0 z-10 bg-slate-950/50 backdrop-blur-sm rounded-2xl flex items-center justify-center"><div className="w-8 h-8 border-2 border-cyan-500/50 border-t-cyan-400 rounded-full animate-spin" /></div>}
-          <StatCard label="Income"   amount={summary?.income}   color="green" />
-          <StatCard label="Expenses" amount={summary?.expenses} color="red"   sub={`${summary?.transactions || 0} transactions`} />
-          <StatCard label="Savings"  amount={summary?.savings}  color="purple"/>
+          <StatCard label="Income"   amount={summary?.income}   color="green" onClick={() => handleCardClick('Income')} />
+          <StatCard label="Expenses" amount={summary?.expenses} color="red"   sub={`${summary?.transactions || 0} transactions`} onClick={() => handleCardClick('Expenses')} />
+          <StatCard label="Savings"  amount={summary?.savings}  color="purple" onClick={() => handleCardClick('Savings')} />
           <StatCard
             label="Net Balance"
             amount={summary?.balance}
             color={summary?.balance >= 0 ? 'blue' : 'red'}
             sub={summary?.balance < 0 ? 'Negative balance' : 'Positive balance'}
+            onClick={() => handleCardClick('Net Balance')}
           />
         </div>
 
@@ -303,6 +343,48 @@ export default function Dashboard() {
 
         </div>
       </div>
+
+      {/* Transactions Modal */}
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+          <div className="bg-slate-900 border border-white/10 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="p-6 border-b border-white/10 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <span className={`w-3 h-3 rounded-full ${modalType === 'Income' ? 'bg-emerald-400' : modalType === 'Expenses' ? 'bg-rose-400' : modalType === 'Savings' ? 'bg-fuchsia-400' : 'bg-blue-400'}`} />
+                {modalType} Transactions
+              </h2>
+              <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-white transition-colors">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+              {modalLoading ? (
+                <div className="flex justify-center py-10">
+                  <div className="w-8 h-8 border-2 border-cyan-500/50 border-t-cyan-400 rounded-full animate-spin" />
+                </div>
+              ) : modalTransactions.length === 0 ? (
+                <div className="text-center py-10 text-slate-500">
+                  No transactions found for this period.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {modalTransactions.map(tx => (
+                    <div key={tx.id} className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
+                      <div>
+                        <p className="font-semibold text-white">{tx.category || tx.type}</p>
+                        <p className="text-xs text-slate-400 mt-1">{tx.date} {tx.details && `• ${tx.details}`}</p>
+                      </div>
+                      <p className={`font-bold ${tx.type === 'Income' ? 'text-emerald-400' : tx.type === 'Expenses' ? 'text-rose-400' : 'text-fuchsia-400'}`}>
+                        {tx.type === 'Expenses' ? '-' : '+'}GH₵{Number(tx.amount).toLocaleString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
