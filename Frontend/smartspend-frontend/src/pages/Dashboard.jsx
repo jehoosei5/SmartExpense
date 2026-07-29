@@ -136,23 +136,22 @@ function BreakdownGroup({ type, items, headerColorClass, headerBgClass, rowColor
               let remaining = '-'
               let excess = '-'
               
-              if (c.budgeted > 0) {
-                if (isIncome) {
-                  const rem = Math.max(0, c.budgeted - c.total)
-                  const exc = Math.max(0, c.total - c.budgeted)
-                  remaining = rem > 0 ? rem : '-'
-                  excess = exc > 0 ? exc : '-'
-                  if (rem > 0) totalRemaining += rem
-                  if (exc > 0) totalExcess += exc
-                } else {
-                  const rem = Math.max(0, c.budgeted - c.total)
-                  const exc = Math.max(0, c.total - c.budgeted)
-                  remaining = rem > 0 ? rem : '-'
-                  excess = exc > 0 ? exc : '-'
-                  if (rem > 0) totalRemaining += rem
-                  if (exc > 0) totalExcess += exc
-                }
+              const rem = Math.max(0, c.budgeted - c.total)
+              const exc = Math.max(0, c.total - c.budgeted)
+              
+              if (rem > 0) {
+                remaining = rem
+                totalRemaining += rem
               }
+              if (exc > 0) {
+                excess = exc
+                totalExcess += exc
+              }
+
+              const isGoodExcess = type === 'Income' || type === 'Savings'
+              const pctClass = percent > 100 
+                ? (isGoodExcess ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400') 
+                : 'bg-white/10 text-slate-300'
 
               return (
                 <tr key={i} className="hover:bg-white/[0.04] transition-colors">
@@ -161,7 +160,7 @@ function BreakdownGroup({ type, items, headerColorClass, headerBgClass, rowColor
                   <td className="py-2 px-3 text-right text-slate-300">{c.budgeted > 0 ? Number(c.budgeted).toLocaleString() : '-'}</td>
                   <td className="py-2 px-3 text-right">
                     {c.budgeted > 0 ? (
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${percent > 100 ? (isIncome ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400') : 'bg-white/10 text-slate-300'}`}>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${pctClass}`}>
                         {percent}%
                       </span>
                     ) : '-'}
