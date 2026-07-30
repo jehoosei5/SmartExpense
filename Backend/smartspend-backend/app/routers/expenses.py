@@ -1,7 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import Optional
 from datetime import date
+import io
+import csv
 from app.database import get_db
 from app.utils.security import get_current_user
 from app.models.user import User
@@ -58,6 +61,57 @@ def list_expenses(
         search=search
     )
     return ExpenseListResponse(total=len(expenses), expenses=expenses)
+
+
+@router.get("/export")
+def export_expenses(
+    type:       Optional[str]  = Query(None),
+    category:   Optional[str]  = Query(None),
+    source:     Optional[str]  = Query(None),
+    month:      Optional[int]  = Query(None),
+    year:       Optional[int]  = Query(None),
+    start_date: Optional[date] = Query(None),
+    end_date:   Optional[date] = Query(None),
+    search:     Optional[str]  = Query(None),
+    db:         Session        = Depends(get_db),
+    current_user: User         = Depends(get_current_user)
+):
+    expenses = get_expenses(
+        db=db,
+        user_id=current_user.id,
+        type=type,
+        category=category,
+        source=source,
+        month=month,
+        year=year,
+        start_date=start_date,
+        end_date=end_date,
+        search=search
+    )
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['Date', 'Type', 'Category', 'Amount', 'Currency', 'Payment Method', 'Details', 'Notes', 'Source'])
+    
+    for e in expenses:
+        writer.writerow([
+            e.date,
+            e.type,
+            e.category,
+            e.amount,
+            e.currency,
+            e.payment_method or '',
+            e.details or '',
+            e.notes or '',
+            e.source
+        ])
+        
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=expenses_export.csv"}
+    )
 
 
 @router.put("/{expense_id}", response_model=ExpenseResponse)

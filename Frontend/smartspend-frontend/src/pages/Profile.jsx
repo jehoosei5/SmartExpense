@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { getMe, updateMe, deleteAccount } from '../api/client'
+import toast from 'react-hot-toast'
 
 const CURRENCIES = ['GHS', 'USD', 'EUR', 'GBP', 'NGN', 'KES', 'ZAR']
 
@@ -25,7 +26,6 @@ export default function Profile() {
   const [displayName, setDisplayName] = useState('')
   const [currency, setCurrency]       = useState('GHS')
   const [infoSaving, setInfoSaving]   = useState(false)
-  const [infoMsg, setInfoMsg]         = useState('')
 
   // Password form
   const [oldPassword, setOldPassword] = useState('')
@@ -34,7 +34,6 @@ export default function Profile() {
   const [showOld, setShowOld]         = useState(false)
   const [showNew, setShowNew]         = useState(false)
   const [pwSaving, setPwSaving]       = useState(false)
-  const [pwMsg, setPwMsg]             = useState('')
 
   useEffect(() => { loadProfile() }, [])
 
@@ -55,38 +54,36 @@ export default function Profile() {
   }
 
   async function handleUpdateInfo() {
-    setInfoMsg('')
     setInfoSaving(true)
     try {
       const res = await updateMe({ display_name: displayName, default_currency: currency })
       setUser(res.data) 
       setDisplayName(res.data.display_name)
       setCurrency(res.data.default_currency)
-      setInfoMsg('✓ Profile updated successfully')
+      toast.success('Profile updated successfully')
     } catch (err) {
-      setInfoMsg(err.response?.data?.detail || 'Failed to update profile')
+      toast.error(err.response?.data?.detail || 'Failed to update profile')
     } finally {
       setInfoSaving(false)
     }
   }
 
   async function handleUpdatePassword() {
-    setPwMsg('')
     if (!user?.is_oauth_user && !oldPassword) {
-        setPwMsg('Please enter your current password')
+        toast.error('Please enter your current password')
         return
     }
     if (!newPassword || !confirmPassword) {
-      setPwMsg('Please fill in all new password fields')
+      toast.error('Please fill in all new password fields')
       return
     }
     if (newPassword !== confirmPassword) {
-      setPwMsg('New passwords do not match')
+      toast.error('New passwords do not match')
       return
     }
     const checks = validatePassword(newPassword)
     if (!Object.values(checks).every(Boolean)) {
-      setPwMsg('New password does not meet all requirements')
+      toast.error('New password does not meet all requirements')
       return
     }
     setPwSaving(true)
@@ -97,12 +94,12 @@ export default function Profile() {
       }
       const res = await updateMe(payload)
       setUser(res.data) 
-      setPwMsg('✓ Password changed successfully')
+      toast.success('Password changed successfully')
       setOldPassword('')
       setNewPassword('')
       setConfirmPassword('')
     } catch (err) {
-      setPwMsg(err.response?.data?.detail || 'Failed to change password')
+      toast.error(err.response?.data?.detail || 'Failed to change password')
     } finally {
       setPwSaving(false)
     }
@@ -118,9 +115,10 @@ export default function Profile() {
     try {
       await deleteAccount()
       localStorage.clear()
+      toast.success('Account deleted successfully')
       navigate('/login')
     } catch (err) {
-      setInfoMsg(err.response?.data?.detail || 'Failed to delete account')
+      toast.error(err.response?.data?.detail || 'Failed to delete account')
     }
   }
 
@@ -202,14 +200,6 @@ export default function Profile() {
                 ))}
               </select>
             </div>
-            
-            {infoMsg && (
-              <div className={`p-4 rounded-xl border ${infoMsg.includes('✓') ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30' : 'bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'}`}>
-                <p className={`text-sm font-bold flex items-center gap-2 ${infoMsg.includes('✓') ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                  {infoMsg}
-                </p>
-              </div>
-            )}
             
             <button
               type="button"
@@ -301,14 +291,6 @@ export default function Profile() {
                 <p className="text-xs text-rose-600 dark:text-rose-400 mt-2 font-bold tracking-wide">Passwords do not match</p>
               )}
             </div>
-            
-            {pwMsg && (
-              <div className={`p-4 rounded-xl border ${pwMsg.includes('✓') ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30' : 'bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'}`}>
-                <p className={`text-sm font-bold flex items-center gap-2 ${pwMsg.includes('✓') ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                  {pwMsg}
-                </p>
-              </div>
-            )}
             
             <button
               type="button"

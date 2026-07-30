@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
-import { getExpenses, createExpense, updateExpense, deleteExpense, getCategories, createCategory, deleteCategory, reorderCategories } from '../api/client'
+import { getExpenses, createExpense, updateExpense, deleteExpense, getCategories, createCategory, deleteCategory, reorderCategories, exportExpenses } from '../api/client'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import toast from 'react-hot-toast'
 
@@ -90,6 +90,30 @@ export default function Expenses() {
     if (filterSearch)   filters.search   = filterSearch
     const res = await getExpenses(filters)
     setExpenses(res.data.expenses || res.data)
+  }
+
+  async function handleExportCSV() {
+    const filters = {}
+    if (filterType)     filters.type     = filterType
+    if (filterCategory) filters.category = filterCategory
+    if (filterMonth)    filters.month    = filterMonth
+    if (filterYear)     filters.year     = filterYear
+    if (filterSearch)   filters.search   = filterSearch
+    
+    try {
+      const res = await exportExpenses(filters)
+      const url = window.URL.createObjectURL(new Blob([res.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `SmartSpend_Export_${new Date().toISOString().split('T')[0]}.csv`)
+      document.body.appendChild(link)
+      link.click()
+      link.parentNode.removeChild(link)
+      toast.success('Export successful!')
+    } catch (err) {
+      toast.error('Failed to export CSV')
+      console.error(err)
+    }
   }
 
   async function handleSave() {
@@ -271,6 +295,13 @@ export default function Expenses() {
             </p>
           </div>
           <div className="flex gap-4">
+            <button
+              type="button"
+              onClick={handleExportCSV}
+              className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm dark:shadow-md hover:bg-slate-50 dark:hover:bg-white/10 transition-all hidden md:block"
+            >
+              ⬇️ Export CSV
+            </button>
             <button
               type="button"
               onClick={() => setShowCatModal(true)}

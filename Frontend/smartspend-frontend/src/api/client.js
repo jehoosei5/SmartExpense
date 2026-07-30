@@ -33,6 +33,9 @@ export const googleLogin = (credential) =>
 export const getExpenses = (filters = {}) =>
   api.get('/expenses', { params: filters })
 
+export const exportExpenses = (filters = {}) =>
+  api.get('/expenses/export', { params: filters, responseType: 'blob' })
+
 export const createExpense = (data) =>
   api.post('/expenses', data)
 
