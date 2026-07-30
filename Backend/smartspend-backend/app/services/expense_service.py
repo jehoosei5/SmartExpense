@@ -33,6 +33,8 @@ def create_expense(db: Session, data: ExpenseCreate, user_id: str):
         payment_method=data.payment_method.value if data.payment_method else None,
         source=data.source.value,
         notes=data.notes,
+        is_recurring=data.is_recurring,
+        recurrence_period=data.recurrence_period.value if data.recurrence_period else None,
         sync_hash=sync_hash
     )
     db.add(expense)
@@ -108,6 +110,10 @@ def update_expense(db: Session, expense_id: str, user_id: str, data: ExpenseUpda
         expense.payment_method = data.payment_method.value
     if data.notes is not None:
         expense.notes = data.notes
+    if data.is_recurring is not None:
+        expense.is_recurring = data.is_recurring
+    if data.recurrence_period is not None:
+        expense.recurrence_period = data.recurrence_period.value if data.recurrence_period else None
 
     db.commit()
     db.refresh(expense)

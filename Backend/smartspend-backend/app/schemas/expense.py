@@ -19,6 +19,12 @@ class Source(str, Enum):
     form    = "form"
     ai_chat = "ai_chat"
 
+class RecurrencePeriod(str, Enum):
+    daily   = "daily"
+    weekly  = "weekly"
+    monthly = "monthly"
+    yearly  = "yearly"
+
 # What the client sends to CREATE an expense
 class ExpenseCreate(BaseModel):
     date:           dt_date
@@ -30,6 +36,8 @@ class ExpenseCreate(BaseModel):
     payment_method: Optional[PaymentMethod] = None
     source:         Source = Source.form
     notes:          Optional[str] = None
+    is_recurring:   bool = False
+    recurrence_period: Optional[RecurrencePeriod] = None
 
 # What the client sends to UPDATE an expense
 # Everything is optional — only send what you want to change
@@ -42,6 +50,8 @@ class ExpenseUpdate(BaseModel):
     details:        Optional[str] = None
     payment_method: Optional[PaymentMethod] = None
     notes:          Optional[str] = None
+    is_recurring:   Optional[bool] = None
+    recurrence_period: Optional[RecurrencePeriod] = None
 
 # What the API returns when reading an expense
 class ExpenseResponse(BaseModel):
@@ -56,6 +66,8 @@ class ExpenseResponse(BaseModel):
     payment_method: Optional[str]
     source:         str
     notes:          Optional[str]
+    is_recurring:   bool
+    recurrence_period: Optional[str]
     created_at:     datetime
 
     class Config:

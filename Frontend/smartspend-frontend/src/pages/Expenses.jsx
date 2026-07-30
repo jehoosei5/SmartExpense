@@ -17,8 +17,12 @@ const EMPTY_FORM = {
   details: '',
   payment_method: '',
   notes: '',
-  source: 'form'
+  source: 'form',
+  is_recurring: false,
+  recurrence_period: ''
 }
+
+const RECURRENCE_PERIODS = ['daily', 'weekly', 'monthly', 'yearly']
 
 export default function Expenses() {
   const navigate = useNavigate()
@@ -128,7 +132,8 @@ export default function Expenses() {
       ...form,
       payment_method: form.payment_method || null,
       details: form.details || null,
-      notes: form.notes || null
+      notes: form.notes || null,
+      recurrence_period: form.is_recurring ? (form.recurrence_period || null) : null
     }
 
     try {
@@ -239,7 +244,9 @@ export default function Expenses() {
       details:        expense.details || '',
       payment_method: expense.payment_method || '',
       notes:          expense.notes || '',
-      source:         expense.source || 'form'
+      source:         expense.source || 'form',
+      is_recurring:   expense.is_recurring || false,
+      recurrence_period: expense.recurrence_period || ''
     })
     setEditingId(expense.id)
     setShowForm(true)
@@ -433,9 +440,16 @@ export default function Expenses() {
                     <tr key={exp.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors duration-200">
                       <td className="px-5 py-4 text-slate-600 dark:text-slate-400 font-medium">{exp.date}</td>
                       <td className="px-5 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold tracking-wide ${typeColors[exp.type]}`}>
-                          {exp.type}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold tracking-wide ${typeColors[exp.type]}`}>
+                            {exp.type}
+                          </span>
+                          {exp.is_recurring && (
+                            <span className="text-cyan-500 dark:text-cyan-400" title={`Recurring: ${exp.recurrence_period}`}>
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-5 py-4 text-slate-700 dark:text-slate-300">{exp.category}</td>
                       <td className="px-5 py-4 font-bold text-emerald-600 dark:text-cyan-400 tracking-tight drop-shadow-sm dark:drop-shadow-md">
@@ -543,16 +557,41 @@ export default function Expenses() {
                 />
               </div>
 
-              <div>
-                <label className={labelClasses}>Payment Method</label>
-                <select
-                  value={form.payment_method}
-                  onChange={e => setForm({...form, payment_method: e.target.value})}
-                  className={inputClasses}
-                >
-                  <option value="" className="bg-white dark:bg-slate-900">Select method</option>
-                  {PAYMENT_METHODS.map(m => <option key={m} value={m} className="bg-white dark:bg-slate-900">{m}</option>)}
-                </select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={labelClasses}>Payment Method</label>
+                  <select
+                    value={form.payment_method}
+                    onChange={e => setForm({...form, payment_method: e.target.value})}
+                    className={inputClasses}
+                  >
+                    <option value="" className="bg-white dark:bg-slate-900">Select method</option>
+                    {PAYMENT_METHODS.map(m => <option key={m} value={m} className="bg-white dark:bg-slate-900">{m}</option>)}
+                  </select>
+                </div>
+                
+                <div className="flex items-center gap-3 pt-6">
+                  <input
+                    type="checkbox"
+                    id="is_recurring"
+                    checked={form.is_recurring}
+                    onChange={e => setForm({...form, is_recurring: e.target.checked})}
+                    className="w-5 h-5 accent-cyan-500 bg-slate-100 dark:bg-slate-900/50 border-slate-200 dark:border-white/10 rounded"
+                  />
+                  <label htmlFor="is_recurring" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    Is Recurring?
+                  </label>
+                  {form.is_recurring && (
+                    <select
+                      value={form.recurrence_period}
+                      onChange={e => setForm({...form, recurrence_period: e.target.value})}
+                      className={`${inputClasses} py-1.5 ml-2 !w-32`}
+                    >
+                      <option value="" className="bg-white dark:bg-slate-900">Period</option>
+                      {RECURRENCE_PERIODS.map(p => <option key={p} value={p} className="bg-white dark:bg-slate-900">{p}</option>)}
+                    </select>
+                  )}
+                </div>
               </div>
 
               <div>

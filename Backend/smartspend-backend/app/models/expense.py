@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Date, Enum, Numeric, Text, DateTime, ForeignKey
+from sqlalchemy import Column, String, Date, Enum, Numeric, Text, DateTime, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import uuid
@@ -18,6 +18,8 @@ class Expense(Base):
     payment_method = Column(Enum("Cash", "MoMo", "Card", "Bank Transfer", name="payment_method_enum"), nullable=True)
     source         = Column(Enum("excel", "form", "ai_chat", name="source_enum"), nullable=False, default="form")
     notes          = Column(Text, nullable=True)
+    is_recurring   = Column(Boolean, nullable=False, default=False)
+    recurrence_period = Column(Enum("daily", "weekly", "monthly", "yearly", name="recurrence_period_enum"), nullable=True)
     sync_hash      = Column(String(64), unique=True, nullable=True)
     created_at     = Column(DateTime, server_default=func.now())
     updated_at     = Column(DateTime, server_default=func.now(), onupdate=func.now())
