@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { uploadCSV, getSyncLogs } from '../api/client'
+import toast from 'react-hot-toast'
 
 export default function Sync() {
   const navigate = useNavigate()
@@ -9,7 +10,6 @@ export default function Sync() {
   const [loading, setLoading]   = useState(true)
   const [uploading, setUploading] = useState(false)
   const [result, setResult]     = useState(null)
-  const [error, setError]       = useState('')
   const [dragOver, setDragOver] = useState(false)
 
   useEffect(() => { loadLogs() }, [])
@@ -31,18 +31,18 @@ export default function Sync() {
   async function handleUpload(file) {
     if (!file) return
     if (!file.name.endsWith('.csv')) {
-      setError('Please upload a CSV file only')
+      toast.error('Please upload a CSV file only')
       return
     }
-    setError('')
     setResult(null)
     setUploading(true)
     try {
       const res = await uploadCSV(file)
       setResult(res.data)
+      toast.success('Sync complete!')
       loadLogs()
     } catch (err) {
-      setError(err.response?.data?.detail || 'Upload failed')
+      toast.error(err.response?.data?.detail || 'Upload failed')
     } finally {
       setUploading(false)
     }
@@ -123,13 +123,6 @@ export default function Sync() {
         {uploading && (
           <div className="bg-emerald-50 dark:bg-cyan-500/10 border border-emerald-200 dark:border-cyan-500/30 rounded-2xl p-6 mb-8 text-center animate-pulse shadow-sm dark:shadow-[0_0_20px_rgba(34,211,238,0.1)]">
             <p className="text-emerald-600 dark:text-cyan-400 text-sm font-bold tracking-widest uppercase">Processing your CSV...</p>
-          </div>
-        )}
-
-        {/* Error */}
-        {error && (
-          <div className="bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 rounded-2xl p-6 mb-8 shadow-sm dark:shadow-[0_0_20px_rgba(244,63,94,0.1)]">
-            <p className="text-rose-600 dark:text-rose-400 text-sm font-bold text-center">{error}</p>
           </div>
         )}
 

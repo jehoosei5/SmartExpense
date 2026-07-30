@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { getExpenses, createExpense, updateExpense, deleteExpense, getCategories, createCategory, deleteCategory, reorderCategories } from '../api/client'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
+import toast from 'react-hot-toast'
 
 const TYPES = ['Expenses', 'Income', 'Savings']
 const PAYMENT_METHODS = ['Cash', 'MoMo', 'Card', 'Bank Transfer']
@@ -92,9 +93,8 @@ export default function Expenses() {
   }
 
   async function handleSave() {
-    setFormError('')
     if (!form.date || !form.type || !form.category || !form.amount) {
-      setFormError('Date, type, category and amount are required')
+      toast.error('Date, type, category and amount are required')
       return
     }
     setSaving(true)
@@ -110,8 +110,10 @@ export default function Expenses() {
     try {
       if (editingId) {
         await updateExpense(editingId, payload)
+        toast.success('Transaction updated!')
       } else {
         await createExpense(payload)
+        toast.success('Transaction added!')
       }
       setShowForm(false)
       setForm(EMPTY_FORM)
@@ -121,7 +123,7 @@ export default function Expenses() {
       const detail = err.response?.data?.detail;
       const errorMsg = typeof detail === 'string' ? detail : 
                        (Array.isArray(detail) ? detail.map(d => d.msg).join(', ') : 'Failed to save');
-      setFormError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setSaving(false)
     }
@@ -131,28 +133,30 @@ export default function Expenses() {
     try {
       await deleteExpense(id)
       setDeletingId(null)
+      toast.success('Transaction deleted!')
       loadExpenses()
     } catch (err) {
+      toast.error('Failed to delete transaction')
       console.error(err)
     }
   }
 
   async function handleAddCategory() {
-    setCatError('')
     if (!newCatName.trim()) {
-      setCatError('Category name is required')
+      toast.error('Category name is required')
       return
     }
     setCatSaving(true)
     try {
       await createCategory(newCatName, newCatType)
       setNewCatName('')
+      toast.success('Category added!')
       loadCategories()
     } catch (err) {
       const detail = err.response?.data?.detail;
       const errorMsg = typeof detail === 'string' ? detail : 
                        (Array.isArray(detail) ? detail.map(d => d.msg).join(', ') : 'Failed to add category');
-      setCatError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setCatSaving(false)
     }
@@ -161,8 +165,10 @@ export default function Expenses() {
   async function handleDeleteCategory(id) {
     try {
       await deleteCategory(id)
+      toast.success('Category deleted!')
       loadCategories()
     } catch (err) {
+      toast.error('Failed to delete category')
       console.error(err)
     }
   }
@@ -191,7 +197,12 @@ export default function Expenses() {
 
     // Save to backend
     const payload = updatedTypeCats.map(c => ({ id: c.id, position: c.position }))
-    reorderCategories(payload).catch(err => console.error('Failed to save category order', err))
+    reorderCategories(payload)
+      .then(() => toast.success('Category order saved'))
+      .catch(err => {
+        toast.error('Failed to save category order')
+        console.error(err)
+      })
   }
 
   function handleEdit(expense) {
@@ -537,7 +548,7 @@ export default function Expenses() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setShowForm(false); setFormError('') }}
+                  onClick={() => setShowForm(false)}
                   className="flex-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 py-3 rounded-xl text-sm font-bold hover:bg-slate-200 dark:hover:bg-white/10 transition-all"
                 >
                   Cancel

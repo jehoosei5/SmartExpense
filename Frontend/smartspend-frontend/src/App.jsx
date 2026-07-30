@@ -7,6 +7,7 @@ import Sync from './pages/Sync'
 import Profile from './pages/Profile'
 import Budgets from './pages/Budgets'
 import { ThemeProvider } from './contexts/ThemeContext'
+import { Toaster } from 'react-hot-toast'
 
 // Protected route — redirects to login if no token
 function PrivateRoute({ children }) {
@@ -17,6 +18,7 @@ function PrivateRoute({ children }) {
 function App() {
   return (
     <ThemeProvider>
+      <Toaster position="top-right" toastOptions={{ duration: 4000, style: { background: '#1e293b', color: '#fff' } }} />
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />

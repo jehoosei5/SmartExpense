@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { GoogleLogin } from '@react-oauth/google'
 import { login, register, googleLogin } from '../api/client'
+import toast from 'react-hot-toast'
 
 function validateEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -63,7 +64,6 @@ export default function Login() {
   const [password, setPassword]       = useState('')
   const [displayName, setDisplayName] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError]             = useState('')
   const [loading, setLoading]         = useState(false)
   const [touched, setTouched]         = useState({ email: false, password: false })
 
@@ -71,14 +71,12 @@ export default function Login() {
   const passwordChecks = validatePassword(password)
   const passwordValid  = Object.values(passwordChecks).every(Boolean)
   const emailError     = touched.email && email && !emailValid ? 'Please enter a valid email address' : ''
-  const isGoogleError  = error.includes('Google')
 
   async function handleSubmit() {
     setTouched({ email: true, password: true })
-    if (!email || !password) { setError('Please fill in all fields'); return }
-    if (!emailValid) { setError('Please enter a valid email address'); return }
-    if (isRegister && !passwordValid) { setError('Password does not meet all requirements'); return }
-    setError('')
+    if (!email || !password) { toast.error('Please fill in all fields'); return }
+    if (!emailValid) { toast.error('Please enter a valid email address'); return }
+    if (isRegister && !passwordValid) { toast.error('Password does not meet all requirements'); return }
     setLoading(true)
     try {
       if (isRegister) {
@@ -87,30 +85,31 @@ export default function Login() {
         setEmail('')
         setPassword('')
         setTouched({ email: false, password: false })
-        setError('Account created! Please login.')
+        toast.success('Account created! Please login.')
       } else {
         const res = await login(email, password)
         localStorage.setItem('access_token', res.data.access_token)
         localStorage.setItem('refresh_token', res.data.refresh_token)
+        toast.success('Logged in successfully')
         navigate('/')
       }
     } catch (err) {
-      setError(err.response?.data?.detail || 'Something went wrong')
+      toast.error(err.response?.data?.detail || 'Something went wrong')
     } finally {
       setLoading(false)
     }
   }
 
   async function handleGoogleLogin(credentialResponse) {
-    setError('')
     setLoading(true)
     try {
       const res = await googleLogin(credentialResponse.credential)
       localStorage.setItem('access_token', res.data.access_token)
       localStorage.setItem('refresh_token', res.data.refresh_token)
+      toast.success('Logged in successfully')
       navigate('/')
     } catch (err) {
-      setError(err.response?.data?.detail || 'Google login failed')
+      toast.error(err.response?.data?.detail || 'Google login failed')
     } finally {
       setLoading(false)
     }
@@ -140,7 +139,7 @@ export default function Login() {
         <div className="flex bg-slate-100 dark:bg-white/5 backdrop-blur-md rounded-xl p-1.5 mb-8 border border-slate-200 dark:border-white/5">
           <button
             type="button"
-            onClick={() => { setIsRegister(false); setError(''); setTouched({ email: false, password: false }) }}
+            onClick={() => { setIsRegister(false); setTouched({ email: false, password: false }) }}
             className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 cursor-pointer ${
               !isRegister ? 'bg-white dark:bg-cyan-500/20 text-emerald-600 dark:text-cyan-400 shadow-sm dark:shadow-[0_0_15px_rgba(34,211,238,0.2)] border border-slate-200 dark:border-cyan-500/30' : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-300'
             }`}
@@ -149,7 +148,7 @@ export default function Login() {
           </button>
           <button
             type="button"
-            onClick={() => { setIsRegister(true); setError(''); setTouched({ email: false, password: false }) }}
+            onClick={() => { setIsRegister(true); setTouched({ email: false, password: false }) }}
             className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 cursor-pointer ${
               isRegister ? 'bg-white dark:bg-fuchsia-500/20 text-rose-600 dark:text-fuchsia-400 shadow-sm dark:shadow-[0_0_15px_rgba(217,70,239,0.2)] border border-slate-200 dark:border-fuchsia-500/30' : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-300'
             }`}
@@ -216,25 +215,6 @@ export default function Login() {
             {isRegister && <PasswordStrength password={password} />}
           </div>
 
-          {/* Error message */}
-          {error && (
-            <div className="bg-slate-100 dark:bg-black/30 border border-slate-200 dark:border-white/5 rounded-xl p-3">
-              <p className={`text-sm font-medium text-center ${error.includes('created') ? 'text-emerald-600 dark:text-emerald-400 drop-shadow-sm dark:drop-shadow-[0_0_5px_rgba(16,185,129,0.5)]' : 'text-rose-600 dark:text-rose-400'}`}>
-                {error}
-              </p>
-              {isGoogleError && (
-                <div className="mt-4 flex justify-center">
-                  <GoogleLogin
-                    onSuccess={handleGoogleLogin}
-                    onError={() => setError('Google login failed')}
-                    width="100%"
-                    shape="pill"
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
           <button
             type="button"
             onClick={handleSubmit}
@@ -255,7 +235,7 @@ export default function Login() {
           <div className="flex justify-center opacity-90 hover:opacity-100 transition-opacity [&_iframe]:!bg-transparent dark:[&_iframe]:!bg-transparent">
             <GoogleLogin
               onSuccess={handleGoogleLogin}
-              onError={() => setError('Google login failed')}
+              onError={() => toast.error('Google login failed')}
               shape="pill"
             />
           </div>
