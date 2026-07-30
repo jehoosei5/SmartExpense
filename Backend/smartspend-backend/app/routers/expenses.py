@@ -18,7 +18,8 @@ from app.services.expense_service import (
     create_expense,
     get_expenses,
     update_expense,
-    delete_expense
+    delete_expense,
+    process_recurring_expenses
 )
 
 router = APIRouter(prefix="/expenses", tags=["Expenses"])
@@ -142,3 +143,11 @@ def delete(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=error
         )
+
+@router.post("/process-recurring")
+def trigger_recurring_process(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    created_count = process_recurring_expenses(db, current_user.id)
+    return {"message": "Recurring expenses processed successfully", "created_count": created_count}

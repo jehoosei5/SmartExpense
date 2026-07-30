@@ -5,6 +5,8 @@ from app.schemas.expense import ExpenseCreate, ExpenseUpdate
 from app.utils.hashing import generate_sync_hash
 from typing import Optional
 from datetime import date
+from dateutil.relativedelta import relativedelta
+from sqlalchemy import func
 
 def create_expense(db: Session, data: ExpenseCreate, user_id: str):
     # Generate sync hash for duplicate prevention
@@ -132,3 +134,86 @@ def delete_expense(db: Session, expense_id: str, user_id: str):
     db.delete(expense)
     db.commit()
     return True, None
+
+
+def process_recurring_expenses(db: Session, user_id: str):
+    rows = db.query(
+        Expense.type,
+        Expense.category,
+        Expense.amount,
+        Expense.currency,
+        Expense.details,
+        Expense.payment_method,
+        Expense.recurrence_period,
+        func.max(Expense.date).label("latest_date")
+    ).filter(
+        Expense.user_id == user_id,
+        Expense.is_recurring == True,
+        Expense.recurrence_period.isnot(None)
+    ).group_by(
+        Expense.type,
+        Expense.category,
+        Expense.amount,
+        Expense.currency,
+        Expense.details,
+        Expense.payment_method,
+        Expense.recurrence_period
+    ).all()
+
+    today = date.today()
+    created_count = 0
+
+    for row in rows:
+        latest_date = row.latest_date
+        period = row.recurrence_period
+        
+        while True:
+            if period == 'daily':
+                next_date = latest_date + relativedelta(days=1)
+            elif period == 'weekly':
+                next_date = latest_date + relativedelta(weeks=1)
+            elif period == 'monthly':
+                next_date = latest_date + relativedelta(months=1)
+            elif period == 'yearly':
+                next_date = latest_date + relativedelta(years=1)
+            else:
+                break
+                
+            if next_date > today:
+                break
+                
+            sync_hash = generate_sync_hash(
+                user_id=user_id,
+                date=str(next_date),
+                type=row.type,
+                category=row.category,
+                amount=str(row.amount),
+                details=row.details or ""
+            )
+            
+            existing = db.query(Expense).filter(Expense.sync_hash == sync_hash).first()
+            if not existing:
+                new_exp = Expense(
+                    user_id=user_id,
+                    date=next_date,
+                    type=row.type,
+                    category=row.category,
+                    amount=row.amount,
+                    currency=row.currency,
+                    details=row.details,
+                    payment_method=row.payment_method,
+                    source='form',
+                    notes="Auto-generated recurring expense",
+                    is_recurring=True,
+                    recurrence_period=period,
+                    sync_hash=sync_hash
+                )
+                db.add(new_exp)
+                created_count += 1
+                
+            latest_date = next_date
+
+    if created_count > 0:
+        db.commit()
+        
+    return created_count

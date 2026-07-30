@@ -45,6 +45,9 @@ export const updateExpense = (id, data) =>
 export const deleteExpense = (id) =>
   api.delete(`/expenses/${id}`)
 
+export const processRecurring = () =>
+  api.post('/expenses/process-recurring')
+
 // ── Categories ────────────────────────────────────────────────────────────
 export const getCategories = (type = null) =>
   api.get('/categories', { params: type ? { type } : {} })

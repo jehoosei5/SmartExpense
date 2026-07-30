@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
-import { getExpenses, createExpense, updateExpense, deleteExpense, getCategories, createCategory, deleteCategory, reorderCategories, exportExpenses } from '../api/client'
+import { getExpenses, createExpense, updateExpense, deleteExpense, getCategories, createCategory, deleteCategory, reorderCategories, exportExpenses, processRecurring } from '../api/client'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import toast from 'react-hot-toast'
 
@@ -60,6 +60,7 @@ export default function Expenses() {
 
   async function loadAll() {
     try {
+      try { await processRecurring() } catch (e) { console.error('Failed to process recurring expenses:', e) }
       const [exp, cat] = await Promise.all([
         getExpenses(),
         getCategories()
