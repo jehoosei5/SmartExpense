@@ -113,10 +113,8 @@ function BreakdownGroup({ type, items, headerColorClass, headerBgClass, rowColor
       <div className={`px-3 py-1.5 font-bold text-sm uppercase tracking-widest text-white rounded-t-lg ${headerBgClass}`}>
         {type}
       </div>
-      <style>{`.hide-scroll::-webkit-scrollbar { display: none; }`}</style>
       <div 
-        className="bg-white/[0.02] border border-white/5 rounded-b-lg overflow-x-auto hide-scroll"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        className="bg-white/[0.02] border border-white/5 rounded-b-lg overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
       >
         <table className="w-full text-left text-xs">
           <thead>
