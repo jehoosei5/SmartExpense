@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import extract
+from sqlalchemy import extract, or_
 from app.models.expense import Expense
 from app.schemas.expense import ExpenseCreate, ExpenseUpdate
 from app.utils.hashing import generate_sync_hash
@@ -51,6 +51,7 @@ def get_expenses(
     year: Optional[int] = None,
     start_date: Optional[date] = None,
     end_date: Optional[date] = None,
+    search: Optional[str] = None,
 ):
     query = db.query(Expense).filter(Expense.user_id == user_id)
 
@@ -69,6 +70,13 @@ def get_expenses(
         query = query.filter(Expense.date >= start_date)
     if end_date:
         query = query.filter(Expense.date <= end_date)
+    if search:
+        search_pattern = f"%{search}%"
+        query = query.filter(or_(
+            Expense.category.ilike(search_pattern),
+            Expense.details.ilike(search_pattern),
+            Expense.notes.ilike(search_pattern)
+        ))
 
     expenses = query.order_by(Expense.date.desc()).all()
     return expenses

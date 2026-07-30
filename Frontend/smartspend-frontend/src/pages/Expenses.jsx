@@ -30,8 +30,9 @@ export default function Expenses() {
   // Filters
   const [filterType, setFilterType]       = useState('')
   const [filterCategory, setFilterCategory] = useState('')
-  const [filterMonth, setFilterMonth]     = useState('')
-  const [filterYear, setFilterYear]       = useState('')
+  const [filterMonth, setFilterMonth]       = useState('')
+  const [filterYear, setFilterYear]         = useState('')
+  const [filterSearch, setFilterSearch]     = useState('')
 
   // Form
   const [showForm, setShowForm]   = useState(false)
@@ -85,6 +86,7 @@ export default function Expenses() {
     if (filterCategory) filters.category = filterCategory
     if (filterMonth)    filters.month    = filterMonth
     if (filterYear)     filters.year     = filterYear
+    if (filterSearch)   filters.search   = filterSearch
     const res = await getExpenses(filters)
     setExpenses(res.data.expenses || res.data)
   }
@@ -298,7 +300,7 @@ export default function Expenses() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white dark:bg-white/[0.02] backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-4 md:p-5 mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 shadow-md dark:shadow-xl">
+        <div className="bg-white dark:bg-white/[0.02] backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-4 md:p-5 mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 shadow-md dark:shadow-xl">
           <select value={filterType} onChange={e => setFilterType(e.target.value)} className={inputClasses}>
             <option value="" className="bg-white dark:bg-slate-900">All Types</option>
             {TYPES.map(t => <option key={t} value={t} className="bg-white dark:bg-slate-900">{t}</option>)}
@@ -342,6 +344,16 @@ export default function Expenses() {
             placeholder="Year e.g. 2026"
             value={filterYear}
             onChange={e => setFilterYear(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && loadExpenses()}
+            className={inputClasses}
+          />
+
+          <input
+            type="text"
+            placeholder="Search keywords..."
+            value={filterSearch}
+            onChange={e => setFilterSearch(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && loadExpenses()}
             className={inputClasses}
           />
 

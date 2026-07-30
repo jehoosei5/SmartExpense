@@ -41,6 +41,7 @@ def list_expenses(
     year:       Optional[int]  = Query(None),
     start_date: Optional[date] = Query(None),
     end_date:   Optional[date] = Query(None),
+    search:     Optional[str]  = Query(None),
     db:         Session        = Depends(get_db),
     current_user: User         = Depends(get_current_user)
 ):
@@ -53,7 +54,8 @@ def list_expenses(
         month=month,
         year=year,
         start_date=start_date,
-        end_date=end_date
+        end_date=end_date,
+        search=search
     )
     return ExpenseListResponse(total=len(expenses), expenses=expenses)
 

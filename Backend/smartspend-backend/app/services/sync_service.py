@@ -22,6 +22,13 @@ COLUMN_MAP = {
 VALID_TYPES      = {"Expenses", "Income", "Savings"}
 VALID_PAYMENTS   = {"Cash", "MoMo", "Card", "Bank Transfer", None}
 
+def clean_str(val):
+    if pd.isna(val):
+        return None
+    val_str = str(val).strip()
+    if val_str.lower() == "nan" or val_str == "":
+        return None
+    return val_str
 
 def process_sync(db: Session, file_bytes: bytes, user_id: str):
     inserted  = 0
@@ -71,9 +78,9 @@ def process_sync(db: Session, file_bytes: bytes, user_id: str):
             type_val = str(row["Type "]).strip()
             category = str(row["Category"]).strip()
             amount   = float(row["Amount"])
-            details  = str(row.get("Details", "")).strip() or None
-            payment  = str(row.get("Payment Method", "")).strip() or None
-            notes    = str(row.get("Notes", "")).strip() or None
+            details  = clean_str(row.get("Details"))
+            payment  = clean_str(row.get("Payment Method"))
+            notes    = clean_str(row.get("Notes"))
 
             # Validate type
             if type_val not in VALID_TYPES:
