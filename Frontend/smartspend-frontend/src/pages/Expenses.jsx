@@ -212,9 +212,9 @@ export default function Expenses() {
   const filterBarCategories = categories.filter(c => !filterType || c.type === filterType)
 
   const typeColors = {
-    Expenses: 'bg-rose-500/20 text-rose-400 border border-rose-500/30',
-    Income:   'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
-    Savings:  'bg-fuchsia-500/20 text-fuchsia-400 border border-fuchsia-500/30'
+    Expenses: 'bg-rose-100 text-rose-600 border border-rose-200 dark:bg-rose-500/20 dark:text-rose-400 dark:border-rose-500/30',
+    Income:   'bg-emerald-100 text-emerald-600 border border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30',
+    Savings:  'bg-fuchsia-100 text-fuchsia-600 border border-fuchsia-200 dark:bg-fuchsia-500/20 dark:text-fuchsia-400 dark:border-fuchsia-500/30'
   }
 
   const months = [
@@ -226,8 +226,8 @@ export default function Expenses() {
     { value: '11', label: 'November'},{ value: '12', label: 'December' }
   ]
 
-  const inputClasses = "w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all"
-  const labelClasses = "block text-xs font-semibold tracking-wider text-slate-400 mb-1.5 uppercase"
+  const inputClasses = "w-full bg-white dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all shadow-sm dark:shadow-none"
+  const labelClasses = "block text-xs font-semibold tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 uppercase"
 
   // Summary Stats Calculations
   const todayFormatted = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -241,19 +241,19 @@ export default function Expenses() {
   })
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#0a0f1c] to-indigo-950 text-slate-100 font-sans selection:bg-cyan-500/30 relative overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-gradient-to-br dark:from-slate-950 dark:via-[#0a0f1c] dark:to-indigo-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-cyan-500/30 relative overflow-x-hidden transition-colors duration-200">
       <Navbar />
 
-      <div className="absolute top-20 left-10 w-64 h-64 md:w-96 md:h-96 bg-cyan-500/10 rounded-full blur-[80px] md:blur-[100px] -z-10 pointer-events-none" />
-      <div className="absolute bottom-20 right-10 w-64 h-64 md:w-96 md:h-96 bg-fuchsia-500/10 rounded-full blur-[80px] md:blur-[120px] -z-10 pointer-events-none" />
+      <div className="absolute top-20 left-10 w-64 h-64 md:w-96 md:h-96 bg-cyan-500/5 dark:bg-cyan-500/10 rounded-full blur-[80px] md:blur-[100px] -z-10 pointer-events-none" />
+      <div className="absolute bottom-20 right-10 w-64 h-64 md:w-96 md:h-96 bg-fuchsia-500/5 dark:bg-fuchsia-500/10 rounded-full blur-[80px] md:blur-[120px] -z-10 pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 py-6 md:px-6 md:py-10 relative z-10">
 
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white drop-shadow-lg">Transactions</h1>
-            <p className="text-cyan-400 text-sm mt-1 md:mt-2 font-semibold tracking-wide drop-shadow-md">
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow-lg">Transactions</h1>
+            <p className="text-emerald-600 dark:text-cyan-400 text-sm mt-1 md:mt-2 font-semibold tracking-wide drop-shadow-sm dark:drop-shadow-md">
               {expenses.length} records found
             </p>
           </div>
@@ -261,14 +261,14 @@ export default function Expenses() {
             <button
               type="button"
               onClick={() => setShowCatModal(true)}
-              className="bg-white/5 border border-white/10 text-slate-300 px-5 py-2.5 rounded-xl text-sm font-bold shadow-md hover:bg-white/10 hover:shadow-lg transition-all"
+              className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm dark:shadow-md hover:bg-slate-50 dark:hover:bg-white/10 transition-all"
             >
               ⚙️ Manage Categories
             </button>
             <button
               type="button"
               onClick={() => { setShowForm(true); setEditingId(null); setForm(EMPTY_FORM) }}
-              className="bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 px-5 py-2.5 rounded-xl text-sm font-bold shadow-[0_0_15px_rgba(34,211,238,0.2)] hover:bg-cyan-500/30 hover:shadow-[0_0_20px_rgba(34,211,238,0.4)] transition-all"
+              className="bg-emerald-600 dark:bg-cyan-500/20 border border-emerald-600 dark:border-cyan-500/30 text-white dark:text-cyan-400 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm dark:shadow-[0_0_15px_rgba(34,211,238,0.2)] hover:bg-emerald-700 dark:hover:bg-cyan-500/30 transition-all"
             >
               + Add Transaction
             </button>
@@ -277,31 +277,31 @@ export default function Expenses() {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-lg flex flex-col items-center justify-center text-center">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Date of Today</p>
-            <p className="text-xl md:text-2xl font-bold text-white">{todayFormatted}</p>
+          <div className="bg-white dark:bg-white/[0.02] backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-sm dark:shadow-lg flex flex-col items-center justify-center text-center">
+            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Date of Today</p>
+            <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">{todayFormatted}</p>
           </div>
-          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-lg flex flex-col items-center justify-center text-center">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Date of Last Record</p>
-            <p className="text-xl md:text-2xl font-bold text-white">{lastRecordDate}</p>
+          <div className="bg-white dark:bg-white/[0.02] backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-sm dark:shadow-lg flex flex-col items-center justify-center text-center">
+            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Date of Last Record</p>
+            <p className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">{lastRecordDate}</p>
           </div>
-          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-lg flex flex-col items-center justify-center text-center">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">No. of Records</p>
-            <p className="text-xl md:text-2xl font-bold text-cyan-400">{expenses.length}</p>
+          <div className="bg-white dark:bg-white/[0.02] backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-sm dark:shadow-lg flex flex-col items-center justify-center text-center">
+            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">No. of Records</p>
+            <p className="text-xl md:text-2xl font-bold text-emerald-600 dark:text-cyan-400">{expenses.length}</p>
           </div>
-          <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-lg flex flex-col items-center justify-center text-center">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Total Tracking Balance</p>
-            <p className={`text-xl md:text-2xl font-bold ${totalTrackingBalance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+          <div className="bg-white dark:bg-white/[0.02] backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-sm dark:shadow-lg flex flex-col items-center justify-center text-center">
+            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Total Tracking Balance</p>
+            <p className={`text-xl md:text-2xl font-bold ${totalTrackingBalance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
               GH₵{totalTrackingBalance.toLocaleString('en-GH', { minimumFractionDigits: 2 })}
             </p>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-4 md:p-5 mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 shadow-xl">
+        <div className="bg-white dark:bg-white/[0.02] backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-4 md:p-5 mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 shadow-md dark:shadow-xl">
           <select value={filterType} onChange={e => setFilterType(e.target.value)} className={inputClasses}>
-            <option value="" className="bg-slate-900">All Types</option>
-            {TYPES.map(t => <option key={t} value={t} className="bg-slate-900">{t}</option>)}
+            <option value="" className="bg-white dark:bg-slate-900">All Types</option>
+            {TYPES.map(t => <option key={t} value={t} className="bg-white dark:bg-slate-900">{t}</option>)}
           </select>
 
           <select 
@@ -310,11 +310,11 @@ export default function Expenses() {
             className={inputClasses}
             disabled={filterBarCategories.length === 0}
           >
-            <option value="" className="bg-slate-900">All Categories</option>
+            <option value="" className="bg-white dark:bg-slate-900">All Categories</option>
             {filterType ? (
               // If a type is selected, just show the categories normally
               filterBarCategories.map(c => (
-                <option key={c.id} value={c.name} className="bg-slate-900">{c.name}</option>
+                <option key={c.id} value={c.name} className="bg-white dark:bg-slate-900">{c.name}</option>
               ))
             ) : (
               // If no type is selected, group them by type
@@ -322,9 +322,9 @@ export default function Expenses() {
                 const typeCategories = filterBarCategories.filter(c => c.type === type);
                 if (typeCategories.length === 0) return null;
                 return (
-                  <optgroup key={type} label={type} className="bg-slate-800 text-cyan-400 font-bold uppercase tracking-wider text-xs">
+                  <optgroup key={type} label={type} className="bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-cyan-400 font-bold uppercase tracking-wider text-xs">
                     {typeCategories.map(c => (
-                      <option key={c.id} value={c.name} className="bg-slate-900 text-white font-normal normal-case tracking-normal text-sm">{c.name}</option>
+                      <option key={c.id} value={c.name} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-normal normal-case tracking-normal text-sm">{c.name}</option>
                     ))}
                   </optgroup>
                 );
@@ -333,8 +333,8 @@ export default function Expenses() {
           </select>
 
           <select value={filterMonth} onChange={e => setFilterMonth(e.target.value)} className={inputClasses}>
-            <option value="" className="bg-slate-900">All Months</option>
-            {months.map(m => <option key={m.value} value={m.value} className="bg-slate-900">{m.label}</option>)}
+            <option value="" className="bg-white dark:bg-slate-900">All Months</option>
+            {months.map(m => <option key={m.value} value={m.value} className="bg-white dark:bg-slate-900">{m.label}</option>)}
           </select>
 
           <input
@@ -348,14 +348,14 @@ export default function Expenses() {
           <button
             type="button"
             onClick={loadExpenses}
-            className="bg-fuchsia-500/20 border border-fuchsia-500/30 text-fuchsia-400 rounded-xl px-4 py-2 text-sm font-bold shadow-[0_0_15px_rgba(217,70,239,0.2)] hover:bg-fuchsia-500/30 transition-all"
+            className="bg-slate-900 dark:bg-fuchsia-500/20 border border-slate-900 dark:border-fuchsia-500/30 text-white dark:text-fuchsia-400 rounded-xl px-4 py-2 text-sm font-bold shadow-md dark:shadow-[0_0_15px_rgba(217,70,239,0.2)] hover:bg-slate-800 dark:hover:bg-fuchsia-500/30 transition-all"
           >
             Apply Filters
           </button>
         </div>
 
         {/* Table */}
-        <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
+        <div className="bg-white dark:bg-white/[0.02] backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-md dark:shadow-2xl">
           {loading ? (
             <div className="p-12 text-center text-slate-500 flex justify-center">
               <div className="w-8 h-8 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin" />
@@ -365,32 +365,32 @@ export default function Expenses() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-white/5 border-b border-white/10">
+                <thead className="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10">
                   <tr>
                     {['Date','Type','Category','Amount','Details','Payment','Source',''].map(h => (
-                      <th key={h} className="text-left px-5 py-4 text-xs font-bold text-slate-300 uppercase tracking-widest">
+                      <th key={h} className="text-left px-5 py-4 text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-widest">
                         {h}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                   {expenses.map(exp => (
-                    <tr key={exp.id} className="hover:bg-white/[0.04] transition-colors duration-200">
-                      <td className="px-5 py-4 text-slate-400 font-medium">{exp.date}</td>
+                    <tr key={exp.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors duration-200">
+                      <td className="px-5 py-4 text-slate-600 dark:text-slate-400 font-medium">{exp.date}</td>
                       <td className="px-5 py-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-bold tracking-wide ${typeColors[exp.type]}`}>
                           {exp.type}
                         </span>
                       </td>
-                      <td className="px-5 py-4 text-slate-300">{exp.category}</td>
-                      <td className="px-5 py-4 font-bold text-cyan-400 tracking-tight drop-shadow-md">
+                      <td className="px-5 py-4 text-slate-700 dark:text-slate-300">{exp.category}</td>
+                      <td className="px-5 py-4 font-bold text-emerald-600 dark:text-cyan-400 tracking-tight drop-shadow-sm dark:drop-shadow-md">
                         GH₵{Number(exp.amount).toLocaleString('en-GH', { minimumFractionDigits: 2 })}
                       </td>
                       <td className="px-5 py-4 text-slate-500">{exp.details || '—'}</td>
                       <td className="px-5 py-4 text-slate-500">{exp.payment_method || '—'}</td>
                       <td className="px-5 py-4">
-                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-white/5 border border-white/10 text-slate-400">
+                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400">
                           {exp.source}
                         </span>
                       </td>
@@ -399,14 +399,14 @@ export default function Expenses() {
                           <button
                             type="button"
                             onClick={() => handleEdit(exp)}
-                            className="text-cyan-400 hover:text-cyan-300 text-xs font-bold uppercase tracking-wider transition-colors"
+                            className="text-emerald-600 dark:text-cyan-400 hover:text-emerald-700 dark:hover:text-cyan-300 text-xs font-bold uppercase tracking-wider transition-colors"
                           >
                             Edit
                           </button>
                           <button
                             type="button"
                             onClick={() => setDeletingId(exp.id)}
-                            className="text-rose-400 hover:text-rose-300 text-xs font-bold uppercase tracking-wider transition-colors"
+                            className="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 text-xs font-bold uppercase tracking-wider transition-colors"
                           >
                             Delete
                           </button>
@@ -423,9 +423,9 @@ export default function Expenses() {
 
       {/* Add/Edit Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-          <div className="bg-slate-900 border border-white/10 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.5)] p-5 md:p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto relative">
-            <h2 className="text-2xl font-bold text-white mb-6 tracking-tight">
+        <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-xl dark:shadow-[0_0_40px_rgba(0,0,0,0.5)] p-5 md:p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto relative">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 tracking-tight">
               {editingId ? 'Edit Transaction' : 'Add Transaction'}
             </h2>
 
@@ -447,7 +447,7 @@ export default function Expenses() {
                     onChange={e => setForm({...form, type: e.target.value, category: ''})}
                     className={inputClasses}
                   >
-                    {TYPES.map(t => <option key={t} value={t} className="bg-slate-900">{t}</option>)}
+                    {TYPES.map(t => <option key={t} value={t} className="bg-white dark:bg-slate-900">{t}</option>)}
                   </select>
                 </div>
               </div>
@@ -460,9 +460,9 @@ export default function Expenses() {
                     onChange={e => setForm({...form, category: e.target.value})}
                     className={inputClasses}
                   >
-                    <option value="" className="bg-slate-900">Select category</option>
+                    <option value="" className="bg-white dark:bg-slate-900">Select category</option>
                     {filteredCategories.map(c => (
-                      <option key={c.id} value={c.name} className="bg-slate-900">{c.name}</option>
+                      <option key={c.id} value={c.name} className="bg-white dark:bg-slate-900">{c.name}</option>
                     ))}
                   </select>
                 </div>
@@ -496,8 +496,8 @@ export default function Expenses() {
                   onChange={e => setForm({...form, payment_method: e.target.value})}
                   className={inputClasses}
                 >
-                  <option value="" className="bg-slate-900">Select method</option>
-                  {PAYMENT_METHODS.map(m => <option key={m} value={m} className="bg-slate-900">{m}</option>)}
+                  <option value="" className="bg-white dark:bg-slate-900">Select method</option>
+                  {PAYMENT_METHODS.map(m => <option key={m} value={m} className="bg-white dark:bg-slate-900">{m}</option>)}
                 </select>
               </div>
 
@@ -519,14 +519,14 @@ export default function Expenses() {
                   type="button"
                   onClick={handleSave}
                   disabled={saving}
-                  className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 text-white py-3 rounded-xl text-sm font-bold shadow-[0_0_15px_rgba(34,211,238,0.3)] hover:shadow-[0_0_20px_rgba(34,211,238,0.5)] transition-all disabled:opacity-50"
+                  className="flex-1 bg-emerald-600 dark:bg-gradient-to-r dark:from-cyan-600 dark:to-blue-600 text-white py-3 rounded-xl text-sm font-bold shadow-md dark:shadow-[0_0_15px_rgba(34,211,238,0.3)] hover:bg-emerald-700 dark:hover:shadow-[0_0_20px_rgba(34,211,238,0.5)] transition-all disabled:opacity-50"
                 >
                   {saving ? 'Processing...' : editingId ? 'Update' : 'Save'}
                 </button>
                 <button
                   type="button"
                   onClick={() => { setShowForm(false); setFormError('') }}
-                  className="flex-1 bg-white/5 border border-white/10 text-slate-300 py-3 rounded-xl text-sm font-bold hover:bg-white/10 transition-all"
+                  className="flex-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 py-3 rounded-xl text-sm font-bold hover:bg-slate-200 dark:hover:bg-white/10 transition-all"
                 >
                   Cancel
                 </button>
@@ -538,10 +538,10 @@ export default function Expenses() {
 
       {/* Delete Confirmation Modal */}
       {deletingId && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-          <div className="bg-slate-900 border border-rose-500/30 rounded-3xl shadow-[0_0_40px_rgba(244,63,94,0.3)] p-6 md:p-8 w-full max-w-sm text-center">
-            <h2 className="text-xl font-bold text-white mb-2">Delete Transaction?</h2>
-            <p className="text-slate-400 text-sm mb-8">This action cannot be undone.</p>
+        <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-500/30 rounded-3xl shadow-xl dark:shadow-[0_0_40px_rgba(244,63,94,0.3)] p-6 md:p-8 w-full max-w-sm text-center">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Delete Transaction?</h2>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mb-8">This action cannot be undone.</p>
             <div className="flex gap-4">
               <button
                 type="button"
@@ -553,7 +553,7 @@ export default function Expenses() {
               <button
                 type="button"
                 onClick={() => setDeletingId(null)}
-                className="flex-1 bg-white/5 border border-white/10 text-slate-300 py-3 rounded-xl text-sm font-bold hover:bg-white/10 transition-all"
+                className="flex-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 py-3 rounded-xl text-sm font-bold hover:bg-slate-200 dark:hover:bg-white/10 transition-all"
               >
                 Cancel
               </button>
@@ -564,23 +564,23 @@ export default function Expenses() {
 
       {/* Manage Categories Modal */}
       {showCatModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
-          <div className="bg-slate-900 border border-white/10 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.5)] p-4 md:p-8 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col relative">
+        <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-xl dark:shadow-[0_0_40px_rgba(0,0,0,0.5)] p-4 md:p-8 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col relative">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-white tracking-tight">Manage Categories</h2>
-              <button onClick={() => setShowCatModal(false)} className="text-slate-400 hover:text-white transition-colors">
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Manage Categories</h2>
+              <button onClick={() => setShowCatModal(false)} className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
               </button>
             </div>
 
             {/* Add Category Form */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-6 shrink-0">
-              <h3 className="text-sm font-bold tracking-wider uppercase text-slate-300 mb-3">Add Custom Category</h3>
+            <div className="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-4 mb-6 shrink-0">
+              <h3 className="text-sm font-bold tracking-wider uppercase text-slate-500 dark:text-slate-300 mb-3">Add Custom Category</h3>
               <div className="flex flex-col md:flex-row gap-4 md:items-end">
                 <div className="flex-1">
                   <label className={labelClasses}>Type</label>
                   <select value={newCatType} onChange={e => setNewCatType(e.target.value)} className={inputClasses}>
-                    {TYPES.map(t => <option key={t} value={t} className="bg-slate-900">{t}</option>)}
+                    {TYPES.map(t => <option key={t} value={t} className="bg-white dark:bg-slate-900">{t}</option>)}
                   </select>
                 </div>
                 <div className="flex-[2]">
@@ -627,14 +627,14 @@ export default function Expenses() {
                                   <div
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
-                                    className="bg-black/30 border border-white/5 rounded-xl px-4 py-3 flex justify-between items-center group"
+                                    className="bg-white dark:bg-black/30 border border-slate-200 dark:border-white/5 rounded-xl px-4 py-3 flex justify-between items-center group shadow-sm dark:shadow-none"
                                   >
                                     <div className="flex items-center gap-3">
-                                      <div {...provided.dragHandleProps} className="text-slate-500 hover:text-white cursor-grab active:cursor-grabbing">
+                                      <div {...provided.dragHandleProps} className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-white cursor-grab active:cursor-grabbing">
                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 8h16M4 16h16"></path></svg>
                                       </div>
                                       <div>
-                                        <p className="text-sm text-slate-200 font-medium">{c.name}</p>
+                                        <p className="text-sm text-slate-800 dark:text-slate-200 font-medium">{c.name}</p>
                                       </div>
                                     </div>
                                     <button

@@ -130,21 +130,21 @@ export default function Profile() {
   const strengthColor = pwStrength <= 2 ? 'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]' : pwStrength <= 4 ? 'bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)]' : 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]'
   const strengthWidth = pwStrength <= 2 ? 'w-1/3' : pwStrength <= 4 ? 'w-2/3' : 'w-full'
 
-  const inputClasses = "w-full bg-black/20 border border-white/10 rounded-xl px-5 py-3.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all shadow-inner"
-  const labelClasses = "block text-xs font-bold tracking-widest text-slate-400 mb-2 uppercase"
-  const cardClasses = "bg-white/[0.02] backdrop-blur-2xl border border-white/10 rounded-3xl p-5 md:p-8 mb-8 shadow-2xl relative overflow-hidden hover:shadow-[0_0_40px_rgba(34,211,238,0.05)] transition-shadow duration-500"
+  const inputClasses = "w-full bg-white dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-5 py-3.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all shadow-sm dark:shadow-inner"
+  const labelClasses = "block text-xs font-bold tracking-widest text-slate-500 dark:text-slate-400 mb-2 uppercase"
+  const cardClasses = "bg-white dark:bg-white/[0.02] backdrop-blur-2xl border border-slate-200 dark:border-white/10 rounded-3xl p-5 md:p-8 mb-8 shadow-sm dark:shadow-2xl relative overflow-hidden hover:shadow-md dark:hover:shadow-[0_0_40px_rgba(34,211,238,0.05)] transition-shadow duration-500"
 
   if (loading) return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#0a0f1c] to-indigo-950 flex flex-col items-center justify-center relative selection:bg-cyan-500/30">
+    <div className="min-h-screen bg-slate-50 dark:bg-gradient-to-br dark:from-slate-950 dark:via-[#0a0f1c] dark:to-indigo-950 flex flex-col items-center justify-center relative selection:bg-cyan-500/30 transition-colors duration-200">
       <Navbar />
       <div className="flex-1 flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]" />
+        <div className="w-10 h-10 border-4 border-slate-200 dark:border-cyan-500/30 border-t-emerald-600 dark:border-t-cyan-400 rounded-full animate-spin drop-shadow-none dark:drop-shadow-[0_0_15px_rgba(34,211,238,0.5)]" />
       </div>
     </div>
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#0a0f1c] to-indigo-950 text-slate-100 font-sans selection:bg-cyan-500/30 relative pb-12 overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-gradient-to-br dark:from-slate-950 dark:via-[#0a0f1c] dark:to-indigo-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-cyan-500/30 relative pb-12 overflow-x-hidden transition-colors duration-200">
       <Navbar />
 
       <div className="absolute top-20 right-1/4 w-64 h-64 md:w-[600px] md:h-[600px] bg-cyan-500/10 rounded-full blur-[80px] md:blur-[150px] -z-10 pointer-events-none" />
@@ -154,17 +154,17 @@ export default function Profile() {
 
         {/* Header */}
         <div className="mb-10 text-center">
-          <h1 className="text-4xl font-extrabold tracking-tight text-white drop-shadow-lg mb-2">Profile Settings</h1>
-          <div className="inline-flex items-center justify-center bg-white/5 border border-white/10 rounded-full px-5 py-1.5 backdrop-blur-md">
-            <span className="text-cyan-400 text-sm font-bold tracking-wide">{user?.email}</span>
+          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow-lg mb-2">Profile Settings</h1>
+          <div className="inline-flex items-center justify-center bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full px-5 py-1.5 backdrop-blur-md">
+            <span className="text-emerald-600 dark:text-cyan-400 text-sm font-bold tracking-wide">{user?.email}</span>
           </div>
         </div>
 
         {/* Profile Info Card */}
         <div className={cardClasses}>
-          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-          <h2 className="text-xl font-bold text-white mb-6 tracking-tight flex items-center gap-3">
-            <span className="text-cyan-400 text-2xl">👤</span> Personal Information
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent dark:block hidden" />
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 tracking-tight flex items-center gap-3">
+            <span className="text-emerald-600 dark:text-cyan-400 text-2xl">👤</span> Personal Information
           </h2>
           
           <div className="space-y-6">
@@ -174,7 +174,7 @@ export default function Profile() {
                 type="email"
                 value={user?.email || ''}
                 disabled
-                className="w-full bg-black/40 border border-white/5 rounded-xl px-5 py-3.5 text-sm text-slate-500 cursor-not-allowed"
+                className="w-full bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/5 rounded-xl px-5 py-3.5 text-sm text-slate-500 cursor-not-allowed"
               />
               <p className="text-xs text-slate-500 mt-2 font-medium">Email address cannot be changed.</p>
             </div>
@@ -198,14 +198,14 @@ export default function Profile() {
                 className={`${inputClasses} appearance-none`}
               >
                 {CURRENCIES.map(c => (
-                  <option key={c} value={c} className="bg-slate-900">{c}</option>
+                  <option key={c} value={c} className="bg-white dark:bg-slate-900">{c}</option>
                 ))}
               </select>
             </div>
             
             {infoMsg && (
-              <div className={`p-4 rounded-xl border ${infoMsg.includes('✓') ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-rose-500/10 border-rose-500/30'}`}>
-                <p className={`text-sm font-bold flex items-center gap-2 ${infoMsg.includes('✓') ? 'text-emerald-400' : 'text-rose-400'}`}>
+              <div className={`p-4 rounded-xl border ${infoMsg.includes('✓') ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30' : 'bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'}`}>
+                <p className={`text-sm font-bold flex items-center gap-2 ${infoMsg.includes('✓') ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                   {infoMsg}
                 </p>
               </div>
@@ -215,7 +215,7 @@ export default function Profile() {
               type="button"
               onClick={handleUpdateInfo}
               disabled={infoSaving}
-              className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white py-3.5 rounded-xl text-sm font-bold uppercase tracking-widest shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:shadow-[0_0_25px_rgba(34,211,238,0.5)] transition-all disabled:opacity-50 mt-4"
+              className="w-full bg-emerald-600 dark:bg-gradient-to-r dark:from-cyan-600 dark:to-blue-600 hover:bg-emerald-700 dark:hover:from-cyan-500 dark:hover:to-blue-500 text-white py-3.5 rounded-xl text-sm font-bold uppercase tracking-widest shadow-sm dark:shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:shadow-md dark:hover:shadow-[0_0_25px_rgba(34,211,238,0.5)] transition-all disabled:opacity-50 mt-4"
             >
               {infoSaving ? 'Saving...' : 'Save Changes'}
             </button>
@@ -224,9 +224,9 @@ export default function Profile() {
 
         {/* Change Password Card */}
         <div className={cardClasses}>
-          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-          <h2 className="text-xl font-bold text-white mb-6 tracking-tight flex items-center gap-3">
-            <span className="text-cyan-400 text-2xl">🔒</span> {user?.is_oauth_user ? 'Set Account Password' : 'Change Password'}
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent dark:block hidden" />
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 tracking-tight flex items-center gap-3">
+            <span className="text-emerald-600 dark:text-cyan-400 text-2xl">🔒</span> {user?.is_oauth_user ? 'Set Account Password' : 'Change Password'}
           </h2>
           
           <div className="space-y-6">
@@ -244,7 +244,7 @@ export default function Profile() {
                   <button
                     type="button"
                     onClick={() => setShowOld(!showOld)}
-                    className="absolute right-4 top-3.5 text-slate-400 hover:text-white text-xs font-bold transition-colors"
+                    className="absolute right-4 top-3.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-xs font-bold transition-colors"
                   >
                     {showOld ? 'HIDE' : 'SHOW'}
                   </button>
@@ -265,20 +265,20 @@ export default function Profile() {
                 <button
                   type="button"
                   onClick={() => setShowNew(!showNew)}
-                  className="absolute right-4 top-3.5 text-slate-400 hover:text-white text-xs font-bold transition-colors"
+                  className="absolute right-4 top-3.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-xs font-bold transition-colors"
                 >
                   {showNew ? 'HIDE' : 'SHOW'}
                 </button>
               </div>
               
               {newPassword && (
-                <div className="mt-4 p-4 bg-black/30 rounded-xl border border-white/5">
-                  <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div className="mt-4 p-4 bg-slate-100 dark:bg-black/30 rounded-xl border border-slate-200 dark:border-white/5">
+                  <div className="h-1.5 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
                     <div className={`h-full rounded-full transition-all duration-500 ${strengthColor} ${strengthWidth}`} />
                   </div>
                   <p className={`text-xs font-bold mt-3 tracking-widest uppercase ${
-                    pwStrength <= 2 ? 'text-rose-400' :
-                    pwStrength <= 4 ? 'text-yellow-400' : 'text-emerald-400'
+                    pwStrength <= 2 ? 'text-rose-600 dark:text-rose-400' :
+                    pwStrength <= 4 ? 'text-yellow-600 dark:text-yellow-400' : 'text-emerald-600 dark:text-emerald-400'
                   }`}>{strengthLabel} password</p>
                 </div>
               )}
@@ -291,20 +291,20 @@ export default function Profile() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                className={`w-full bg-black/20 border rounded-xl px-5 py-3.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 transition-all shadow-inner ${
+                className={`w-full bg-white dark:bg-black/20 border rounded-xl px-5 py-3.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 transition-all shadow-sm dark:shadow-inner ${
                   confirmPassword && confirmPassword !== newPassword 
-                    ? 'border-rose-500/50 focus:ring-rose-500/50 bg-rose-500/5' 
-                    : 'border-white/10 focus:ring-cyan-500/50 focus:border-cyan-400'
+                    ? 'border-rose-300 dark:border-rose-500/50 focus:ring-rose-500/50 bg-rose-50 dark:bg-rose-500/5' 
+                    : 'border-slate-200 dark:border-white/10 focus:ring-cyan-500/50 focus:border-cyan-400'
                 }`}
               />
               {confirmPassword && confirmPassword !== newPassword && (
-                <p className="text-xs text-rose-400 mt-2 font-bold tracking-wide">Passwords do not match</p>
+                <p className="text-xs text-rose-600 dark:text-rose-400 mt-2 font-bold tracking-wide">Passwords do not match</p>
               )}
             </div>
             
             {pwMsg && (
-              <div className={`p-4 rounded-xl border ${pwMsg.includes('✓') ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-rose-500/10 border-rose-500/30'}`}>
-                <p className={`text-sm font-bold flex items-center gap-2 ${pwMsg.includes('✓') ? 'text-emerald-400' : 'text-rose-400'}`}>
+              <div className={`p-4 rounded-xl border ${pwMsg.includes('✓') ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30' : 'bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30'}`}>
+                <p className={`text-sm font-bold flex items-center gap-2 ${pwMsg.includes('✓') ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                   {pwMsg}
                 </p>
               </div>
@@ -314,7 +314,7 @@ export default function Profile() {
               type="button"
               onClick={handleUpdatePassword}
               disabled={pwSaving}
-              className="w-full bg-white/10 hover:bg-white/20 border border-white/20 text-white py-3.5 rounded-xl text-sm font-bold uppercase tracking-widest transition-all disabled:opacity-50 mt-4"
+              className="w-full bg-white dark:bg-white/10 hover:bg-slate-50 dark:hover:bg-white/20 border border-slate-200 dark:border-white/20 text-slate-700 dark:text-white py-3.5 rounded-xl text-sm font-bold uppercase tracking-widest transition-all disabled:opacity-50 mt-4"
             >
               {pwSaving ? 'Updating...' : user?.is_oauth_user ? 'Set Password' : 'Change Password'}
             </button>
@@ -322,18 +322,18 @@ export default function Profile() {
         </div>
 
         {/* Danger Zone */}
-        <div className="bg-rose-500/5 backdrop-blur-xl border border-rose-500/20 rounded-3xl p-6 md:p-8 shadow-[0_0_30px_rgba(244,63,94,0.05)] relative overflow-hidden group">
-          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-rose-500/30 to-transparent" />
-          <h2 className="text-xl font-bold text-rose-500 mb-2 flex items-center gap-2 tracking-tight group-hover:text-rose-400 transition-colors">
+        <div className="bg-rose-50 dark:bg-rose-500/5 backdrop-blur-xl border border-rose-200 dark:border-rose-500/20 rounded-3xl p-6 md:p-8 shadow-sm dark:shadow-[0_0_30px_rgba(244,63,94,0.05)] relative overflow-hidden group">
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-rose-500/30 to-transparent dark:block hidden" />
+          <h2 className="text-xl font-bold text-rose-600 dark:text-rose-500 mb-2 flex items-center gap-2 tracking-tight group-hover:text-rose-700 dark:group-hover:text-rose-400 transition-colors">
             ⚠️ Danger Zone
           </h2>
-          <p className="text-sm text-rose-400/80 mb-6 font-medium leading-relaxed">
+          <p className="text-sm text-rose-600 dark:text-rose-400/80 mb-6 font-medium leading-relaxed">
             Once you delete your account, there is no going back. All your financial data, parsed expenses, and settings will be permanently wiped. Please be certain.
           </p>
           <button
             type="button"
             onClick={handleDeleteAccount}
-            className="w-full bg-rose-500/10 border border-rose-500/30 text-rose-400 py-3.5 rounded-xl text-sm font-bold uppercase tracking-widest hover:bg-rose-500/20 hover:text-rose-300 hover:shadow-[0_0_20px_rgba(244,63,94,0.3)] transition-all"
+            className="w-full bg-rose-100 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 text-rose-600 dark:text-rose-400 py-3.5 rounded-xl text-sm font-bold uppercase tracking-widest hover:bg-rose-200 dark:hover:bg-rose-500/20 hover:text-rose-700 dark:hover:text-rose-300 hover:shadow-md dark:hover:shadow-[0_0_20px_rgba(244,63,94,0.3)] transition-all"
           >
             Delete Account Permanently
           </button>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
+import { useTheme } from '../contexts/ThemeContext'
 import { getDashboard, getMonthly, getCategories2, getExpenses } from '../api/client'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -16,13 +17,13 @@ function DonutChartCard({ title, data, colors, type }) {
   const total = data.reduce((sum, item) => sum + Number(item.total), 0)
 
   return (
-    <div className="bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-2xl relative overflow-hidden flex flex-col flex-1 min-h-[180px]">
-      <h3 className="font-bold text-sm text-white mb-3 flex items-center gap-2 uppercase tracking-wider">
-        <span className="w-2 h-2 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" style={{ backgroundColor: colors[0] }} />
+    <div className="bg-white dark:bg-white/[0.02] backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-4 shadow-lg dark:shadow-2xl relative overflow-hidden flex flex-col flex-1 min-h-[180px]">
+      <h3 className="font-bold text-sm text-slate-800 dark:text-white mb-3 flex items-center gap-2 uppercase tracking-wider">
+        <span className="w-2 h-2 rounded-full shadow-md dark:shadow-[0_0_8px_rgba(255,255,255,0.8)]" style={{ backgroundColor: colors[0] }} />
         {title}
       </h3>
       {data.length === 0 ? (
-        <p className="text-slate-500 text-xs flex-1 flex items-center justify-center">No {type} data</p>
+        <p className="text-slate-400 dark:text-slate-500 text-xs flex-1 flex items-center justify-center">No {type} data</p>
       ) : (
         <div className="flex items-center justify-between flex-1 gap-2">
           <div className="w-[120px] h-[120px]">
@@ -52,17 +53,17 @@ function DonutChartCard({ title, data, colors, type }) {
               <div key={i} className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-1.5 truncate pr-2">
                   <div className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: colors[i % colors.length] }} />
-                  <span className="text-slate-300 truncate" title={item.category}>{item.category}</span>
+                  <span className="text-slate-600 dark:text-slate-300 truncate" title={item.category}>{item.category}</span>
                 </div>
-                <span className="text-white font-medium shrink-0">{Number(item.total).toLocaleString()}</span>
+                <span className="text-slate-900 dark:text-white font-medium shrink-0">{Number(item.total).toLocaleString()}</span>
               </div>
             ))}
             {data.length > 4 && (
-              <div className="text-xs text-slate-500 italic ml-3.5">+ {data.length - 4} more</div>
+              <div className="text-xs text-slate-400 dark:text-slate-500 italic ml-3.5">+ {data.length - 4} more</div>
             )}
-            <div className="flex items-center justify-between text-xs font-bold mt-2 pt-2 border-t border-white/10">
-              <span className="text-slate-400">Total</span>
-              <span className="text-white">{total.toLocaleString()}</span>
+            <div className="flex items-center justify-between text-xs font-bold mt-2 pt-2 border-t border-slate-100 dark:border-white/10">
+              <span className="text-slate-500 dark:text-slate-400">Total</span>
+              <span className="text-slate-900 dark:text-white">{total.toLocaleString()}</span>
             </div>
           </div>
         </div>
@@ -110,15 +111,15 @@ function BreakdownGroup({ type, items, headerColorClass, headerBgClass, rowColor
 
   return (
     <div className="mb-6">
-      <div className={`px-3 py-1.5 font-bold text-sm uppercase tracking-widest text-white rounded-t-lg ${headerBgClass}`}>
+      <div className={`px-3 py-1.5 font-bold text-sm uppercase tracking-widest rounded-t-lg ${headerBgClass}`}>
         {type}
       </div>
       <div 
-        className="bg-white/[0.02] border border-white/5 rounded-b-lg overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+        className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-b-lg overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
       >
         <table className="w-full text-left text-xs">
           <thead>
-            <tr className="border-b border-white/5 text-slate-400">
+            <tr className="border-b border-slate-100 dark:border-white/5 text-slate-500 dark:text-slate-400">
               <th className="py-2 px-3 font-semibold w-1/3">Category</th>
               <th className="py-2 px-3 font-semibold text-right">Tracked</th>
               <th className="py-2 px-3 font-semibold text-right">Budgeted</th>
@@ -127,7 +128,7 @@ function BreakdownGroup({ type, items, headerColorClass, headerBgClass, rowColor
               <th className="py-2 px-3 font-semibold text-right">Excess</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5">
+          <tbody className="divide-y divide-slate-100 dark:divide-white/5">
             {items.map((c, i) => {
               const percent = c.budgeted > 0 ? ((c.total / c.budgeted) * 100).toFixed(0) : 0
               
@@ -148,14 +149,14 @@ function BreakdownGroup({ type, items, headerColorClass, headerBgClass, rowColor
 
               const isGoodExcess = type === 'Income' || type === 'Savings'
               const pctClass = percent > 100 
-                ? (isGoodExcess ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400') 
-                : 'bg-white/10 text-slate-300'
+                ? (isGoodExcess ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400' : 'bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400') 
+                : 'bg-slate-100 text-slate-500 dark:bg-white/10 dark:text-slate-300'
 
               return (
-                <tr key={i} className="hover:bg-white/[0.04] transition-colors">
-                  <td className="py-2 px-3 text-white font-medium">{c.category}</td>
-                  <td className="py-2 px-3 text-right text-white">{Number(c.total).toLocaleString()}</td>
-                  <td className="py-2 px-3 text-right text-slate-300">{c.budgeted > 0 ? Number(c.budgeted).toLocaleString() : '-'}</td>
+                <tr key={i} className="hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors">
+                  <td className="py-2 px-3 text-slate-800 dark:text-white font-medium">{c.category}</td>
+                  <td className="py-2 px-3 text-right text-slate-900 dark:text-white">{Number(c.total).toLocaleString()}</td>
+                  <td className="py-2 px-3 text-right text-slate-500 dark:text-slate-300">{c.budgeted > 0 ? Number(c.budgeted).toLocaleString() : '-'}</td>
                   <td className="py-2 px-3 text-right">
                     {c.budgeted > 0 ? (
                       <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${pctClass}`}>
@@ -163,8 +164,8 @@ function BreakdownGroup({ type, items, headerColorClass, headerBgClass, rowColor
                       </span>
                     ) : '-'}
                   </td>
-                  <td className="py-2 px-3 text-right text-slate-300">{remaining.toLocaleString()}</td>
-                  <td className={`py-2 px-3 text-right font-bold ${excess !== '-' ? excessColorClass : 'text-slate-500'}`}>
+                  <td className="py-2 px-3 text-right text-slate-500 dark:text-slate-300">{remaining.toLocaleString()}</td>
+                  <td className={`py-2 px-3 text-right font-bold ${excess !== '-' ? excessColorClass : 'text-slate-400 dark:text-slate-500'}`}>
                     {excess !== '-' ? (
                       <span className={`px-1.5 py-0.5 rounded ${excessBgClass}`}>{excess.toLocaleString()}</span>
                     ) : '-'}
@@ -174,13 +175,13 @@ function BreakdownGroup({ type, items, headerColorClass, headerBgClass, rowColor
             })}
           </tbody>
           <tfoot>
-            <tr className="border-t border-white/10 font-bold bg-white/5">
-              <td className="py-2 px-3 text-white">Total</td>
+            <tr className="border-t border-slate-200 dark:border-white/10 font-bold bg-slate-50 dark:bg-white/5">
+              <td className="py-2 px-3 text-slate-900 dark:text-white">Total</td>
               <td className={`py-2 px-3 text-right ${rowColorClass}`}>{totals.tracked.toLocaleString()}</td>
-              <td className="py-2 px-3 text-right text-white">{totals.budgeted > 0 ? totals.budgeted.toLocaleString() : '-'}</td>
-              <td className="py-2 px-3 text-right text-white">{totals.budgeted > 0 ? `${totalPercent}%` : '-'}</td>
-              <td className="py-2 px-3 text-right text-white">{totalRemaining > 0 ? totalRemaining.toLocaleString() : '-'}</td>
-              <td className="py-2 px-3 text-right text-white">{totalExcess > 0 ? totalExcess.toLocaleString() : '-'}</td>
+              <td className="py-2 px-3 text-right text-slate-900 dark:text-white">{totals.budgeted > 0 ? totals.budgeted.toLocaleString() : '-'}</td>
+              <td className="py-2 px-3 text-right text-slate-900 dark:text-white">{totals.budgeted > 0 ? `${totalPercent}%` : '-'}</td>
+              <td className="py-2 px-3 text-right text-slate-900 dark:text-white">{totalRemaining > 0 ? totalRemaining.toLocaleString() : '-'}</td>
+              <td className="py-2 px-3 text-right text-slate-900 dark:text-white">{totalExcess > 0 ? totalExcess.toLocaleString() : '-'}</td>
             </tr>
           </tfoot>
         </table>
@@ -192,14 +193,14 @@ function BreakdownGroup({ type, items, headerColorClass, headerBgClass, rowColor
 const CustomChartTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-slate-900/95 backdrop-blur-md border border-white/10 p-3 rounded-xl shadow-2xl">
-        <p className="text-white font-bold mb-2 pb-2 border-b border-white/10">{label}</p>
+      <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-white/10 p-3 rounded-xl shadow-xl dark:shadow-2xl">
+        <p className="text-slate-900 dark:text-white font-bold mb-2 pb-2 border-b border-slate-200 dark:border-white/10">{label}</p>
         <div className="grid grid-cols-2 gap-x-6 gap-y-2">
           {payload.map((entry, index) => (
             <div key={index} className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-              <span className="text-xs text-slate-300 w-16">{entry.name}</span>
-              <span className="text-sm font-bold text-white">GH₵{Number(entry.value).toLocaleString()}</span>
+              <span className="text-xs text-slate-600 dark:text-slate-300 w-16">{entry.name}</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white">GH₵{Number(entry.value).toLocaleString()}</span>
             </div>
           ))}
         </div>
@@ -210,6 +211,7 @@ const CustomChartTooltip = ({ active, payload, label }) => {
 };
 
 export default function Dashboard() {
+  const { theme } = useTheme()
   const navigate = useNavigate()
   const [summary, setSummary]   = useState(null)
   const [monthly, setMonthly]   = useState([])
@@ -341,23 +343,23 @@ export default function Dashboard() {
   const savingsCats = catData.filter(d => d.type === 'Savings')
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-[#0a0f1c] to-indigo-950 text-slate-100 font-sans selection:bg-cyan-500/30 overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-gradient-to-br dark:from-slate-950 dark:via-[#0a0f1c] dark:to-indigo-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-cyan-500/30 overflow-x-hidden transition-colors duration-200">
       <Navbar />
 
       <div className="max-w-[1400px] mx-auto px-4 py-6 md:px-6 md:py-8 relative">
-        <div className="absolute top-20 left-10 w-64 h-64 md:w-96 md:h-96 bg-cyan-500/10 rounded-full blur-[80px] md:blur-[100px] -z-10 pointer-events-none" />
-        <div className="absolute bottom-20 right-10 w-64 h-64 md:w-96 md:h-96 bg-fuchsia-500/10 rounded-full blur-[80px] md:blur-[120px] -z-10 pointer-events-none" />
+        <div className="absolute top-20 left-10 w-64 h-64 md:w-96 md:h-96 bg-cyan-500/5 dark:bg-cyan-500/10 rounded-full blur-[80px] md:blur-[100px] -z-10 pointer-events-none" />
+        <div className="absolute bottom-20 right-10 w-64 h-64 md:w-96 md:h-96 bg-fuchsia-500/5 dark:bg-fuchsia-500/10 rounded-full blur-[80px] md:blur-[120px] -z-10 pointer-events-none" />
 
         {/* Top Header Row (Excel Style) */}
-        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-8 bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-lg">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-8 bg-white dark:bg-white/[0.02] backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-sm dark:shadow-lg">
           <div className="flex items-center gap-4 flex-wrap">
-            <h1 className="text-2xl font-extrabold tracking-tight text-white drop-shadow-lg shrink-0">Budget Dashboard</h1>
+            <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow-lg shrink-0">Budget Dashboard</h1>
             
-            <div className="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-xl border border-white/5 shrink-0">
+            <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-900/50 p-1.5 rounded-xl border border-slate-200 dark:border-white/5 shrink-0">
               <select 
                 value={filterType} 
                 onChange={e => setFilterType(e.target.value)}
-                className="bg-transparent border-none text-sm text-white focus:outline-none focus:ring-0 cursor-pointer font-medium pl-2 pr-6 py-1 appearance-none"
+                className="bg-transparent border-none text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-0 cursor-pointer font-medium pl-2 pr-6 py-1 appearance-none"
               >
                 <option value="today">Today</option>
                 <option value="this_week">This Week</option>
@@ -366,30 +368,30 @@ export default function Dashboard() {
                 <option value="all_time">All Time</option>
                 <option value="custom">Custom...</option>
               </select>
-              <svg className="w-4 h-4 text-slate-400 -ml-6 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              <svg className="w-4 h-4 text-slate-500 dark:text-slate-400 -ml-6 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
             </div>
 
             {filterType === 'custom' && (
               <div className="flex items-center gap-2 shrink-0">
-                 <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)} className="bg-slate-900/50 border border-white/10 rounded-xl px-3 py-1.5 text-sm text-white focus:outline-none" />
+                 <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)} className="bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-1.5 text-sm text-slate-800 dark:text-white focus:outline-none" />
                  <span className="text-slate-500">to</span>
-                 <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)} className="bg-slate-900/50 border border-white/10 rounded-xl px-3 py-1.5 text-sm text-white focus:outline-none" />
+                 <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)} className="bg-slate-100 dark:bg-slate-900/50 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-1.5 text-sm text-slate-800 dark:text-white focus:outline-none" />
               </div>
             )}
           </div>
           
           <div className="flex flex-wrap items-center gap-4 xl:gap-8 shrink-0">
              <div className="text-center bg-emerald-500/10 border border-emerald-500/20 px-6 py-2 rounded-xl">
-               <p className="text-xs text-emerald-400 uppercase tracking-widest font-bold">Total Income</p>
-               <p className="text-xl font-bold text-white">GH₵{Number(summary?.income || 0).toLocaleString()}</p>
+               <p className="text-xs text-emerald-600 dark:text-emerald-400 uppercase tracking-widest font-bold">Total Income</p>
+               <p className="text-xl font-bold text-slate-900 dark:text-white">GH₵{Number(summary?.income || 0).toLocaleString()}</p>
              </div>
              <div className="text-center bg-rose-500/10 border border-rose-500/20 px-6 py-2 rounded-xl">
-               <p className="text-xs text-rose-400 uppercase tracking-widest font-bold">Total Expenses</p>
-               <p className="text-xl font-bold text-white">GH₵{Number(summary?.expenses || 0).toLocaleString()}</p>
+               <p className="text-xs text-rose-600 dark:text-rose-400 uppercase tracking-widest font-bold">Total Expenses</p>
+               <p className="text-xl font-bold text-slate-900 dark:text-white">GH₵{Number(summary?.expenses || 0).toLocaleString()}</p>
              </div>
              <div className="text-center bg-blue-500/10 border border-blue-500/20 px-6 py-2 rounded-xl">
-               <p className="text-xs text-blue-400 uppercase tracking-widest font-bold">Period Balance</p>
-               <p className="text-xl font-bold text-white">GH₵{Number(summary?.balance || 0).toLocaleString()}</p>
+               <p className="text-xs text-blue-600 dark:text-blue-400 uppercase tracking-widest font-bold">Period Balance</p>
+               <p className="text-xl font-bold text-slate-900 dark:text-white">GH₵{Number(summary?.balance || 0).toLocaleString()}</p>
              </div>
           </div>
         </div>
@@ -398,8 +400,8 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative">
           
           {/* Left Column: Breakdown Table */}
-          <div className="lg:col-span-5 bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-2xl overflow-hidden flex flex-col h-[700px]">
-            <h3 className="font-bold text-base text-white mb-4 uppercase tracking-wider">Category Breakdown</h3>
+          <div className="lg:col-span-5 bg-white dark:bg-white/[0.02] backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-lg dark:shadow-2xl overflow-hidden flex flex-col h-[700px]">
+            <h3 className="font-bold text-base text-slate-900 dark:text-white mb-4 uppercase tracking-wider">Category Breakdown</h3>
             <div 
               className="overflow-y-auto flex-1 pr-2" 
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
@@ -442,23 +444,23 @@ export default function Dashboard() {
           </div>
 
           {/* Right Column: Bar Chart */}
-          <div className="lg:col-span-4 bg-white/[0.02] backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-2xl flex flex-col h-[700px]">
+          <div className="lg:col-span-4 bg-white dark:bg-white/[0.02] backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-lg dark:shadow-2xl flex flex-col h-[700px]">
             <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-              <h3 className="font-bold text-base text-white uppercase tracking-wider">Tracked vs Budgeted</h3>
+              <h3 className="font-bold text-base text-slate-900 dark:text-white uppercase tracking-wider">Tracked vs Budgeted</h3>
               
               {/* Checkboxes like Excel */}
-              <div className="flex flex-wrap gap-3 bg-slate-900/50 p-2 rounded-xl border border-white/5">
-                <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-emerald-400 hover:text-emerald-300">
+              <div className="flex flex-wrap gap-3 bg-slate-100 dark:bg-slate-900/50 p-2 rounded-xl border border-slate-200 dark:border-white/5">
+                <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300">
                   <input type="checkbox" checked={showIncome} onChange={e => setShowIncome(e.target.checked)} className="accent-emerald-500" /> Income
                 </label>
-                <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-rose-400 hover:text-rose-300">
+                <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-500 dark:hover:text-rose-300">
                   <input type="checkbox" checked={showExpenses} onChange={e => setShowExpenses(e.target.checked)} className="accent-rose-500" /> Expenses
                 </label>
-                <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-fuchsia-400 hover:text-fuchsia-300">
+                <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-fuchsia-600 dark:text-fuchsia-400 hover:text-fuchsia-500 dark:hover:text-fuchsia-300">
                   <input type="checkbox" checked={showSavings} onChange={e => setShowSavings(e.target.checked)} className="accent-fuchsia-500" /> Savings
                 </label>
-                <div className="w-px h-4 bg-white/20 mx-1" />
-                <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-300 hover:text-white">
+                <div className="w-px h-4 bg-slate-300 dark:bg-white/20 mx-1" />
+                <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-500 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
                   <input type="checkbox" checked={showBudget} onChange={e => setShowBudget(e.target.checked)} className="accent-slate-500" /> Budget
                 </label>
               </div>
@@ -470,12 +472,12 @@ export default function Dashboard() {
               <div className="flex-1 w-full mt-2">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={monthly} margin={{ top: 20, right: 0, left: -20, bottom: 45 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff08" vertical={false} />
-                    <XAxis dataKey="month_name" xAxisId="tracked" stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} dy={15} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#ffffff08' : '#00000008'} vertical={false} />
+                    <XAxis dataKey="month_name" xAxisId="tracked" stroke={theme === 'dark' ? '#64748b' : '#cbd5e1'} tick={{ fill: theme === 'dark' ? '#94a3b8' : '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} dy={15} />
                     <XAxis dataKey="month_name" xAxisId="budget" hide />
                     
-                    <YAxis stroke="#64748b" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} dx={-10} />
-                    <Tooltip content={<CustomChartTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                    <YAxis stroke={theme === 'dark' ? '#64748b' : '#cbd5e1'} tick={{ fill: theme === 'dark' ? '#94a3b8' : '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} dx={-10} />
+                    <Tooltip content={<CustomChartTooltip />} cursor={{ fill: theme === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }} />
                     <Legend verticalAlign="bottom" wrapperStyle={{ position: 'relative', marginTop: '20px', fontSize: '12px' }} iconType="circle" />
                     
                     {/* Budgeted Bars (Wider, fainter background bars) */}
@@ -499,14 +501,14 @@ export default function Dashboard() {
 
       {/* Transactions Modal */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
-          <div className="bg-slate-900 border border-white/10 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
-            <div className="p-6 border-b border-white/10 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <span className={`w-3 h-3 rounded-full ${modalType === 'Income' ? 'bg-emerald-400' : modalType === 'Expenses' ? 'bg-rose-400' : modalType === 'Savings' ? 'bg-fuchsia-400' : 'bg-blue-400'}`} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm transition-opacity">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+            <div className="p-6 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <span className={`w-3 h-3 rounded-full ${modalType === 'Income' ? 'bg-emerald-500' : modalType === 'Expenses' ? 'bg-rose-500' : modalType === 'Savings' ? 'bg-fuchsia-500' : 'bg-blue-500'}`} />
                 {modalType} Transactions
               </h2>
-              <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-white transition-colors">
+              <button onClick={() => setModalOpen(false)} className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
@@ -522,12 +524,12 @@ export default function Dashboard() {
               ) : (
                 <div className="space-y-3">
                   {modalTransactions.map(tx => (
-                    <div key={tx.id} className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
+                    <div key={tx.id} className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/[0.04] transition-colors">
                       <div>
-                        <p className="font-semibold text-white">{tx.category || tx.type}</p>
-                        <p className="text-xs text-slate-400 mt-1">{tx.date} {tx.details && `• ${tx.details}`}</p>
+                        <p className="font-semibold text-slate-900 dark:text-white">{tx.category || tx.type}</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{tx.date} {tx.details && `• ${tx.details}`}</p>
                       </div>
-                      <p className={`font-bold ${tx.type === 'Income' ? 'text-emerald-400' : tx.type === 'Expenses' ? 'text-rose-400' : 'text-fuchsia-400'}`}>
+                      <p className={`font-bold ${tx.type === 'Income' ? 'text-emerald-600 dark:text-emerald-400' : tx.type === 'Expenses' ? 'text-rose-600 dark:text-rose-400' : 'text-fuchsia-600 dark:text-fuchsia-400'}`}>
                         {tx.type === 'Expenses' ? '-' : '+'}GH₵{Number(tx.amount).toLocaleString()}
                       </p>
                     </div>
