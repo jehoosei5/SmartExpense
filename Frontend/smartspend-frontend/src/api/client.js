@@ -79,8 +79,8 @@ export const confirmChatMessage = (parsed, session_id = null) =>
 export const getDashboard = (start_date = null, end_date = null) =>
   api.get('/charts/dashboard', { params: { start_date, end_date } })
 
-export const getMonthly = (year = null) =>
-  api.get('/charts/monthly', { params: year ? { year } : {} })
+export const getMonthly = (year = null, start_date = null, end_date = null) =>
+  api.get('/charts/monthly', { params: { year, start_date, end_date } })
 
 export const getCategories2 = (type = null, start_date = null, end_date = null) =>
   api.get('/charts/categories', { params: { type, start_date, end_date } })
