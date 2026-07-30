@@ -298,7 +298,7 @@ export default function Dashboard() {
 
         const [s, m, c] = await Promise.all([
           getDashboard(startDate, endDate),
-          getMonthly(),
+          getMonthly(null, startDate, endDate),
           getCategories2(null, startDate, endDate)
         ])
         setSummary(s.data)

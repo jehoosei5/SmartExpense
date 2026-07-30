@@ -23,11 +23,13 @@ router = APIRouter(prefix="/charts", tags=["Charts & Dashboard"])
 
 @router.get("/monthly", response_model=list[MonthlySummary])
 def monthly_summary(
-    year: Optional[int] = Query(None),
-    db: Session = Depends(get_db),
+    year:       Optional[int] = Query(None),
+    start_date: Optional[date] = Query(None),
+    end_date:   Optional[date] = Query(None),
+    db:         Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return get_monthly_summary(db, current_user.id, year)
+    return get_monthly_summary(db, current_user.id, year, start_date, end_date)
 
 
 @router.get("/categories", response_model=list[CategoryBreakdown])

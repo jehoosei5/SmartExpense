@@ -7,85 +7,109 @@ from calendar import month_name
 from typing import Optional
 
 
-def get_monthly_summary(db: Session, user_id: str, year: Optional[int] = None):
-    year = year or date.today().year
+def get_monthly_summary(
+    db: Session, 
+    user_id: str, 
+    year: Optional[int] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None
+):
 
-    # Query grouped by month and type
-    rows = db.query(
+    # Base query for expenses
+    exp_query = db.query(
+        extract("year", Expense.date).label("year"),
         extract("month", Expense.date).label("month"),
         Expense.type,
         func.sum(Expense.amount).label("total")
-    ).filter(
-        Expense.user_id == user_id,
-        extract("year", Expense.date) == year
-    ).group_by(
+    ).filter(Expense.user_id == user_id)
+    
+    if year:
+        exp_query = exp_query.filter(extract("year", Expense.date) == year)
+    if start_date:
+        exp_query = exp_query.filter(Expense.date >= start_date)
+    if end_date:
+        exp_query = exp_query.filter(Expense.date <= end_date)
+        
+    rows = exp_query.group_by(
+        extract("year", Expense.date),
         extract("month", Expense.date),
         Expense.type
     ).all()
 
-    # Get budgets for this year
-    budget_rows = db.query(
+    # Base query for budgets
+    bud_query = db.query(
+        Budget.year,
         Budget.month,
         Budget.type,
         func.sum(Budget.amount).label("amount")
-    ).filter(
-        Budget.user_id == user_id,
-        Budget.year == year
-    ).group_by(
+    ).filter(Budget.user_id == user_id)
+    
+    if year:
+        bud_query = bud_query.filter(Budget.year == year)
+    if start_date:
+        start_val = start_date.year * 12 + start_date.month
+        bud_query = bud_query.filter(Budget.year * 12 + Budget.month >= start_val)
+    if end_date:
+        end_val = end_date.year * 12 + end_date.month
+        bud_query = bud_query.filter(Budget.year * 12 + Budget.month <= end_val)
+        
+    budget_rows = bud_query.group_by(
+        Budget.year,
         Budget.month,
         Budget.type
     ).all()
 
-    # Organize into a dict per month
+    # Organize into a dict per year-month
     months = {}
-    for m in range(1, 13):
-        months[m] = {
-            "month":      m,
-            "month_name": month_name[m],
-            "year":       year,
-            "income":     0.0,
-            "expenses":   0.0,
-            "savings":    0.0,
-            "balance":    0.0,
-            "income_budget": 0.0,
-            "expenses_budget": 0.0,
-            "savings_budget": 0.0
-        }
+    
+    # If no filters at all, default to current year
+    if not start_date and not end_date and not year:
+        year = date.today().year
+        for m in range(1, 13):
+            key = f"{year}-{m:02d}"
+            months[key] = {
+                "month": m,
+                "month_name": month_name[m],
+                "year": year,
+                "income": 0.0, "expenses": 0.0, "savings": 0.0, "balance": 0.0,
+                "income_budget": 0.0, "expenses_budget": 0.0, "savings_budget": 0.0
+            }
 
     for row in rows:
-        m = int(row.month)
-        if row.type == "Income":
-            months[m]["income"] = float(row.total)
-        elif row.type == "Expenses":
-            months[m]["expenses"] = float(row.total)
-        elif row.type == "Savings":
-            months[m]["savings"] = float(row.total)
+        y, m = int(row.year), int(row.month)
+        key = f"{y}-{m:02d}"
+        if key not in months:
+            months[key] = {
+                "month": m, "month_name": f"{month_name[m][:3]} '{str(y)[-2:]}", "year": y,
+                "income": 0.0, "expenses": 0.0, "savings": 0.0, "balance": 0.0,
+                "income_budget": 0.0, "expenses_budget": 0.0, "savings_budget": 0.0
+            }
+        if row.type == "Income": months[key]["income"] = float(row.total)
+        elif row.type == "Expenses": months[key]["expenses"] = float(row.total)
+        elif row.type == "Savings": months[key]["savings"] = float(row.total)
 
     for row in budget_rows:
-        m = int(row.month)
-        if row.type == "Income":
-            months[m]["income_budget"] = float(row.amount)
-        elif row.type == "Expenses":
-            months[m]["expenses_budget"] = float(row.amount)
-        elif row.type == "Savings":
-            months[m]["savings_budget"] = float(row.amount)
-    # Remove empty months if there's no data and no budget, 
-    # but to be safe we can just leave it or filter. The original code only added months that had expense data.
-    # We will filter out months that have 0 expenses and 0 budget so we don't show blank months unnecessarily,
-    # unless they are up to the current month.
-    current_month = date.today().month if year == date.today().year else 12
-    active_months = {k: v for k, v in months.items() if k <= current_month or v["income"] > 0 or v["expenses"] > 0 or v["savings"] > 0 or v["income_budget"] > 0 or v["expenses_budget"] > 0 or v["savings_budget"] > 0}
+        y, m = int(row.year), int(row.month)
+        key = f"{y}-{m:02d}"
+        if key not in months:
+            months[key] = {
+                "month": m, "month_name": f"{month_name[m][:3]} '{str(y)[-2:]}", "year": y,
+                "income": 0.0, "expenses": 0.0, "savings": 0.0, "balance": 0.0,
+                "income_budget": 0.0, "expenses_budget": 0.0, "savings_budget": 0.0
+            }
+        if row.type == "Income": months[key]["income_budget"] = float(row.amount)
+        elif row.type == "Expenses": months[key]["expenses_budget"] = float(row.amount)
+        elif row.type == "Savings": months[key]["savings_budget"] = float(row.amount)
 
-    # Calculate balance per month
-    for m in active_months:
-        active_months[m]["balance"] = (
-            active_months[m]["income"] -
-            active_months[m]["expenses"] -
-            active_months[m]["savings"]
-        )
+    # Filter out empty months unless we specifically generated them for the current year
+    active_months = {}
+    for k, v in months.items():
+        if (not start_date and not end_date) or v["income"] > 0 or v["expenses"] > 0 or v["savings"] > 0 or v["income_budget"] > 0 or v["expenses_budget"] > 0 or v["savings_budget"] > 0:
+            v["balance"] = v["income"] - v["expenses"] - v["savings"]
+            active_months[k] = v
 
-    # Return sorted by month
-    return sorted(active_months.values(), key=lambda x: x["month"])
+    # Return sorted by year then month
+    return sorted(active_months.values(), key=lambda x: (x["year"], x["month"]))
 
 
 def get_category_breakdown(
