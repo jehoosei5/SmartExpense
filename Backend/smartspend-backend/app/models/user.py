@@ -12,6 +12,8 @@ class User(Base):
     password_hash    = Column(String(255), nullable=False)
     display_name     = Column(String(100), nullable=False)
     default_currency = Column(String(3), nullable=False, default="GHS")
+    report_frequency = Column(String(20), nullable=False, default="NONE") # NONE, WEEKLY, MONTHLY
+    last_report_sent_at = Column(DateTime, nullable=True)
     created_at       = Column(DateTime, server_default=func.now())
     updated_at       = Column(DateTime, server_default=func.now(), onupdate=func.now())
 

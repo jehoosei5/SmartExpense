@@ -118,8 +118,8 @@ def get_me(current_user: User = Depends(get_current_user)):
         "email":            current_user.email,
         "display_name":     current_user.display_name,
         "default_currency": current_user.default_currency,
+        "report_frequency": current_user.report_frequency,
         "is_oauth_user":   is_oauth
-        
     }
 
 @router.put("/me")
@@ -133,6 +133,8 @@ def update_me(
         current_user.display_name = payload["display_name"]
     if "default_currency" in payload:
         current_user.default_currency = payload["default_currency"]
+    if "report_frequency" in payload:
+        current_user.report_frequency = payload["report_frequency"]
 
     # Modified Password Logic
     if "new_password" in payload:
@@ -155,6 +157,7 @@ def update_me(
         "email": current_user.email,
         "display_name": current_user.display_name,
         "default_currency": current_user.default_currency,
+        "report_frequency": current_user.report_frequency,
         "is_oauth_user": len(current_user.password_hash) > 60 
     }
     

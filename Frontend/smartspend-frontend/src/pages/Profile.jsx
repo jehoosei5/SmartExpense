@@ -25,6 +25,7 @@ export default function Profile() {
   // Name & currency form
   const [displayName, setDisplayName] = useState('')
   const [currency, setCurrency]       = useState('GHS')
+  const [reportFrequency, setReportFrequency] = useState('NONE')
   const [infoSaving, setInfoSaving]   = useState(false)
 
   // Password form
@@ -43,6 +44,7 @@ export default function Profile() {
       setUser(res.data)
       setDisplayName(res.data.display_name || '')
       setCurrency(res.data.default_currency || 'GHS')
+      setReportFrequency(res.data.report_frequency || 'NONE')
     } catch (err) {
       if (err.response?.status === 401) {
         localStorage.clear()
@@ -56,10 +58,11 @@ export default function Profile() {
   async function handleUpdateInfo() {
     setInfoSaving(true)
     try {
-      const res = await updateMe({ display_name: displayName, default_currency: currency })
+      const res = await updateMe({ display_name: displayName, default_currency: currency, report_frequency: reportFrequency })
       setUser(res.data) 
       setDisplayName(res.data.display_name)
       setCurrency(res.data.default_currency)
+      setReportFrequency(res.data.report_frequency)
       toast.success('Profile updated successfully')
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Failed to update profile')
@@ -199,6 +202,20 @@ export default function Profile() {
                   <option key={c} value={c} className="bg-white dark:bg-slate-900">{c}</option>
                 ))}
               </select>
+            </div>
+            
+            <div>
+              <label className={labelClasses}>Email Reports</label>
+              <select
+                value={reportFrequency}
+                onChange={(e) => setReportFrequency(e.target.value)}
+                className={`${inputClasses} appearance-none`}
+              >
+                <option value="NONE" className="bg-white dark:bg-slate-900">Off (Do not send reports)</option>
+                <option value="WEEKLY" className="bg-white dark:bg-slate-900">Weekly (Every Sunday)</option>
+                <option value="MONTHLY" className="bg-white dark:bg-slate-900">Monthly (1st of the month)</option>
+              </select>
+              <p className="text-xs text-slate-500 mt-2 font-medium">Receive automated spending summaries.</p>
             </div>
             
             <button

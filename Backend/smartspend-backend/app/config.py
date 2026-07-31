@@ -29,6 +29,16 @@ class Settings(BaseSettings):
     #Google OAuth
     GOOGLE_CLIENT_ID: str = ""
 
+    # Email Settings (SMTP)
+    SMTP_SERVER: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM_EMAIL: str = ""
+    
+    # Cron / Background Tasks
+    CRON_SECRET: str = "changeme"
+
     # Pydantic V2 Configuration
     model_config = SettingsConfigDict(
         env_file=".env",
