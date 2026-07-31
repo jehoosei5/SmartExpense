@@ -3,6 +3,8 @@ from sqlalchemy import extract, or_
 from app.models.expense import Expense
 from app.schemas.expense import ExpenseCreate, ExpenseUpdate
 from app.utils.hashing import generate_sync_hash
+from app.models.user import User
+from app.services.currency_service import currency_service
 from typing import Optional
 from datetime import date
 from dateutil.relativedelta import relativedelta
@@ -25,12 +27,24 @@ def create_expense(db: Session, data: ExpenseCreate, user_id: str):
     if existing:
         return None, "Expense already exists"
 
+    # Get user to know base currency
+    user = db.query(User).filter(User.id == user_id).first()
+    
+    # Calculate exchange rate and base_amount
+    exchange_rate = currency_service.get_exchange_rate(
+        base_currency=user.default_currency,
+        target_currency=data.currency
+    )
+    base_amount = data.amount * exchange_rate
+
     expense = Expense(
         user_id=user_id,
         date=data.date,
         type=data.type.value,
         category=data.category,
         amount=data.amount,
+        base_amount=base_amount,
+        exchange_rate=exchange_rate,
         currency=data.currency,
         details=data.details,
         payment_method=data.payment_method.value if data.payment_method else None,
@@ -105,10 +119,23 @@ def update_expense(db: Session, expense_id: str, user_id: str, data: ExpenseUpda
         expense.type = data.type.value
     if data.category is not None:
         expense.category = data.category
-    if data.amount is not None:
-        expense.amount = data.amount
-    if data.currency is not None:
-        expense.currency = data.currency
+    if data.amount is not None or data.currency is not None:
+        new_amount = data.amount if data.amount is not None else expense.amount
+        new_currency = data.currency if data.currency is not None else expense.currency
+        
+        if data.amount is not None:
+            expense.amount = new_amount
+        if data.currency is not None:
+            expense.currency = new_currency
+            
+        # Re-calculate exchange rate and base amount
+        user = db.query(User).filter(User.id == user_id).first()
+        new_exchange_rate = currency_service.get_exchange_rate(
+            base_currency=user.default_currency,
+            target_currency=new_currency
+        )
+        expense.exchange_rate = new_exchange_rate
+        expense.base_amount = new_amount * new_exchange_rate
     if data.details is not None:
         expense.details = data.details
     if data.payment_method is not None:

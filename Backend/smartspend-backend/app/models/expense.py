@@ -13,6 +13,8 @@ class Expense(Base):
     type           = Column(Enum("Expenses", "Income", "Savings", name="expense_type_enum"), nullable=False)
     category       = Column(String(100), nullable=False)
     amount         = Column(Numeric(10, 2), nullable=False)
+    base_amount    = Column(Numeric(10, 2), nullable=False)
+    exchange_rate  = Column(Numeric(10, 6), nullable=False, default=1.0)
     currency       = Column(String(3), nullable=False, default="GHS")
     details        = Column(String(255), nullable=True)
     payment_method = Column(Enum("Cash", "MoMo", "Card", "Bank Transfer", name="payment_method_enum"), nullable=True)

@@ -12,6 +12,7 @@ from app.config import settings
 
 from app.models.category import Category
 from app.database import SessionLocal
+from scripts.migrate_postgres import run_migration
 
 try:
     print("Creating database tables...")
@@ -32,6 +33,10 @@ try:
             db.add(Category(name=name, type=ctype, is_default=1, user_id=None))
         db.commit()
     db.close()
+    
+    # Run auto-migration for postgres
+    print("Running column migrations...")
+    run_migration()
 except Exception as e:
     print(f"Error creating database tables: {e}")
     

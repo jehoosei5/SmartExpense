@@ -1,12 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
-import { getExpenses, createExpense, updateExpense, deleteExpense, getCategories, createCategory, deleteCategory, reorderCategories, exportExpenses, getSuggestions, snoozeSuggestion } from '../api/client'
+import { getExpenses, createExpense, updateExpense, deleteExpense, getCategories, createCategory, deleteCategory, reorderCategories, exportExpenses, getSuggestions, snoozeSuggestion, getMe } from '../api/client'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import toast from 'react-hot-toast'
 
 const TYPES = ['Expenses', 'Income', 'Savings']
 const PAYMENT_METHODS = ['Cash', 'MoMo', 'Card', 'Bank Transfer']
+const CURRENCIES = ['GHS', 'USD', 'EUR', 'GBP', 'NGN', 'KES']
+
+const formatCurrency = (amount, currency = 'GHS') => {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount)
+}
 
 const EMPTY_FORM = {
   date: new Date().toISOString().split('T')[0],
@@ -39,6 +44,7 @@ export default function Expenses() {
   const [categories, setCategories] = useState([])
   const [suggestions, setSuggestions] = useState([])
   const [loading, setLoading]       = useState(true)
+  const [userProfile, setUserProfile] = useState(null)
 
   // Filters
   const [filterType, setFilterType]       = useState('')
@@ -71,14 +77,17 @@ export default function Expenses() {
 
   async function loadAll() {
     try {
-      const [exp, cat, sugg] = await Promise.all([
+      const [exp, cat, sugg, user] = await Promise.all([
         getExpenses(),
         getCategories(),
-        getSuggestions().catch(() => ({ data: { suggestions: [] } }))
+        getSuggestions().catch(() => ({ data: { suggestions: [] } })),
+        getMe()
       ])
       setExpenses(exp.data.expenses || exp.data)
       setCategories(cat.data)
       setSuggestions(sugg.data?.suggestions || [])
+      setUserProfile(user.data)
+      setForm(prev => ({ ...prev, currency: user.data.default_currency || 'GHS' }))
     } catch (err) {
       if (err.response?.status === 401) {
         localStorage.clear()
@@ -404,7 +413,7 @@ export default function Expenses() {
                       <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{s.category}</span>
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Due: <strong className="text-slate-700 dark:text-slate-200">{s.date}</strong> • Amount: <strong className="text-slate-700 dark:text-slate-200">GH₵{s.amount}</strong>
+                      Due: <strong className="text-slate-700 dark:text-slate-200">{s.date}</strong> • Amount: <strong className="text-slate-700 dark:text-slate-200">{formatCurrency(Number(s.amount), s.currency)}</strong>
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -436,7 +445,7 @@ export default function Expenses() {
           <div className="bg-white dark:bg-white/[0.02] backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-sm dark:shadow-lg flex flex-col items-center justify-center text-center">
             <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Total Tracking Balance</p>
             <p className={`text-xl md:text-2xl font-bold ${totalTrackingBalance >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-              GH₵{totalTrackingBalance.toLocaleString('en-GH', { minimumFractionDigits: 2 })}
+              {formatCurrency(Number(totalTrackingBalance), userProfile?.default_currency || 'GHS')}
             </p>
           </div>
         </div>
@@ -546,7 +555,7 @@ export default function Expenses() {
                       </td>
                       <td className="px-5 py-4 text-slate-700 dark:text-slate-300">{exp.category}</td>
                       <td className="px-5 py-4 font-bold text-emerald-600 dark:text-cyan-400 tracking-tight drop-shadow-sm dark:drop-shadow-md">
-                        GH₵{Number(exp.amount).toLocaleString('en-GH', { minimumFractionDigits: 2 })}
+                        {formatCurrency(Number(exp.amount), exp.currency)}
                       </td>
                       <td className="px-5 py-4 text-slate-500">{exp.details || '—'}</td>
                       <td className="px-5 py-4 text-slate-500">{exp.payment_method || '—'}</td>
@@ -628,14 +637,23 @@ export default function Expenses() {
                   </select>
                 </div>
                 <div>
-                  <label className={labelClasses}>Amount (GHS)</label>
-                  <input
-                    type="number"
-                    value={form.amount}
-                    onChange={e => setForm({...form, amount: e.target.value})}
-                    placeholder="0.00"
-                    className={inputClasses}
-                  />
+                  <label className={labelClasses}>Amount</label>
+                  <div className="flex gap-2">
+                    <select
+                      value={form.currency}
+                      onChange={e => setForm({...form, currency: e.target.value})}
+                      className={`${inputClasses} !w-24`}
+                    >
+                      {CURRENCIES.map(c => <option key={c} value={c} className="bg-white dark:bg-slate-900">{c}</option>)}
+                    </select>
+                    <input
+                      type="number"
+                      value={form.amount}
+                      onChange={e => setForm({...form, amount: e.target.value})}
+                      placeholder="0.00"
+                      className={`${inputClasses} flex-1`}
+                    />
+                  </div>
                 </div>
               </div>
 

@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react'
 import Navbar from '../components/Navbar'
-import { getCategories, getBudgets, setBudgetBulk, getExpenses } from '../api/client'
+import { getCategories, getBudgets, setBudgetBulk, getExpenses, getMe } from '../api/client'
 import toast from 'react-hot-toast'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+const formatCurrency = (amount, currency = 'GHS') => {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount)
+}
 
 export default function Budgets() {
   const [categories, setCategories] = useState([])
@@ -12,6 +16,7 @@ export default function Budgets() {
   const [loading, setLoading] = useState(true)
   const [year, setYear] = useState(new Date().getFullYear())
   const [expandedCat, setExpandedCat] = useState(null)
+  const [userProfile, setUserProfile] = useState(null)
   
   // State for the currently edited category's 12 months
   const [editValues, setEditValues] = useState({})
@@ -23,14 +28,16 @@ export default function Budgets() {
   const load = async () => {
     try {
       setLoading(true)
-      const [catRes, budRes, expRes] = await Promise.all([
+      const [catRes, budRes, expRes, userRes] = await Promise.all([
         getCategories(),
         getBudgets(year),
-        getExpenses({ year })
+        getExpenses({ year }),
+        getMe()
       ])
       setCategories(catRes.data)
       setBudgets(budRes.data)
       setExpenses(expRes.data.expenses || expRes.data)
+      setUserProfile(userRes.data)
     } catch (error) {
       toast.error('Failed to load data')
       console.error(error)
@@ -163,7 +170,7 @@ export default function Budgets() {
                             <div className="text-right flex flex-col hidden sm:block">
                               <span className="text-xs text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">Spent / Budget</span>
                               <span className={`text-sm font-bold ${isYearlyOver ? 'text-rose-500' : 'text-slate-600 dark:text-slate-300'}`}>
-                                GH₵{yearlySpent.toLocaleString()} <span className="text-slate-400 dark:text-slate-500 font-medium">/ {yearlyTotal.toLocaleString()}</span>
+                                {formatCurrency(yearlySpent, userProfile?.default_currency)} <span className="text-slate-400 dark:text-slate-500 font-medium">/ {formatCurrency(yearlyTotal, userProfile?.default_currency)}</span>
                               </span>
                             </div>
                             <svg className={`w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform duration-300 shrink-0 ${isExpanded ? 'rotate-180 text-cyan-600 dark:text-cyan-400' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7-7-7-7" /></svg>
@@ -196,7 +203,7 @@ export default function Budgets() {
                                   <div key={m} className="flex flex-col">
                                     <label className="text-xs font-semibold text-slate-500 uppercase mb-1 ml-1">{m}</label>
                                     <div className="relative group">
-                                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-sm">GH₵</span>
+                                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-sm">{userProfile?.default_currency || 'GHS'}</span>
                                       <input 
                                         type="number" 
                                         value={editValues[i + 1] === 0 ? '' : editValues[i + 1]}

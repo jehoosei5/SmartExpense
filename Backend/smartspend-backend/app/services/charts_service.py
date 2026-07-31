@@ -20,7 +20,7 @@ def get_monthly_summary(
         extract("year", Expense.date).label("year"),
         extract("month", Expense.date).label("month"),
         Expense.type,
-        func.sum(Expense.amount).label("total")
+        func.sum(Expense.base_amount).label("total")
     ).filter(Expense.user_id == user_id)
     
     if year:
@@ -124,7 +124,7 @@ def get_category_breakdown(
     query = db.query(
         Expense.category,
         Expense.type,
-        func.sum(Expense.amount).label("total"),
+        func.sum(Expense.base_amount).label("total"),
         func.count(Expense.id).label("count")
     ).filter(Expense.user_id == user_id)
 
@@ -204,7 +204,7 @@ def get_trend(db: Session, user_id: str, months: int = 6):
         extract("year", Expense.date).label("year"),
         extract("month", Expense.date).label("month"),
         Expense.type,
-        func.sum(Expense.amount).label("total")
+        func.sum(Expense.base_amount).label("total")
     ).filter(
         Expense.user_id == user_id
     ).group_by(
@@ -258,7 +258,7 @@ def get_dashboard_summary(
 ):
     query = db.query(
         Expense.type,
-        func.sum(Expense.amount).label("total"),
+        func.sum(Expense.base_amount).label("total"),
         func.count(Expense.id).label("count")
     ).filter(Expense.user_id == user_id)
 
@@ -286,7 +286,7 @@ def get_dashboard_summary(
     # Top spending category in this range
     top_query = db.query(
         Expense.category,
-        func.sum(Expense.amount).label("total")
+        func.sum(Expense.base_amount).label("total")
     ).filter(
         Expense.user_id == user_id,
         Expense.type == "Expenses"
@@ -300,7 +300,7 @@ def get_dashboard_summary(
     top = top_query.group_by(
         Expense.category
     ).order_by(
-        func.sum(Expense.amount).desc()
+        func.sum(Expense.base_amount).desc()
     ).first()
 
     return {

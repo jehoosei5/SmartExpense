@@ -66,6 +66,8 @@ class ExpenseResponse(BaseModel):
     type:           str
     category:       str
     amount:         float
+    base_amount:    float
+    exchange_rate:  float
     currency:       str
     details:        Optional[str]
     payment_method: Optional[str]
