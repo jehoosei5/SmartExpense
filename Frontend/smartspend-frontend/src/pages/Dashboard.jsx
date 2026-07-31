@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { useTheme } from '../contexts/ThemeContext'
-import { getDashboard, getMonthly, getCategories2, getExpenses } from '../api/client'
+import { getDashboard, getMonthly, getCategories2, getExpenses, getMe } from '../api/client'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   PieChart, Pie, Cell, ResponsiveContainer
@@ -12,6 +12,10 @@ import {
 const COLORS_INC = ['#34d399', '#10b981', '#059669', '#047857', '#6ee7b7']
 const COLORS_EXP = ['#fb7185', '#f43f5e', '#e11d48', '#be123c', '#fda4af']
 const COLORS_SAV = ['#e879f9', '#d946ef', '#c026d3', '#a21caf', '#f0abfc']
+
+const formatCurrency = (amount, currency = 'GHS') => {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount)
+}
 
 function DonutChartCard({ title, data, colors, type }) {
   const total = data.reduce((sum, item) => sum + Number(item.total), 0)
@@ -87,7 +91,7 @@ function StatCard({ label, amount, color = 'blue', sub = '', onClick }) {
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">{label}</p>
       <p className="text-2xl lg:text-3xl font-bold mt-2 tracking-tight drop-shadow-md">
-        GH₵{Number(amount || 0).toLocaleString('en-GH', { minimumFractionDigits: 2 })}
+        {formatCurrency(Number(amount || 0), sub)}
       </p>
       {sub && <p className="text-xs mt-3 text-slate-500 font-medium">{sub}</p>}
     </div>
@@ -200,7 +204,7 @@ const CustomChartTooltip = ({ active, payload, label }) => {
             <div key={index} className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
               <span className="text-xs text-slate-600 dark:text-slate-300 w-16">{entry.name}</span>
-              <span className="text-sm font-bold text-slate-900 dark:text-white">GH₵{Number(entry.value).toLocaleString()}</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white">{formatCurrency(Number(entry.value), payload[0]?.payload?.currency || 'GHS')}</span>
             </div>
           ))}
         </div>
@@ -222,6 +226,7 @@ export default function Dashboard() {
   const [filterType, setFilterType] = useState('this_month')
   const [customStart, setCustomStart] = useState('')
   const [customEnd, setCustomEnd] = useState('')
+  const [userProfile, setUserProfile] = useState(null)
 
   // Chart Toggles
   const [showIncome, setShowIncome] = useState(true)
@@ -297,14 +302,16 @@ export default function Dashboard() {
 
         const { startDate, endDate } = computeDateRange();
 
-        const [s, m, c] = await Promise.all([
+        const [s, m, c, u] = await Promise.all([
           getDashboard(startDate, endDate),
           getMonthly(null, startDate, endDate),
-          getCategories2(null, startDate, endDate)
+          getCategories2(null, startDate, endDate),
+          getMe()
         ])
         setSummary(s.data)
         setMonthly(m.data)
         setCatData(c.data)
+        setUserProfile(u.data)
       } catch (err) {
         if (err.response?.status === 401) {
           localStorage.clear()
@@ -384,15 +391,15 @@ export default function Dashboard() {
           <div className="flex flex-wrap items-center gap-4 xl:gap-8 shrink-0">
              <div className="text-center bg-emerald-500/10 border border-emerald-500/20 px-6 py-2 rounded-xl">
                <p className="text-xs text-emerald-600 dark:text-emerald-400 uppercase tracking-widest font-bold">Total Income</p>
-               <p className="text-xl font-bold text-slate-900 dark:text-white">GH₵{Number(summary?.income || 0).toLocaleString()}</p>
+               <p className="text-xl font-bold text-slate-900 dark:text-white">{formatCurrency(Number(summary?.income || 0), userProfile?.default_currency)}</p>
              </div>
              <div className="text-center bg-rose-500/10 border border-rose-500/20 px-6 py-2 rounded-xl">
                <p className="text-xs text-rose-600 dark:text-rose-400 uppercase tracking-widest font-bold">Total Expenses</p>
-               <p className="text-xl font-bold text-slate-900 dark:text-white">GH₵{Number(summary?.expenses || 0).toLocaleString()}</p>
+               <p className="text-xl font-bold text-slate-900 dark:text-white">{formatCurrency(Number(summary?.expenses || 0), userProfile?.default_currency)}</p>
              </div>
              <div className="text-center bg-blue-500/10 border border-blue-500/20 px-6 py-2 rounded-xl">
                <p className="text-xs text-blue-600 dark:text-blue-400 uppercase tracking-widest font-bold">Period Balance</p>
-               <p className="text-xl font-bold text-slate-900 dark:text-white">GH₵{Number(summary?.balance || 0).toLocaleString()}</p>
+               <p className="text-xl font-bold text-slate-900 dark:text-white">{formatCurrency(Number(summary?.balance || 0), userProfile?.default_currency)}</p>
              </div>
           </div>
         </div>
@@ -531,7 +538,7 @@ export default function Dashboard() {
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{tx.date} {tx.details && `• ${tx.details}`}</p>
                       </div>
                       <p className={`font-bold ${tx.type === 'Income' ? 'text-emerald-600 dark:text-emerald-400' : tx.type === 'Expenses' ? 'text-rose-600 dark:text-rose-400' : 'text-fuchsia-600 dark:text-fuchsia-400'}`}>
-                        {tx.type === 'Expenses' ? '-' : '+'}GH₵{Number(tx.amount).toLocaleString()}
+                        {tx.type === 'Expenses' ? '-' : '+'}{formatCurrency(Number(tx.amount), tx.currency)}
                       </p>
                     </div>
                   ))}

@@ -19,47 +19,52 @@ def run_migration():
         try:
             logger.info("Starting Postgres migration...")
             
-            # Check if recurrence_period exists
-            # We use a query against information_schema to be safe across dialects
-            check_query = text("""
-                SELECT column_name 
-                FROM information_schema.columns 
-                WHERE table_name='expenses' AND column_name='recurrence_period'
-            """)
+            # List of columns to check and add
+            columns_to_add = [
+                ("is_recurring", "BOOLEAN NOT NULL DEFAULT FALSE"),
+                ("recurrence_period", "VARCHAR(50) NULL"),
+                ("recurrence_days", "VARCHAR(50) NULL"),
+                ("recurrence_end_date", "DATE NULL"),
+                ("base_amount", "DECIMAL(10, 2) NULL"),
+                ("exchange_rate", "DECIMAL(10, 6) NULL"),
+                ("sync_hash", "VARCHAR(64) NULL")
+            ]
             
-            result = conn.execute(check_query).fetchone()
-            
-            if not result:
-                logger.info("Adding missing columns to expenses table...")
+            for col_name, col_type in columns_to_add:
+                # Check if column exists
+                check_query = text(f"""
+                    SELECT column_name 
+                    FROM information_schema.columns 
+                    WHERE table_name='expenses' AND column_name='{col_name}'
+                """)
                 
-                # Using separate ADD COLUMN statements for broader compatibility
-                columns = [
-                    "recurrence_period VARCHAR(50) NULL",
-                    "recurrence_days VARCHAR(50) NULL",
-                    "recurrence_end_date DATE NULL",
-                    "base_amount DECIMAL(10, 2) NULL",
-                    "exchange_rate DECIMAL(10, 6) NULL"
-                ]
+                result = conn.execute(check_query).fetchone()
                 
-                for col in columns:
+                if not result:
+                    logger.info(f"Adding missing column {col_name} to expenses table...")
                     try:
-                        conn.execute(text(f"ALTER TABLE expenses ADD COLUMN {col};"))
-                        logger.info(f"Added column: {col}")
+                        conn.execute(text(f"ALTER TABLE expenses ADD COLUMN {col_name} {col_type};"))
+                        conn.commit()  # Commit immediately to apply schema change
+                        logger.info(f"Added column: {col_name}")
                     except Exception as e:
-                        logger.warning(f"Could not add {col}. It might already exist. Error: {e}")
-                
-                # Backfill data for base_amount and exchange_rate
-                logger.info("Backfilling base_amount and exchange_rate...")
+                        conn.rollback()
+                        logger.error(f"Failed to add {col_name}: {e}")
+                else:
+                    logger.info(f"Column {col_name} already exists. Skipping.")
+            
+            # Backfill data for base_amount and exchange_rate
+            logger.info("Backfilling base_amount and exchange_rate...")
+            try:
                 conn.execute(text("UPDATE expenses SET base_amount = amount, exchange_rate = 1.0 WHERE base_amount IS NULL;"))
-                
                 conn.commit()
-                logger.info("Migration completed successfully!")
-            else:
-                logger.info("Columns already exist. Nothing to do.")
+            except Exception as e:
+                conn.rollback()
+                logger.error(f"Failed to backfill data: {e}")
+            
+            logger.info("Migration completed successfully!")
 
         except Exception as e:
-            logger.error(f"Migration failed: {e}")
-            conn.rollback()
+            logger.error(f"Migration failed globally: {e}")
 
 if __name__ == "__main__":
     run_migration()
