@@ -19,31 +19,32 @@ def run_migration():
         try:
             logger.info("Starting Postgres migration...")
             
-            # List of columns to check and add
             columns_to_add = [
-                ("is_recurring", "BOOLEAN NOT NULL DEFAULT FALSE"),
-                ("recurrence_period", "VARCHAR(50) NULL"),
-                ("recurrence_days", "VARCHAR(50) NULL"),
-                ("recurrence_end_date", "DATE NULL"),
-                ("base_amount", "DECIMAL(10, 2) NULL"),
-                ("exchange_rate", "DECIMAL(10, 6) NULL"),
-                ("sync_hash", "VARCHAR(64) NULL")
+                ("expenses", "is_recurring", "BOOLEAN NOT NULL DEFAULT FALSE"),
+                ("expenses", "recurrence_period", "VARCHAR(50) NULL"),
+                ("expenses", "recurrence_days", "VARCHAR(50) NULL"),
+                ("expenses", "recurrence_end_date", "DATE NULL"),
+                ("expenses", "base_amount", "DECIMAL(10, 2) NULL"),
+                ("expenses", "exchange_rate", "DECIMAL(10, 6) NULL"),
+                ("expenses", "sync_hash", "VARCHAR(64) NULL"),
+                ("users", "report_frequency", "VARCHAR(20) NOT NULL DEFAULT 'NONE'"),
+                ("users", "last_report_sent_at", "TIMESTAMP NULL")
             ]
             
-            for col_name, col_type in columns_to_add:
+            for table_name, col_name, col_type in columns_to_add:
                 # Check if column exists
                 check_query = text(f"""
                     SELECT column_name 
                     FROM information_schema.columns 
-                    WHERE table_name='expenses' AND column_name='{col_name}'
+                    WHERE table_name='{table_name}' AND column_name='{col_name}'
                 """)
                 
                 result = conn.execute(check_query).fetchone()
                 
                 if not result:
-                    logger.info(f"Adding missing column {col_name} to expenses table...")
+                    logger.info(f"Adding missing column {col_name} to {table_name} table...")
                     try:
-                        conn.execute(text(f"ALTER TABLE expenses ADD COLUMN {col_name} {col_type};"))
+                        conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {col_name} {col_type};"))
                         conn.commit()  # Commit immediately to apply schema change
                         logger.info(f"Added column: {col_name}")
                     except Exception as e:
