@@ -12,13 +12,14 @@ from app.config import settings
 
 from app.models.category import Category
 from app.database import SessionLocal
-from scripts.migrate_postgres import run_migration
 
 try:
-    print("Creating database tables...")
+    print("Creating database tables...", flush=True)
     Base.metadata.create_all(bind=engine)
+    print("Database tables created.", flush=True)
     
     # Seed default categories if none exist
+    print("Seeding default categories...", flush=True)
     db = SessionLocal()
     if db.query(Category).count() == 0:
         defaults = [
@@ -33,12 +34,9 @@ try:
             db.add(Category(name=name, type=ctype, is_default=1, user_id=None))
         db.commit()
     db.close()
-    
-    # Run auto-migration for postgres
-    print("Running column migrations...")
-    run_migration()
+    print("Seeding complete.", flush=True)
 except Exception as e:
-    print(f"Error creating database tables: {e}")
+    print(f"Error creating database tables: {e}", flush=True)
     
 app = FastAPI(
     title="SmartSpend AI", 
@@ -74,3 +72,12 @@ def root():
 @app.head("/health")
 def health_check():
     return {"status": "ok"}
+
+@app.get("/api/migrate")
+def migrate_db():
+    from scripts.migrate_postgres import run_migration
+    try:
+        run_migration()
+        return {"message": "Migration completed. Check Render logs for details."}
+    except Exception as e:
+        return {"error": str(e)}
