@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { useTheme } from '../contexts/ThemeContext'
-import { getDashboard, getMonthly, getCategories2, getExpenses, processRecurring } from '../api/client'
+import { getDashboard, getMonthly, getCategories2, getExpenses } from '../api/client'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   PieChart, Pie, Cell, ResponsiveContainer
@@ -294,9 +294,6 @@ export default function Dashboard() {
     async function load() {
       try {
         setLoading(true)
-        
-        // Silently process recurring expenses
-        try { await processRecurring() } catch (e) { console.error('Failed to process recurring expenses:', e) }
 
         const { startDate, endDate } = computeDateRange();
 

@@ -19,8 +19,16 @@ from app.services.expense_service import (
     get_expenses,
     update_expense,
     delete_expense,
-    process_recurring_expenses
+    get_recurring_suggestions
 )
+
+from pydantic import BaseModel
+from app.models.snoozed_recurrence import SnoozedRecurrence
+
+class SnoozeRequest(BaseModel):
+    sync_hash: str
+    remind_date: Optional[date] = None
+    is_dismissed: bool = False
 
 router = APIRouter(prefix="/expenses", tags=["Expenses"])
 
@@ -144,10 +152,36 @@ def delete(
             detail=error
         )
 
-@router.post("/process-recurring")
-def trigger_recurring_process(
+@router.get("/suggestions")
+def get_suggestions(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    created_count = process_recurring_expenses(db, current_user.id)
-    return {"message": "Recurring expenses processed successfully", "created_count": created_count}
+    suggestions = get_recurring_suggestions(db, current_user.id)
+    return {"suggestions": suggestions}
+
+@router.post("/suggestions/snooze")
+def snooze_suggestion(
+    data: SnoozeRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    snoozed = db.query(SnoozedRecurrence).filter(
+        SnoozedRecurrence.sync_hash == data.sync_hash,
+        SnoozedRecurrence.user_id == current_user.id
+    ).first()
+    
+    if not snoozed:
+        snoozed = SnoozedRecurrence(
+            user_id=current_user.id,
+            sync_hash=data.sync_hash,
+            remind_date=data.remind_date,
+            is_dismissed=data.is_dismissed
+        )
+        db.add(snoozed)
+    else:
+        snoozed.remind_date = data.remind_date
+        snoozed.is_dismissed = data.is_dismissed
+        
+    db.commit()
+    return {"message": "Suggestion updated successfully"}

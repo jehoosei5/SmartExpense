@@ -45,8 +45,11 @@ export const updateExpense = (id, data) =>
 export const deleteExpense = (id) =>
   api.delete(`/expenses/${id}`)
 
-export const processRecurring = () =>
-  api.post('/expenses/process-recurring')
+export const getSuggestions = () =>
+  api.get('/expenses/suggestions')
+
+export const snoozeSuggestion = (payload) =>
+  api.post('/expenses/suggestions/snooze', payload)
 
 // ── Categories ────────────────────────────────────────────────────────────
 export const getCategories = (type = null) =>

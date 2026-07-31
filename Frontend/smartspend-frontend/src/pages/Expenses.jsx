@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
-import { getExpenses, createExpense, updateExpense, deleteExpense, getCategories, createCategory, deleteCategory, reorderCategories, exportExpenses, processRecurring } from '../api/client'
+import { getExpenses, createExpense, updateExpense, deleteExpense, getCategories, createCategory, deleteCategory, reorderCategories, exportExpenses, getSuggestions, snoozeSuggestion } from '../api/client'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import toast from 'react-hot-toast'
 
@@ -19,10 +19,17 @@ const EMPTY_FORM = {
   notes: '',
   source: 'form',
   is_recurring: false,
-  recurrence_period: ''
+  recurrence_period: '',
+  recurrence_days: '',
+  recurrence_end_date: ''
 }
 
-const RECURRENCE_PERIODS = ['daily', 'weekly', 'monthly', 'yearly']
+const RECURRENCE_PERIODS = ['daily', 'weekly', 'monthly', 'yearly', 'custom']
+const DAYS_OF_WEEK = [
+  { val: '0', label: 'Mon' }, { val: '1', label: 'Tue' }, { val: '2', label: 'Wed' },
+  { val: '3', label: 'Thu' }, { val: '4', label: 'Fri' }, { val: '5', label: 'Sat' },
+  { val: '6', label: 'Sun' }
+]
 
 export default function Expenses() {
   const navigate = useNavigate()
@@ -30,6 +37,7 @@ export default function Expenses() {
   // Data
   const [expenses, setExpenses]     = useState([])
   const [categories, setCategories] = useState([])
+  const [suggestions, setSuggestions] = useState([])
   const [loading, setLoading]       = useState(true)
 
   // Filters
@@ -56,17 +64,21 @@ export default function Expenses() {
   const [catError, setCatError]               = useState('')
   const [catSaving, setCatSaving]             = useState(false)
 
+  // Snooze Modal
+  const [snoozeModal, setSnoozeModal] = useState({ show: false, sync_hash: '', date: '' })
+
   useEffect(() => { loadAll() }, [])
 
   async function loadAll() {
     try {
-      try { await processRecurring() } catch (e) { console.error('Failed to process recurring expenses:', e) }
-      const [exp, cat] = await Promise.all([
+      const [exp, cat, sugg] = await Promise.all([
         getExpenses(),
-        getCategories()
+        getCategories(),
+        getSuggestions().catch(() => ({ data: { suggestions: [] } }))
       ])
       setExpenses(exp.data.expenses || exp.data)
       setCategories(cat.data)
+      setSuggestions(sugg.data?.suggestions || [])
     } catch (err) {
       if (err.response?.status === 401) {
         localStorage.clear()
@@ -134,7 +146,9 @@ export default function Expenses() {
       payment_method: form.payment_method || null,
       details: form.details || null,
       notes: form.notes || null,
-      recurrence_period: form.is_recurring ? (form.recurrence_period || null) : null
+      recurrence_period: form.is_recurring ? (form.recurrence_period || null) : null,
+      recurrence_days: form.is_recurring && form.recurrence_period === 'custom' ? (form.recurrence_days || null) : null,
+      recurrence_end_date: form.is_recurring ? (form.recurrence_end_date || null) : null
     }
 
     try {
@@ -235,6 +249,51 @@ export default function Expenses() {
       })
   }
 
+  async function handleAcceptSuggestion(sugg) {
+    try {
+      await createExpense(sugg)
+      toast.success('Suggestion accepted!')
+      setSuggestions(prev => prev.filter(s => s.sync_hash !== sugg.sync_hash))
+      loadExpenses()
+    } catch (err) {
+      toast.error('Failed to accept suggestion')
+    }
+  }
+
+  function handleEditSuggestion(sugg) {
+    setForm({
+      ...EMPTY_FORM,
+      ...sugg
+    })
+    setEditingId(null)
+    setShowForm(true)
+  }
+
+  async function handleSnoozeSubmit() {
+    if (!snoozeModal.date) {
+      toast.error('Please select a date')
+      return
+    }
+    try {
+      await snoozeSuggestion({ sync_hash: snoozeModal.sync_hash, remind_date: snoozeModal.date, is_dismissed: false })
+      toast.success('Reminder set!')
+      setSuggestions(prev => prev.filter(s => s.sync_hash !== snoozeModal.sync_hash))
+      setSnoozeModal({ show: false, sync_hash: '', date: '' })
+    } catch (err) {
+      toast.error('Failed to snooze suggestion')
+    }
+  }
+
+  async function handleDismissSuggestion(sync_hash) {
+    try {
+      await snoozeSuggestion({ sync_hash, is_dismissed: true })
+      toast.success('Suggestion dismissed')
+      setSuggestions(prev => prev.filter(s => s.sync_hash !== sync_hash))
+    } catch (err) {
+      toast.error('Failed to dismiss suggestion')
+    }
+  }
+
   function handleEdit(expense) {
     setForm({
       date:           expense.date,
@@ -247,7 +306,9 @@ export default function Expenses() {
       notes:          expense.notes || '',
       source:         expense.source || 'form',
       is_recurring:   expense.is_recurring || false,
-      recurrence_period: expense.recurrence_period || ''
+      recurrence_period: expense.recurrence_period || '',
+      recurrence_days: expense.recurrence_days || '',
+      recurrence_end_date: expense.recurrence_end_date || ''
     })
     setEditingId(expense.id)
     setShowForm(true)
@@ -326,6 +387,37 @@ export default function Expenses() {
             </button>
           </div>
         </div>
+
+        {/* Suggestions Banner */}
+        {suggestions.length > 0 && (
+          <div className="bg-white dark:bg-white/[0.02] backdrop-blur-xl border border-cyan-200 dark:border-cyan-500/30 rounded-2xl p-5 mb-8 shadow-md dark:shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-2 h-full bg-cyan-500"></div>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+              <span className="text-cyan-500">✨</span> Pending Recurring Expenses
+            </h2>
+            <div className="grid gap-3">
+              {suggestions.map(s => (
+                <div key={s.sync_hash} className="bg-slate-50 dark:bg-black/20 border border-slate-100 dark:border-white/5 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${typeColors[s.type]}`}>{s.type}</span>
+                      <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{s.category}</span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Due: <strong className="text-slate-700 dark:text-slate-200">{s.date}</strong> • Amount: <strong className="text-slate-700 dark:text-slate-200">GH₵{s.amount}</strong>
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => handleAcceptSuggestion(s)} className="bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-500/30 transition-colors">Accept</button>
+                    <button onClick={() => handleEditSuggestion(s)} className="bg-blue-500/20 text-blue-600 dark:text-blue-400 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-500/30 transition-colors">Edit</button>
+                    <button onClick={() => setSnoozeModal({ show: true, sync_hash: s.sync_hash, date: '' })} className="bg-orange-500/20 text-orange-600 dark:text-orange-400 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-orange-500/30 transition-colors">Snooze</button>
+                    <button onClick={() => handleDismissSuggestion(s.sync_hash)} className="bg-rose-500/20 text-rose-600 dark:text-rose-400 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-rose-500/30 transition-colors">Dismiss</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -571,28 +663,66 @@ export default function Expenses() {
                   </select>
                 </div>
                 
-                <div className="flex items-center gap-3 pt-6">
-                  <input
-                    type="checkbox"
-                    id="is_recurring"
-                    checked={form.is_recurring}
-                    onChange={e => setForm({...form, is_recurring: e.target.checked})}
-                    className="w-5 h-5 accent-cyan-500 bg-slate-100 dark:bg-slate-900/50 border-slate-200 dark:border-white/10 rounded"
-                  />
-                  <label htmlFor="is_recurring" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    Is Recurring?
-                  </label>
-                  {form.is_recurring && (
-                    <select
-                      value={form.recurrence_period}
-                      onChange={e => setForm({...form, recurrence_period: e.target.value})}
-                      className={`${inputClasses} py-1.5 ml-2 !w-32`}
-                    >
-                      <option value="" className="bg-white dark:bg-slate-900">Period</option>
-                      {RECURRENCE_PERIODS.map(p => <option key={p} value={p} className="bg-white dark:bg-slate-900">{p}</option>)}
-                    </select>
-                  )}
-                </div>
+                  <div className="flex flex-col gap-2 pt-6">
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="is_recurring"
+                        checked={form.is_recurring}
+                        onChange={e => setForm({...form, is_recurring: e.target.checked})}
+                        className="w-5 h-5 accent-cyan-500 bg-slate-100 dark:bg-slate-900/50 border-slate-200 dark:border-white/10 rounded"
+                      />
+                      <label htmlFor="is_recurring" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                        Is Recurring?
+                      </label>
+                    </div>
+                    {form.is_recurring && (
+                      <div className="flex flex-col gap-3 mt-2">
+                        <select
+                          value={form.recurrence_period}
+                          onChange={e => setForm({...form, recurrence_period: e.target.value})}
+                          className={inputClasses}
+                        >
+                          <option value="" className="bg-white dark:bg-slate-900">Period</option>
+                          {RECURRENCE_PERIODS.map(p => <option key={p} value={p} className="bg-white dark:bg-slate-900">{p}</option>)}
+                        </select>
+                        
+                        {form.recurrence_period === 'custom' && (
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {DAYS_OF_WEEK.map(day => {
+                              const selectedDays = form.recurrence_days ? form.recurrence_days.split(',') : [];
+                              const isSelected = selectedDays.includes(day.val);
+                              return (
+                                <button
+                                  key={day.val}
+                                  type="button"
+                                  onClick={() => {
+                                    let newDays = [...selectedDays];
+                                    if (isSelected) newDays = newDays.filter(d => d !== day.val);
+                                    else newDays.push(day.val);
+                                    setForm({...form, recurrence_days: newDays.join(',')});
+                                  }}
+                                  className={`px-3 py-1 rounded-lg text-xs font-bold border transition-colors ${isSelected ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-500' : 'bg-transparent border-slate-200 dark:border-white/10 text-slate-500'}`}
+                                >
+                                  {day.label}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        )}
+                        
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">End Date (Optional)</label>
+                          <input
+                            type="date"
+                            value={form.recurrence_end_date}
+                            onChange={e => setForm({...form, recurrence_end_date: e.target.value})}
+                            className={inputClasses}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
               </div>
 
               <div>
@@ -625,6 +755,41 @@ export default function Expenses() {
                   Cancel
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Snooze Modal */}
+      {snoozeModal.show && (
+        <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-xl dark:shadow-[0_0_40px_rgba(0,0,0,0.5)] p-6 md:p-8 w-full max-w-sm text-center">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Remind me later</h2>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">Select a date to be reminded about this transaction.</p>
+            
+            <input
+              type="date"
+              value={snoozeModal.date}
+              onChange={e => setSnoozeModal({...snoozeModal, date: e.target.value})}
+              min={new Date().toISOString().split('T')[0]}
+              className={`${inputClasses} mb-8`}
+            />
+
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={handleSnoozeSubmit}
+                className="flex-1 bg-cyan-500 text-white py-3 rounded-xl text-sm font-bold hover:bg-cyan-600 shadow-md transition-all"
+              >
+                Set Reminder
+              </button>
+              <button
+                type="button"
+                onClick={() => setSnoozeModal({ show: false, sync_hash: '', date: '' })}
+                className="flex-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 py-3 rounded-xl text-sm font-bold hover:bg-slate-200 dark:hover:bg-white/10 transition-all"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>

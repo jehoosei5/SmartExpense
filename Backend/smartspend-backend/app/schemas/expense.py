@@ -24,6 +24,7 @@ class RecurrencePeriod(str, Enum):
     weekly  = "weekly"
     monthly = "monthly"
     yearly  = "yearly"
+    custom  = "custom"
 
 # What the client sends to CREATE an expense
 class ExpenseCreate(BaseModel):
@@ -38,6 +39,8 @@ class ExpenseCreate(BaseModel):
     notes:          Optional[str] = None
     is_recurring:   bool = False
     recurrence_period: Optional[RecurrencePeriod] = None
+    recurrence_days:   Optional[str] = None
+    recurrence_end_date: Optional[dt_date] = None
 
 # What the client sends to UPDATE an expense
 # Everything is optional — only send what you want to change
@@ -52,6 +55,8 @@ class ExpenseUpdate(BaseModel):
     notes:          Optional[str] = None
     is_recurring:   Optional[bool] = None
     recurrence_period: Optional[RecurrencePeriod] = None
+    recurrence_days:   Optional[str] = None
+    recurrence_end_date: Optional[dt_date] = None
 
 # What the API returns when reading an expense
 class ExpenseResponse(BaseModel):
@@ -68,6 +73,8 @@ class ExpenseResponse(BaseModel):
     notes:          Optional[str]
     is_recurring:   bool
     recurrence_period: Optional[str]
+    recurrence_days:   Optional[str]
+    recurrence_end_date: Optional[dt_date]
     created_at:     datetime
 
     class Config:

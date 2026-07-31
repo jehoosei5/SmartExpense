@@ -7,6 +7,7 @@ from typing import Optional
 from datetime import date
 from dateutil.relativedelta import relativedelta
 from sqlalchemy import func
+from app.models.snoozed_recurrence import SnoozedRecurrence
 
 def create_expense(db: Session, data: ExpenseCreate, user_id: str):
     # Generate sync hash for duplicate prevention
@@ -37,6 +38,8 @@ def create_expense(db: Session, data: ExpenseCreate, user_id: str):
         notes=data.notes,
         is_recurring=data.is_recurring,
         recurrence_period=data.recurrence_period.value if data.recurrence_period else None,
+        recurrence_days=data.recurrence_days,
+        recurrence_end_date=data.recurrence_end_date,
         sync_hash=sync_hash
     )
     db.add(expense)
@@ -116,6 +119,10 @@ def update_expense(db: Session, expense_id: str, user_id: str, data: ExpenseUpda
         expense.is_recurring = data.is_recurring
     if data.recurrence_period is not None:
         expense.recurrence_period = data.recurrence_period.value if data.recurrence_period else None
+    if data.recurrence_days is not None:
+        expense.recurrence_days = data.recurrence_days
+    if data.recurrence_end_date is not None:
+        expense.recurrence_end_date = data.recurrence_end_date
 
     db.commit()
     db.refresh(expense)
@@ -136,7 +143,7 @@ def delete_expense(db: Session, expense_id: str, user_id: str):
     return True, None
 
 
-def process_recurring_expenses(db: Session, user_id: str):
+def get_recurring_suggestions(db: Session, user_id: str):
     rows = db.query(
         Expense.type,
         Expense.category,
@@ -145,6 +152,8 @@ def process_recurring_expenses(db: Session, user_id: str):
         Expense.details,
         Expense.payment_method,
         Expense.recurrence_period,
+        Expense.recurrence_days,
+        Expense.recurrence_end_date,
         func.max(Expense.date).label("latest_date")
     ).filter(
         Expense.user_id == user_id,
@@ -157,15 +166,19 @@ def process_recurring_expenses(db: Session, user_id: str):
         Expense.currency,
         Expense.details,
         Expense.payment_method,
-        Expense.recurrence_period
+        Expense.recurrence_period,
+        Expense.recurrence_days,
+        Expense.recurrence_end_date
     ).all()
 
     today = date.today()
-    created_count = 0
+    suggestions = []
 
     for row in rows:
         latest_date = row.latest_date
         period = row.recurrence_period
+        custom_days = row.recurrence_days
+        end_date = row.recurrence_end_date
         
         while True:
             if period == 'daily':
@@ -176,12 +189,26 @@ def process_recurring_expenses(db: Session, user_id: str):
                 next_date = latest_date + relativedelta(months=1)
             elif period == 'yearly':
                 next_date = latest_date + relativedelta(years=1)
+            elif period == 'custom':
+                next_date = latest_date + relativedelta(days=1)
             else:
                 break
                 
             if next_date > today:
                 break
                 
+            if end_date and next_date > end_date:
+                break
+                
+            # For custom period, check if the weekday matches
+            if period == 'custom' and custom_days:
+                allowed_days = custom_days.split(',')
+                # weekday(): 0=Mon, 1=Tue, ..., 6=Sun
+                # If next_date's weekday is not in allowed_days, skip it but advance the loop
+                if str(next_date.weekday()) not in allowed_days:
+                    latest_date = next_date
+                    continue
+
             sync_hash = generate_sync_hash(
                 user_id=user_id,
                 date=str(next_date),
@@ -193,27 +220,34 @@ def process_recurring_expenses(db: Session, user_id: str):
             
             existing = db.query(Expense).filter(Expense.sync_hash == sync_hash).first()
             if not existing:
-                new_exp = Expense(
-                    user_id=user_id,
-                    date=next_date,
-                    type=row.type,
-                    category=row.category,
-                    amount=row.amount,
-                    currency=row.currency,
-                    details=row.details,
-                    payment_method=row.payment_method,
-                    source='form',
-                    notes="Auto-generated recurring expense",
-                    is_recurring=True,
-                    recurrence_period=period,
-                    sync_hash=sync_hash
-                )
-                db.add(new_exp)
-                created_count += 1
+                # Check snoozed
+                snoozed = db.query(SnoozedRecurrence).filter(SnoozedRecurrence.sync_hash == sync_hash).first()
+                should_suggest = True
+                
+                if snoozed:
+                    if snoozed.is_dismissed:
+                        should_suggest = False
+                    elif snoozed.remind_date and snoozed.remind_date > today:
+                        should_suggest = False
+                        
+                if should_suggest:
+                    suggestions.append({
+                        "date": next_date,
+                        "type": row.type,
+                        "category": row.category,
+                        "amount": row.amount,
+                        "currency": row.currency,
+                        "details": row.details,
+                        "payment_method": row.payment_method,
+                        "source": 'form',
+                        "notes": "Suggested recurring expense",
+                        "is_recurring": True,
+                        "recurrence_period": period,
+                        "recurrence_days": custom_days,
+                        "recurrence_end_date": end_date,
+                        "sync_hash": sync_hash
+                    })
                 
             latest_date = next_date
 
-    if created_count > 0:
-        db.commit()
-        
-    return created_count
+    return suggestions
