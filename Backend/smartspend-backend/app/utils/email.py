@@ -25,11 +25,11 @@ def send_email(to_email: str, subject: str, html_content: str):
         part = MIMEText(html_content, "html")
         msg.attach(part)
 
-        # Connect to server
+        # Connect to server (force IPv4 for Railway compatibility)
         if settings.SMTP_PORT == 465:
-            server = smtplib.SMTP_SSL(settings.SMTP_SERVER, settings.SMTP_PORT)
+            server = smtplib.SMTP_SSL(settings.SMTP_SERVER, settings.SMTP_PORT, source_address=('0.0.0.0', 0))
         else:
-            server = smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT)
+            server = smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT, source_address=('0.0.0.0', 0))
             server.starttls()
             
         server.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
