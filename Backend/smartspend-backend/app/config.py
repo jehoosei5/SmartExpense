@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     SMTP_USERNAME: str = ""
     SMTP_PASSWORD: str = ""
     SMTP_FROM_EMAIL: str = ""
+    RESEND_API_KEY: str = ""
     
     # Cron / Background Tasks
     CRON_SECRET: str = "changeme"
