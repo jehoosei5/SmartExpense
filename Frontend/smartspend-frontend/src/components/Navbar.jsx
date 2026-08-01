@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTheme } from '../contexts/ThemeContext'
 import { getAlerts, markAlertRead } from '../api/client'
+import toast from 'react-hot-toast'
 
 export default function Navbar() {
   const location = useLocation()
@@ -29,6 +30,51 @@ export default function Navbar() {
     try {
       const res = await getAlerts()
       setAlerts(res.data)
+      
+      // Check if there are any alerts for the CURRENT month
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      
+      const recentAlerts = res.data.filter(a => {
+        const d = new Date(a.created_at);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      });
+
+      if (recentAlerts.length > 0) {
+        // Extract category and percentage from the alerts
+        const categoriesWithPercent = recentAlerts.map(a => {
+          const cat = a.title.replace('Budget Alert: ', '');
+          const match = a.message.match(/reached (\d+)%/);
+          const percent = match ? match[1] : '90';
+          return { cat, percent };
+        });
+
+        // Deduplicate by picking the latest alert for each category
+        const uniqueCatMap = new Map();
+        categoriesWithPercent.forEach(c => uniqueCatMap.set(c.cat, c.percent));
+
+        toast((t) => (
+          <div>
+            <div className="font-bold mb-1">⚠️ Warning: Budget Limits Reached!</div>
+            <ul className="m-0 pl-5 text-sm list-disc">
+              {Array.from(uniqueCatMap.entries()).map(([cat, percent]) => (
+                <li key={cat}>
+                  <strong>{cat}</strong>: {percent}% capacity
+                </li>
+              ))}
+            </ul>
+          </div>
+        ), {
+          icon: '🚨',
+          style: {
+            borderRadius: '10px',
+            background: '#fee2e2',
+            color: '#b91c1c',
+            border: '1px solid #fca5a5',
+          },
+          duration: 6000,
+        });
+      }
     } catch (err) {
       console.error("Failed to load alerts", err)
     }
