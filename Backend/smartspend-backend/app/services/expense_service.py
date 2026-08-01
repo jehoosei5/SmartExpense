@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import extract, or_
+from sqlalchemy import extract, or_, cast, String
 from app.models.expense import Expense
 from app.schemas.expense import ExpenseCreate, ExpenseUpdate
 from app.utils.hashing import generate_sync_hash
@@ -99,9 +99,13 @@ def get_expenses(
     if search:
         search_pattern = f"%{search}%"
         query = query.filter(or_(
+            cast(Expense.date, String).ilike(search_pattern),
+            cast(Expense.type, String).ilike(search_pattern),
             Expense.category.ilike(search_pattern),
             Expense.details.ilike(search_pattern),
-            Expense.notes.ilike(search_pattern)
+            Expense.notes.ilike(search_pattern),
+            cast(Expense.source, String).ilike(search_pattern),
+            cast(Expense.payment_method, String).ilike(search_pattern)
         ))
 
     expenses = query.order_by(Expense.date.desc()).all()
