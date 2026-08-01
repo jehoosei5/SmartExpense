@@ -18,7 +18,9 @@ logger = logging.getLogger(__name__)
 def generate_report_html(user: User, expenses: list, period_name: str, start_date: datetime, end_date: datetime) -> str:
     """Generates a beautiful HTML email for the spending report."""
     
-    total_spent = sum(e.amount for e in expenses)
+    total_spent = sum(e.amount for e in expenses if e.type == "Expenses")
+    total_income = sum(e.amount for e in expenses if e.type == "Income")
+    net_balance = total_income - total_spent
     currency = user.default_currency
     
     # Calculate top categories
@@ -31,31 +33,63 @@ def generate_report_html(user: User, expenses: list, period_name: str, start_dat
     
     categories_html = ""
     for cat, amount in top_categories:
-        categories_html += f"<li><strong>{cat}:</strong> {currency} {amount:,.2f}</li>"
+        categories_html += f"""
+        <div style="margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 10px;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size: 14px; color: #e2e8f0;">
+                <tr>
+                    <td align="left" style="font-weight: 500;">{cat}</td>
+                    <td align="right" style="font-weight: bold; color: #ffffff;">{currency} {amount:,.2f}</td>
+                </tr>
+            </table>
+        </div>
+        """
         
     if not categories_html:
-        categories_html = "<li>No expenses recorded in this period.</li>"
+        categories_html = "<p style='color: #94a3b8; font-size: 14px; font-style: italic;'>No expenses recorded in this period.</p>"
 
     html = f"""
     <html>
-    <body style="font-family: Arial, sans-serif; background-color: #f4f7f6; padding: 20px;">
-        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-            <h2 style="color: #333333; text-align: center;">Your {period_name} SmartSpend Report</h2>
-            <p style="color: #555555; text-align: center;">For the period: {start_date.strftime('%b %d, %Y')} to {end_date.strftime('%b %d, %Y')}</p>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #05050f; margin: 0; padding: 40px 20px; color: #ffffff;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #0a0a1a; padding: 0; border-radius: 16px; border: 1px solid #1e1e38; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
             
-            <div style="background-color: #e0f2fe; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
-                <h3 style="margin: 0; color: #0284c7; font-size: 16px;">Total Spent</h3>
-                <h1 style="margin: 10px 0 0 0; color: #0369a1; font-size: 32px;">{currency} {total_spent:,.2f}</h1>
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #4f46e5, #c026d3); padding: 30px; text-align: center;">
+                <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 800; letter-spacing: 1px;">SMARTSPEND</h1>
+                <h2 style="margin: 10px 0 0 0; color: rgba(255,255,255,0.9); font-size: 16px; font-weight: 500;">Your {period_name} Report</h2>
+                <p style="margin: 5px 0 0 0; color: rgba(255,255,255,0.7); font-size: 12px;">{start_date.strftime('%b %d, %Y')} - {end_date.strftime('%b %d, %Y')}</p>
             </div>
             
-            <h3 style="color: #333333; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px;">Top Spending Categories</h3>
-            <ul style="color: #555555; line-height: 1.6; padding-left: 20px;">
+            <div style="padding: 30px;">
+                <!-- Summary Cards -->
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 20px;">
+                    <tr>
+                        <td width="48%" align="center" style="background-color: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 20px; border-radius: 12px;">
+                            <p style="margin: 0 0 5px 0; color: #10b981; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Income</p>
+                            <h3 style="margin: 0; color: #ffffff; font-size: 20px;">{currency} {total_income:,.2f}</h3>
+                        </td>
+                        <td width="4%"></td>
+                        <td width="48%" align="center" style="background-color: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.2); padding: 20px; border-radius: 12px;">
+                            <p style="margin: 0 0 5px 0; color: #f43f5e; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Expenses</p>
+                            <h3 style="margin: 0; color: #ffffff; font-size: 20px;">{currency} {total_spent:,.2f}</h3>
+                        </td>
+                    </tr>
+                </table>
+                
+                <!-- Net Balance -->
+                <div style="background-color: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 40px;">
+                    <p style="margin: 0 0 5px 0; color: #818cf8; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Net Balance</p>
+                    <h2 style="margin: 0; color: #ffffff; font-size: 28px;">{currency} {net_balance:,.2f}</h2>
+                </div>
+
+                <!-- Top Categories -->
+                <h3 style="color: #ffffff; font-size: 16px; margin-bottom: 20px; border-bottom: 1px solid #1e1e38; padding-bottom: 10px;">Top Spending Categories</h3>
                 {categories_html}
-            </ul>
+            </div>
             
-            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 12px; color: #94a3b8;">
-                <p>You are receiving this because your report frequency is set to {user.report_frequency}.</p>
-                <p>You can change this anytime in your SmartSpend settings.</p>
+            <!-- Footer -->
+            <div style="background-color: #05050f; padding: 20px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #1e1e38;">
+                <p style="margin: 0 0 5px 0;">You are receiving this because your report frequency is set to {user.report_frequency}.</p>
+                <p style="margin: 0;">Update your preferences in SmartSpend Settings.</p>
             </div>
         </div>
     </body>
