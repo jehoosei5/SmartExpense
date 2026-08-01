@@ -104,11 +104,13 @@ def get_sessions(
 @limiter.limit("5/minute")
 def get_proactive_insight(
     request: Request,
+    start_date: str = None,
+    end_date: str = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
-    Returns a short, personalized AI financial insight for the dashboard.
+    Returns 5 short, personalized AI financial insights for the dashboard.
     """
-    insight = generate_proactive_insight(db, current_user.id)
-    return {"insight": insight}
+    insights = generate_proactive_insight(db, current_user.id, start_date, end_date)
+    return {"insights": insights}

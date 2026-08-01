@@ -81,8 +81,8 @@ export const sendChatMessage = (message, session_id = null) =>
 export const confirmChatMessage = (parsed, session_id = null) =>
   api.post('/ai/chat/confirm', parsed, { params: { session_id } })
 
-export const getProactiveInsight = () =>
-  api.get('/ai/proactive-insight')
+export const getProactiveInsight = (start_date = null, end_date = null) =>
+  api.get('/ai/proactive-insight', { params: { start_date, end_date } })
 
 // ── Charts ────────────────────────────────────────────────────────────────
 export const getDashboard = (start_date = null, end_date = null) =>

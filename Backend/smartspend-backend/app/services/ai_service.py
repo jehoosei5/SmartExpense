@@ -265,37 +265,95 @@ Return ONLY a valid JSON object matching this structure:
         save_message(db, session.id, "assistant", error)
         return {"type": "text", "content": error, "session_id": session.id}, None
 
-def generate_proactive_insight(db: Session, user_id: str) -> str:
-    """Generate a very short, actionable financial insight based on recent spending."""
-    # Get summary for context
-    expense_summary = db.query(
+from datetime import datetime
+
+def generate_proactive_insight(db: Session, user_id: str, start_date: str = None, end_date: str = None) -> list:
+    """Generate 5 actionable financial insights based on spending vs budget for the period."""
+    from app.models.budget import Budget
+    
+    # Base expense query
+    exp_query = db.query(
         Expense.category,
         func.sum(Expense.amount).label("total")
-    ).filter(
-        Expense.user_id == user_id,
-        Expense.type == "Expenses"
-    ).group_by(Expense.category).order_by(func.sum(Expense.amount).desc()).limit(5).all()
+    ).filter(Expense.user_id == user_id, Expense.type == "Expenses")
+
+    # Base budget query
+    bud_query = db.query(
+        Budget.category,
+        func.sum(Budget.amount).label("budgeted")
+    ).filter(Budget.user_id == user_id, Budget.type == "Expenses")
+
+    if start_date:
+        exp_query = exp_query.filter(Expense.date >= start_date)
+        try:
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d")
+            bud_query = bud_query.filter(Budget.year >= start_dt.year)
+            # Rough approximation for month filters to avoid complex logic
+        except ValueError:
+            pass
+
+    if end_date:
+        exp_query = exp_query.filter(Expense.date <= end_date)
+        try:
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+            bud_query = bud_query.filter(Budget.year <= end_dt.year)
+        except ValueError:
+            pass
+
+    expense_data = exp_query.group_by(Expense.category).all()
+    budget_data = bud_query.group_by(Budget.category).all()
     
-    if not expense_summary:
-        return "Start logging your expenses today to get personalized AI insights!"
+    if not expense_data:
+        return [{"title": "Welcome to SmartSpend AI", "details": "Start logging your expenses today to get personalized AI insights comparing your spending to your budgets!"}]
         
-    summary_text = ", ".join([f"{row.category}: GH₵{row.total}" for row in expense_summary])
+    budget_dict = {row.category: float(row.budgeted) for row in budget_data}
+    
+    summary_lines = []
+    for row in expense_data:
+        cat = row.category
+        spent = float(row.total)
+        bud = budget_dict.get(cat, 0.0)
+        summary_lines.append(f"{cat}: Spent GH₵{spent}, Budgeted: GH₵{bud}")
+        
+    summary_text = "\\n".join(summary_lines)
     
     system_prompt = f"""
 You are SmartSpend AI, a proactive financial assistant.
-The user's top expenses are: {summary_text}.
+The user's expenses vs budgets for the current filtered period are:
+{summary_text}
 
-Task: Write a very short (1-2 sentences MAX) personalized and encouraging financial insight or tip based strictly on this data.
-DO NOT use Markdown formatting. DO NOT say 'Hello' or 'Here is a tip'. Just provide the insight directly.
-Example: "You've spent GH₵500 on Food this month. Consider meal prepping to save more!"
+Task: Generate EXACTLY 5 distinct, highly actionable financial insights based on this data.
+If they are under budget, praise them or give a tip on what to do with the surplus.
+If they are over budget, give them a specific strategy to cut back.
+If budget is 0, mention they should consider setting a budget for that category.
+
+Return ONLY a JSON array of 5 objects with this exact structure:
+[
+  {{
+    "title": "Short punchy title (max 6 words)",
+    "details": "A 2-3 sentence explanation with exact numbers and a specific, actionable tip."
+  }},
+  ...
+]
     """
     try:
         response = client.chat.completions.create(
             model=settings.AZURE_OPENAI_DEPLOYMENT,
             messages=[{"role": "system", "content": system_prompt}],
             temperature=0.7,
-            max_tokens=60
+            max_completion_tokens=800
         )
-        return response.choices[0].message.content.strip()
+        raw = response.choices[0].message.content.strip()
+        # Clean up markdown JSON blocks if present
+        if raw.startswith("```json"):
+            raw = raw.replace("```json", "", 1)
+        if raw.endswith("```"):
+            raw = raw.rsplit("```", 1)[0]
+        
+        insights = json.loads(raw.strip())
+        if isinstance(insights, list) and len(insights) > 0:
+            return insights
     except Exception as e:
-        return "Keep tracking your expenses to build better financial habits!"
+        print(f"AI Insight Error: {e}")
+        
+    return [{"title": "Keep tracking your expenses", "details": "Log more data and set budgets to build better financial habits!"}]
