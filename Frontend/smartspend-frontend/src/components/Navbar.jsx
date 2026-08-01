@@ -40,7 +40,10 @@ export default function Navbar() {
         return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
       });
 
-      if (recentAlerts.length > 0) {
+      const toastAlreadyShown = sessionStorage.getItem('budget_toast_shown');
+
+      if (recentAlerts.length > 0 && !toastAlreadyShown) {
+        sessionStorage.setItem('budget_toast_shown', 'true');
         // Extract category and percentage from the alerts
         const categoriesWithPercent = recentAlerts.map(a => {
           const cat = a.title.replace('Budget Alert: ', '');
