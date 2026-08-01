@@ -306,22 +306,34 @@ export default function Dashboard() {
 
         const { startDate, endDate } = computeDateRange();
 
-        const [s, m, c, u, i] = await Promise.all([
+        // 1. Fetch fast dashboard data and render charts immediately
+        const [s, m, c, u] = await Promise.all([
           getDashboard(startDate, endDate),
           getMonthly(null, startDate, endDate),
           getCategories2(null, startDate, endDate),
-          getMe(),
-          getProactiveInsight(startDate, endDate).catch(() => ({ data: { insights: [{title: "Keep tracking", details: 'Keep tracking your expenses and budgets to build better financial habits!'}] } }))
+          getMe()
         ])
         setSummary(s.data)
         setMonthly(m.data)
         setCatData(c.data)
         setUserProfile(u.data)
-        
-        const fetchedInsights = i.data.insights || [{title: "Keep tracking", details: "Log more expenses to get personalized insights!"}];
-        setInsights(fetchedInsights)
-        setCurrentInsightIndex(Math.floor(Math.random() * fetchedInsights.length))
-        setInsightLoading(false)
+        setLoading(false)
+
+        // 2. Fetch AI Insights asynchronously in the background so it doesn't block the UI
+        setInsightLoading(true)
+        getProactiveInsight(startDate, endDate)
+          .then(i => {
+            const fetchedInsights = i.data.insights || [{title: "Keep tracking", details: "Log more expenses to get personalized insights!"}];
+            setInsights(fetchedInsights)
+            setCurrentInsightIndex(Math.floor(Math.random() * fetchedInsights.length))
+          })
+          .catch(() => {
+            setInsights([{title: "Keep tracking", details: 'Keep tracking your expenses and budgets to build better financial habits!'}])
+          })
+          .finally(() => {
+            setInsightLoading(false)
+          })
+
       } catch (err) {
         if (err.response?.status === 401) {
           localStorage.clear()
