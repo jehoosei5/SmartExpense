@@ -1,6 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import Navbar from '../components/Navbar'
+import { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { sendChatMessage, confirmChatMessage } from '../api/client'
 
 const WELCOME = {
@@ -10,7 +9,14 @@ const WELCOME = {
 }
 
 export default function AIChat() {
-  const navigate = useNavigate()
+  const location = useLocation()
+  
+  // Don't render on the login page
+  if (location.pathname === '/login') return null
+
+  const [isOpen, setIsOpen] = useState(() => {
+    return sessionStorage.getItem('chat_open') === 'true'
+  })
 
   const [messages, setMessages] = useState(() => {
     try {
@@ -30,6 +36,10 @@ export default function AIChat() {
       return updated
     })
   }
+
+  useEffect(() => {
+    sessionStorage.setItem('chat_open', isOpen)
+  }, [isOpen])
 
   function handleReset() {
     sessionStorage.removeItem('chat_messages')
@@ -105,37 +115,37 @@ export default function AIChat() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-gradient-to-br dark:from-slate-950 dark:via-[#0a0f1c] dark:to-indigo-950 flex flex-col relative font-sans selection:bg-cyan-500/30 overflow-x-hidden transition-colors duration-200">
-      <Navbar />
-
-      <div className="absolute top-1/4 left-0 w-64 h-64 md:w-[500px] md:h-[500px] bg-cyan-500/10 rounded-full blur-[80px] md:blur-[150px] -z-10 pointer-events-none" />
-      <div className="absolute bottom-1/4 right-0 w-64 h-64 md:w-[500px] md:h-[500px] bg-fuchsia-500/10 rounded-full blur-[80px] md:blur-[150px] -z-10 pointer-events-none" />
-
-      <div className="max-w-4xl mx-auto w-full px-4 py-4 md:px-6 md:py-8 flex flex-col flex-1 relative z-10">
-
-        {/* Header + Reset */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white drop-shadow-sm dark:drop-shadow-md">AI Chat</h1>
-            <p className="text-emerald-600 dark:text-cyan-400 font-semibold tracking-wide text-sm mt-1">Talk to your finances</p>
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none">
+      
+      {/* Chat Window */}
+      <div 
+        className={`pointer-events-auto transition-all duration-300 origin-bottom-right mb-4 flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden ${
+          isOpen ? 'scale-100 opacity-100 w-80 sm:w-96 h-[500px]' : 'scale-0 opacity-0 w-0 h-0'
+        }`}
+      >
+        {/* Header */}
+        <div className="bg-emerald-600 dark:bg-slate-800 text-white px-4 py-3 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+            <h3 className="font-bold tracking-wide">SmartSpend AI</h3>
           </div>
-          <button
+          <button 
             type="button"
             onClick={handleReset}
-            className="text-sm font-semibold text-slate-500 hover:text-rose-400 transition-colors uppercase tracking-widest"
+            className="text-xs font-semibold bg-white/20 hover:bg-white/30 px-2 py-1 rounded transition-colors"
           >
-            Reset Chat
+            Clear
           </button>
         </div>
 
-        {/* Chat Window */}
-        <div className="flex-1 bg-white dark:bg-white/[0.02] backdrop-blur-2xl border border-slate-200 dark:border-white/10 rounded-3xl p-6 overflow-y-auto mb-6 space-y-6 shadow-sm dark:shadow-2xl min-h-96 max-h-[65vh]">
+        {/* Messages */}
+        <div className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50 dark:bg-slate-900/50">
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
 
               {/* User message */}
               {msg.role === 'user' && (
-                <div className="bg-emerald-600 dark:bg-gradient-to-r dark:from-cyan-600 dark:to-blue-600 text-white px-6 py-3 rounded-2xl rounded-tr-sm shadow-sm dark:shadow-[0_0_20px_rgba(34,211,238,0.3)] max-w-md text-sm font-medium leading-relaxed">
+                <div className="bg-emerald-600 dark:bg-gradient-to-r dark:from-cyan-600 dark:to-blue-600 text-white px-4 py-2 rounded-2xl rounded-tr-sm shadow-sm max-w-[80%] text-sm font-medium leading-relaxed">
                   {msg.content}
                 </div>
               )}
@@ -252,27 +262,39 @@ export default function AIChat() {
           )}
         </div>
 
-        {/* Input */}
-        <div className="flex flex-col sm:flex-row gap-4">
+        {/* Input area */}
+        <div className="p-3 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-white/10 flex gap-2">
           <input
             type="text"
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSend()}
-            placeholder="Type anything... e.g. I spent GH₵45 on food, or How much did I spend this month?"
-            className="flex-1 bg-white dark:bg-black/30 border border-slate-200 dark:border-white/10 rounded-2xl px-6 py-4 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all shadow-sm dark:shadow-inner"
+            placeholder="Type your message..."
+            className="flex-1 bg-slate-100 dark:bg-slate-700/50 border-none rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:text-white placeholder-slate-500"
           />
           <button
             type="button"
             onClick={handleSend}
             disabled={loading || !input.trim()}
-            className="bg-emerald-600 dark:bg-gradient-to-r dark:from-cyan-600 dark:to-blue-600 text-white px-8 py-4 rounded-2xl text-sm font-bold shadow-sm dark:shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:shadow-md dark:hover:shadow-[0_0_25px_rgba(34,211,238,0.5)] disabled:opacity-50 disabled:cursor-not-allowed transition-all uppercase tracking-widest"
+            className="bg-emerald-600 text-white p-2 rounded-xl disabled:opacity-50 hover:bg-emerald-700 transition-colors"
           >
-            Send
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
           </button>
         </div>
-
       </div>
+
+      {/* Floating Toggle Button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="pointer-events-auto bg-emerald-600 dark:bg-cyan-500 hover:bg-emerald-700 dark:hover:bg-cyan-400 text-white rounded-full p-4 shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center relative group"
+      >
+        {isOpen ? (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        ) : (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+        )}
+      </button>
+
     </div>
   )
 }
