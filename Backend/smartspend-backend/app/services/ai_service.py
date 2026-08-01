@@ -317,12 +317,23 @@ def generate_proactive_insight(db: Session, user_id: str, start_date: str = None
         
     summary_text = "\\n".join(summary_lines)
     
+    today_dt = datetime.today()
+    from calendar import monthrange
+    days_in_month = monthrange(today_dt.year, today_dt.month)[1]
+    
     system_prompt = f"""
 You are SmartSpend AI, a proactive financial assistant.
+Today is {today_dt.strftime('%Y-%m-%d')} (Day {today_dt.day} of {days_in_month} this month).
+The user is viewing expenses for the period: {start_date or 'All Time'} to {end_date or 'All Time'}.
+
 The user's expenses vs budgets for the current filtered period are:
 {summary_text}
 
 Task: Generate EXACTLY 5 distinct, highly actionable financial insights based on this data.
+CRITICAL INSTRUCTION FOR PACING/RUN RATE: 
+- If the viewing period is "All Time", DO NOT calculate daily run rates, because the expenses span multiple months. Just compare total spent to total budgeted.
+- If the viewing period is a specific month that includes today, calculate their ideal daily spend (Budget / Days in Month) and compare it to their actual daily spend (Spent / Current Day). If their current trajectory exceeds the budget, warn them with mathematically projected end-of-month totals.
+If they are pacing well under budget (or totally under budget for All Time), praise them and forecast their surplus.
 If they are under budget, praise them or give a tip on what to do with the surplus.
 If they are over budget, give them a specific strategy to cut back.
 If budget is 0, mention they should consider setting a budget for that category.
@@ -330,8 +341,8 @@ If budget is 0, mention they should consider setting a budget for that category.
 Return ONLY a JSON array of 5 objects with this exact structure:
 [
   {{
-    "title": "Short punchy title (max 6 words)",
-    "details": "A 2-3 sentence explanation with exact numbers and a specific, actionable tip."
+    "title": "Short punchy title",
+    "details": "A sentence explanation with exact numbers and a specific, actionable tip."
   }},
   ...
 ]
