@@ -24,6 +24,9 @@ export default function AIChat() {
       return saved ? JSON.parse(saved) : [WELCOME]
     } catch { return [WELCOME] }
   })
+  
+  const [expandedQueries, setExpandedQueries] = useState({})
+
   const [input, setInput]               = useState('')
   const [sessionId, setSessionId]       = useState(() => sessionStorage.getItem('chat_session_id'))
   const [loading, setLoading]           = useState(false)
@@ -47,6 +50,12 @@ export default function AIChat() {
     setMessages([WELCOME])
     setSessionId(null)
     setPendingParse({})
+    setExpandedQueries({})
+    setIsOpen(false)
+  }
+
+  function toggleExpand(index) {
+    setExpandedQueries(prev => ({ ...prev, [index]: !prev[index] }))
   }
 
   async function handleSend() {
@@ -159,8 +168,8 @@ export default function AIChat() {
 
               {/* Parsed expense card */}
               {msg.role === 'assistant' && msg.type === 'parse' && (
-                <div className="bg-emerald-50 dark:bg-cyan-500/10 border border-emerald-200 dark:border-cyan-500/30 rounded-2xl rounded-tl-sm p-5 max-w-md w-full shadow-sm dark:shadow-[0_0_20px_rgba(34,211,238,0.1)]">
-                  <p className="text-sm text-emerald-700 dark:text-cyan-300 font-semibold mb-4">{msg.content}</p>
+                <div className="bg-emerald-50 dark:bg-cyan-500/10 border border-emerald-200 dark:border-cyan-500/30 rounded-2xl rounded-tl-sm p-4 max-w-[95%] w-full shadow-sm">
+                  <p className="text-sm text-emerald-700 dark:text-cyan-300 font-semibold mb-3">{msg.content}</p>
                   
                   {msg.parsed_list?.map((parsedItem, idx) => (
                     <div key={idx} className="mb-6 last:mb-0">
@@ -212,32 +221,35 @@ export default function AIChat() {
 
               {/* Query result card */}
               {msg.role === 'assistant' && msg.type === 'query' && (
-                <div className="bg-fuchsia-50 dark:bg-fuchsia-500/10 border border-fuchsia-200 dark:border-fuchsia-500/30 rounded-2xl rounded-tl-sm p-5 max-w-lg w-full shadow-sm dark:shadow-[0_0_20px_rgba(217,70,239,0.1)]">
-                  <p className="text-sm text-fuchsia-700 dark:text-fuchsia-300 font-semibold mb-4 leading-relaxed">{msg.content}</p>
+                <div className="bg-fuchsia-50 dark:bg-fuchsia-500/10 border border-fuchsia-200 dark:border-fuchsia-500/30 rounded-2xl rounded-tl-sm p-4 max-w-[95%] w-full shadow-sm">
+                  <p className="text-sm text-fuchsia-700 dark:text-fuchsia-300 font-semibold mb-3 leading-relaxed">{msg.content}</p>
                   {msg.data && msg.data.length > 0 && (
-                    <div className="bg-white dark:bg-black/30 rounded-xl border border-fuchsia-100 dark:border-white/10 overflow-hidden shadow-sm dark:shadow-none">
-                      <table className="w-full text-sm">
+                    <div className="bg-white dark:bg-black/30 rounded-xl border border-fuchsia-100 dark:border-white/10 overflow-x-auto shadow-sm">
+                      <table className="w-full text-xs">
                         <thead className="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10">
                           <tr>
-                            <th className="text-left px-4 py-3 text-fuchsia-600 dark:text-fuchsia-400 font-bold uppercase tracking-widest text-xs">Date</th>
-                            <th className="text-left px-4 py-3 text-fuchsia-600 dark:text-fuchsia-400 font-bold uppercase tracking-widest text-xs">Category</th>
-                            <th className="text-right px-4 py-3 text-fuchsia-600 dark:text-fuchsia-400 font-bold uppercase tracking-widest text-xs">Amount</th>
+                            <th className="text-left px-2 py-2 text-fuchsia-600 dark:text-fuchsia-400 font-bold uppercase tracking-wider">Date</th>
+                            <th className="text-left px-2 py-2 text-fuchsia-600 dark:text-fuchsia-400 font-bold uppercase tracking-wider">Category</th>
+                            <th className="text-right px-2 py-2 text-fuchsia-600 dark:text-fuchsia-400 font-bold uppercase tracking-wider">Amount</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-white/10">
-                          {msg.data.slice(0, 5).map((row, j) => (
+                          {msg.data.slice(0, expandedQueries[i] ? msg.data.length : 5).map((row, j) => (
                             <tr key={j} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                              <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{row.date}</td>
-                              <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{row.category}</td>
-                              <td className="px-4 py-3 text-right font-bold text-emerald-600 dark:text-cyan-400">
+                              <td className="px-2 py-2 text-slate-500 dark:text-slate-400 whitespace-nowrap">{row.date.substring(5)}</td>
+                              <td className="px-2 py-2 text-slate-700 dark:text-slate-300 truncate max-w-[80px]" title={row.category}>{row.category}</td>
+                              <td className="px-2 py-2 text-right font-bold text-emerald-600 dark:text-cyan-400 whitespace-nowrap">
                                 GH₵{Number(row.amount).toLocaleString()}
                               </td>
                             </tr>
                           ))}
                           {msg.data.length > 5 && (
-                            <tr>
-                              <td colSpan={3} className="px-4 py-3 text-center text-slate-500 font-medium text-xs tracking-widest uppercase bg-slate-50 dark:bg-white/[0.02]">
-                                +{msg.data.length - 5} more records
+                            <tr 
+                              onClick={() => toggleExpand(i)}
+                              className="cursor-pointer hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
+                            >
+                              <td colSpan={3} className="px-2 py-2 text-center text-slate-500 font-medium text-xs tracking-widest uppercase bg-slate-50 dark:bg-white/[0.02]">
+                                {expandedQueries[i] ? "Collapse records" : `+${msg.data.length - 5} more records (Click to expand)`}
                               </td>
                             </tr>
                           )}

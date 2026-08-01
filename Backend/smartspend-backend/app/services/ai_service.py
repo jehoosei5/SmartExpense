@@ -79,7 +79,7 @@ Return ONLY a valid JSON object matching this structure:
 {{
   "intent": "add_expense" | "query" | "general",
   
-  "general_response": "Your conversational reply here (only if intent is general)",
+  "general_response": "Your conversational reply here (only if intent is general). KEEP IT EXTREMELY SHORT AND CONCISE (1-2 sentences). Do not re-explain your capabilities.",
   
   "expenses_data": [
     {{
@@ -243,7 +243,14 @@ Return ONLY a valid JSON object matching this structure:
                     elif filters.get("year"):
                         filters_desc.append(str(filters["year"]))
                     desc = " | ".join(filters_desc) if filters_desc else "all categories"
-                    answer = f"You spent GH₵{real_total:,.2f} on {desc} across {count} transaction{'s' if count > 1 else ''}."
+                    
+                    verb = "spent"
+                    if filters.get("type") == "Income":
+                        verb = "received"
+                    elif filters.get("type") == "Savings":
+                        verb = "saved"
+                        
+                    answer = f"You {verb} GH₵{real_total:,.2f} on {desc} across {count} transaction{'s' if count > 1 else ''}."
 
             save_message(db, session.id, "assistant", answer)
             return {
