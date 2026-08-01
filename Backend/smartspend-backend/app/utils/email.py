@@ -3,6 +3,14 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from app.config import settings
 import logging
+import socket
+
+# Railway IPv6 Patch: Force Python to only use IPv4 (AF_INET) to prevent "Network is unreachable" errors
+old_getaddrinfo = socket.getaddrinfo
+def new_getaddrinfo(*args, **kwargs):
+    responses = old_getaddrinfo(*args, **kwargs)
+    return [response for response in responses if response[0] == socket.AF_INET]
+socket.getaddrinfo = new_getaddrinfo
 
 logger = logging.getLogger(__name__)
 
@@ -25,11 +33,11 @@ def send_email(to_email: str, subject: str, html_content: str):
         part = MIMEText(html_content, "html")
         msg.attach(part)
 
-        # Connect to server (force IPv4 for Railway compatibility)
+        # Connect to server
         if settings.SMTP_PORT == 465:
-            server = smtplib.SMTP_SSL(settings.SMTP_SERVER, settings.SMTP_PORT, source_address=('0.0.0.0', 0))
+            server = smtplib.SMTP_SSL(settings.SMTP_SERVER, settings.SMTP_PORT)
         else:
-            server = smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT, source_address=('0.0.0.0', 0))
+            server = smtplib.SMTP(settings.SMTP_SERVER, settings.SMTP_PORT)
             server.starttls()
             
         server.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
