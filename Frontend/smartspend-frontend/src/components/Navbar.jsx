@@ -1,12 +1,49 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTheme } from '../contexts/ThemeContext'
+import { getAlerts, markAlertRead } from '../api/client'
 
 export default function Navbar() {
   const location = useLocation()
   const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [alerts, setAlerts] = useState([])
   const { theme, toggleTheme } = useTheme()
+  const notifRef = useRef(null)
+
+  useEffect(() => {
+    loadAlerts()
+    
+    // Close dropdown on click outside
+    function handleClickOutside(event) {
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setShowNotifications(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [])
+
+  async function loadAlerts() {
+    try {
+      const res = await getAlerts()
+      setAlerts(res.data)
+    } catch (err) {
+      console.error("Failed to load alerts", err)
+    }
+  }
+
+  async function handleAlertClick(id) {
+    try {
+      await markAlertRead(id)
+      setAlerts(alerts.map(a => a.id === id ? { ...a, is_read: true } : a))
+    } catch (err) {
+      console.error("Failed to mark alert as read", err)
+    }
+  }
+
+  const unreadCount = alerts.filter(a => !a.is_read).length
 
   function handleLogout() {
     localStorage.clear()
@@ -54,6 +91,53 @@ export default function Navbar() {
         </div>
 
         <div className="hidden md:flex items-center gap-4">
+          
+          {/* Notification Bell */}
+          <div className="relative" ref={notifRef}>
+            <button
+              type="button"
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="relative p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors duration-300 rounded-full hover:bg-slate-100 dark:hover:bg-white/5"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              {unreadCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full shadow-[0_0_8px_rgba(244,63,94,0.8)] animate-pulse" />
+              )}
+            </button>
+
+            {/* Notifications Dropdown */}
+            {showNotifications && (
+              <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl py-2 z-50">
+                <div className="px-4 py-2 border-b border-slate-100 dark:border-white/5">
+                  <h3 className="text-sm font-bold text-slate-800 dark:text-white">Notifications</h3>
+                </div>
+                <div className="max-h-[300px] overflow-y-auto">
+                  {alerts.length === 0 ? (
+                    <div className="px-4 py-6 text-center text-sm text-slate-500 dark:text-slate-400">
+                      No notifications yet
+                    </div>
+                  ) : (
+                    alerts.map(alert => (
+                      <div 
+                        key={alert.id}
+                        onClick={() => handleAlertClick(alert.id)}
+                        className={`px-4 py-3 cursor-pointer transition-colors duration-200 border-b border-slate-50 dark:border-white/5 last:border-0 ${!alert.is_read ? 'bg-slate-50 dark:bg-slate-700/30' : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
+                      >
+                        <div className="flex justify-between items-start mb-1">
+                          <span className={`text-xs font-semibold ${!alert.is_read ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300'}`}>{alert.title}</span>
+                          {!alert.is_read && <span className="w-1.5 h-1.5 bg-rose-500 rounded-full mt-1" />}
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{alert.message}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
           <button
             type="button"
             onClick={toggleTheme}

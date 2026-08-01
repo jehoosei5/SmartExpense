@@ -101,6 +101,13 @@ export const getTrend = (months = 6) =>
 export const getMe = () =>
   api.get('/auth/me')
 
+// ── Alerts ────────────────────────────────────────────────────────────────
+export const getAlerts = () =>
+  api.get('/api/alerts')
+
+export const markAlertRead = (id) =>
+  api.put(`/api/alerts/${id}/read`)
+
 export const updateMe = (data) =>
   api.put('/auth/me', data)
 

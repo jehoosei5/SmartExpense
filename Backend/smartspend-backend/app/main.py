@@ -4,7 +4,7 @@ from app.models import User
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
 from app import models
-from app.routers import auth, expenses, sync, ai, charts, categories, budgets, reports
+from app.routers import auth, expenses, sync, ai, charts, categories, budgets, reports, alerts
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.utils.rate_limit import limiter
@@ -63,6 +63,7 @@ app.include_router(charts.router)
 app.include_router(categories.router)
 app.include_router(budgets.router)
 app.include_router(reports.router)
+app.include_router(alerts.router)
 
 @app.get("/")
 @app.head("/")

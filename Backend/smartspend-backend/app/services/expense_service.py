@@ -10,6 +10,7 @@ from datetime import date
 from dateutil.relativedelta import relativedelta
 from sqlalchemy import func
 from app.models.snoozed_recurrence import SnoozedRecurrence
+from app.services.alert_service import check_and_trigger_budget_alert
 
 def create_expense(db: Session, data: ExpenseCreate, user_id: str):
     # Generate sync hash for duplicate prevention
@@ -59,7 +60,11 @@ def create_expense(db: Session, data: ExpenseCreate, user_id: str):
     db.add(expense)
     db.commit()
     db.refresh(expense)
-    return expense, None
+
+    # Check for budget alerts!
+    alert_triggered = check_and_trigger_budget_alert(db, expense, user)
+
+    return expense, alert_triggered, None
 
 
 def get_expenses(

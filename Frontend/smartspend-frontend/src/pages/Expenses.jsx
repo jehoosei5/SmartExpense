@@ -161,13 +161,30 @@ export default function Expenses() {
     }
 
     try {
+      let res;
       if (editingId) {
-        await updateExpense(editingId, payload)
+        res = await updateExpense(editingId, payload)
         toast.success('Transaction updated!')
       } else {
-        await createExpense(payload)
+        res = await createExpense(payload)
         toast.success('Transaction added!')
       }
+      
+      // Check for budget alert
+      if (res && res.data && res.data.alert_triggered) {
+        toast('⚠️ Warning: You have reached 90% of your budget for this category!', {
+          icon: '🚨',
+          style: {
+            borderRadius: '10px',
+            background: '#fee2e2',
+            color: '#b91c1c',
+            border: '1px solid #fca5a5',
+            fontWeight: 'bold'
+          },
+          duration: 5000,
+        });
+      }
+
       setShowForm(false)
       setForm(EMPTY_FORM)
       setEditingId(null)
@@ -260,8 +277,23 @@ export default function Expenses() {
 
   async function handleAcceptSuggestion(sugg) {
     try {
-      await createExpense(sugg)
+      const res = await createExpense(sugg)
       toast.success('Suggestion accepted!')
+      
+      if (res && res.data && res.data.alert_triggered) {
+        toast('⚠️ Warning: You have reached 90% of your budget for this category!', {
+          icon: '🚨',
+          style: {
+            borderRadius: '10px',
+            background: '#fee2e2',
+            color: '#b91c1c',
+            border: '1px solid #fca5a5',
+            fontWeight: 'bold'
+          },
+          duration: 5000,
+        });
+      }
+
       setSuggestions(prev => prev.filter(s => s.sync_hash !== sugg.sync_hash))
       loadExpenses()
     } catch (err) {
