@@ -11,7 +11,7 @@ from app.schemas.ai import (
     ParsedExpense
 )
 from app.schemas.expense import ExpenseCreate
-from app.services.ai_service import handle_chat_message
+from app.services.ai_service import handle_chat_message, generate_proactive_insight
 from app.services.expense_service import create_expense
 
 router = APIRouter(prefix="/ai", tags=["AI Chat"])
@@ -99,3 +99,16 @@ def get_sessions(
         }
         for s in sessions
     ]
+
+@router.get("/proactive-insight")
+@limiter.limit("5/minute")
+def get_proactive_insight(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Returns a short, personalized AI financial insight for the dashboard.
+    """
+    insight = generate_proactive_insight(db, current_user.id)
+    return {"insight": insight}

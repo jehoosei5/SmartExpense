@@ -90,11 +90,11 @@ def trigger_reports(x_cron_secret: Optional[str] = Header(None), db: Session = D
         start_date = None
         period_name = ""
         
-        if user.report_frequency == "WEEKLY": # and is_sunday:
+        if user.report_frequency == "WEEKLY" and is_sunday:
             should_send = True
             start_date = today - timedelta(days=7)
             period_name = "Weekly"
-        elif user.report_frequency == "MONTHLY": # and is_first_of_month:
+        elif user.report_frequency == "MONTHLY" and is_first_of_month:
             should_send = True
             # Calculate 1st of previous month
             last_month = today.month - 1 if today.month > 1 else 12

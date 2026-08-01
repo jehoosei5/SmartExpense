@@ -264,3 +264,38 @@ Return ONLY a valid JSON object matching this structure:
         error = f"Something went wrong: {str(e)}"
         save_message(db, session.id, "assistant", error)
         return {"type": "text", "content": error, "session_id": session.id}, None
+
+def generate_proactive_insight(db: Session, user_id: str) -> str:
+    """Generate a very short, actionable financial insight based on recent spending."""
+    # Get summary for context
+    expense_summary = db.query(
+        Expense.category,
+        func.sum(Expense.amount).label("total")
+    ).filter(
+        Expense.user_id == user_id,
+        Expense.type == "Expenses"
+    ).group_by(Expense.category).order_by(func.sum(Expense.amount).desc()).limit(5).all()
+    
+    if not expense_summary:
+        return "Start logging your expenses today to get personalized AI insights!"
+        
+    summary_text = ", ".join([f"{row.category}: GH₵{row.total}" for row in expense_summary])
+    
+    system_prompt = f"""
+You are SmartSpend AI, a proactive financial assistant.
+The user's top expenses are: {summary_text}.
+
+Task: Write a very short (1-2 sentences MAX) personalized and encouraging financial insight or tip based strictly on this data.
+DO NOT use Markdown formatting. DO NOT say 'Hello' or 'Here is a tip'. Just provide the insight directly.
+Example: "You've spent GH₵500 on Food this month. Consider meal prepping to save more!"
+    """
+    try:
+        response = client.chat.completions.create(
+            model=settings.AZURE_OPENAI_DEPLOYMENT,
+            messages=[{"role": "system", "content": system_prompt}],
+            temperature=0.7,
+            max_tokens=60
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        return "Keep tracking your expenses to build better financial habits!"

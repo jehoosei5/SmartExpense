@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { useTheme } from '../contexts/ThemeContext'
-import { getDashboard, getMonthly, getCategories2, getExpenses, getMe } from '../api/client'
+import { getDashboard, getMonthly, getCategories2, getExpenses, getMe, getProactiveInsight } from '../api/client'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   PieChart, Pie, Cell, ResponsiveContainer
@@ -222,6 +222,8 @@ export default function Dashboard() {
   const [catData, setCatData]   = useState([])
   const [loading, setLoading]   = useState(true)
   const [error, setError]       = useState('')
+  const [insight, setInsight]   = useState(null)
+  const [insightLoading, setInsightLoading] = useState(true)
 
   const [filterType, setFilterType] = useState('this_month')
   const [customStart, setCustomStart] = useState('')
@@ -302,16 +304,19 @@ export default function Dashboard() {
 
         const { startDate, endDate } = computeDateRange();
 
-        const [s, m, c, u] = await Promise.all([
+        const [s, m, c, u, i] = await Promise.all([
           getDashboard(startDate, endDate),
           getMonthly(null, startDate, endDate),
           getCategories2(null, startDate, endDate),
-          getMe()
+          getMe(),
+          getProactiveInsight().catch(() => ({ data: { insight: 'Keep tracking your expenses to build better financial habits!' } }))
         ])
         setSummary(s.data)
         setMonthly(m.data)
         setCatData(c.data)
         setUserProfile(u.data)
+        setInsight(i.data.insight)
+        setInsightLoading(false)
       } catch (err) {
         if (err.response?.status === 401) {
           localStorage.clear()
@@ -401,6 +406,27 @@ export default function Dashboard() {
                <p className="text-xs text-blue-600 dark:text-blue-400 uppercase tracking-widest font-bold">Period Balance</p>
                <p className="text-xl font-bold text-slate-900 dark:text-white">{formatCurrency(Number(summary?.balance || 0), userProfile?.default_currency)}</p>
              </div>
+          </div>
+        </div>
+
+        {/* Proactive AI Insight Banner */}
+        <div className="mb-6 relative overflow-hidden bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-fuchsia-500/10 border border-indigo-500/20 rounded-2xl p-6 shadow-lg backdrop-blur-xl group cursor-default transition-all duration-300 hover:shadow-indigo-500/10 hover:border-indigo-500/30">
+          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-fuchsia-500/10 rounded-full blur-[60px] pointer-events-none" />
+          <div className="flex items-start md:items-center gap-4 relative z-10">
+            <div className="shrink-0 p-3 bg-indigo-500/20 rounded-full border border-indigo-500/30 animate-pulse">
+              <svg className="w-6 h-6 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest mb-1 flex items-center gap-2">
+                SmartSpend AI Insight
+                {insightLoading && <span className="flex gap-1"><span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce" style={{animationDelay: '0ms'}}></span><span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce" style={{animationDelay: '150ms'}}></span><span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce" style={{animationDelay: '300ms'}}></span></span>}
+              </h4>
+              <p className="text-slate-700 dark:text-slate-200 text-sm md:text-base font-medium leading-relaxed">
+                {insightLoading ? "Analyzing your latest financial data..." : insight}
+              </p>
+            </div>
           </div>
         </div>
 
