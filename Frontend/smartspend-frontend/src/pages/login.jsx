@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { GoogleLogin } from '@react-oauth/google'
 import { login, register, googleLogin } from '../api/client'
 import toast from 'react-hot-toast'
@@ -59,7 +59,16 @@ function PasswordStrength({ password }) {
 
 export default function Login() {
   const navigate = useNavigate()
-  const [isRegister, setIsRegister]   = useState(false)
+  const location = useLocation()
+  const queryParams = new URLSearchParams(location.search)
+  const initialMode = queryParams.get('mode') === 'register'
+
+  const [isRegister, setIsRegister]   = useState(initialMode)
+
+  useEffect(() => {
+    const mode = new URLSearchParams(location.search).get('mode')
+    setIsRegister(mode === 'register')
+  }, [location.search])
   const [email, setEmail]             = useState('')
   const [password, setPassword]       = useState('')
   const [displayName, setDisplayName] = useState('')
