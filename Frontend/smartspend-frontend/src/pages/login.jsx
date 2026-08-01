@@ -91,7 +91,7 @@ export default function Login() {
         localStorage.setItem('access_token', res.data.access_token)
         localStorage.setItem('refresh_token', res.data.refresh_token)
         toast.success('Logged in successfully')
-        navigate('/')
+        navigate('/dashboard')
       }
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Something went wrong')
@@ -107,7 +107,7 @@ export default function Login() {
       localStorage.setItem('access_token', res.data.access_token)
       localStorage.setItem('refresh_token', res.data.refresh_token)
       toast.success('Logged in successfully')
-      navigate('/')
+      navigate('/dashboard')
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Google login failed')
     } finally {

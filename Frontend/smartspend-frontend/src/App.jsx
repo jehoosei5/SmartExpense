@@ -6,6 +6,7 @@ import AIChat from './pages/AIChat'
 import Sync from './pages/Sync'
 import Profile from './pages/Profile'
 import Budgets from './pages/Budgets'
+import Landing from './pages/Landing'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { Toaster } from 'react-hot-toast'
 
@@ -21,8 +22,9 @@ function App() {
       <Toaster position="top-right" toastOptions={{ duration: 4000, style: { background: '#1e293b', color: '#fff' } }} />
       <BrowserRouter>
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+          <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
           <Route path="/expenses" element={<PrivateRoute><Expenses /></PrivateRoute>} />
           <Route path="/budgets" element={<PrivateRoute><Budgets /></PrivateRoute>} />
           <Route path="/sync" element={<PrivateRoute><Sync /></PrivateRoute>} />

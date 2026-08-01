@@ -100,8 +100,8 @@ export default function Navbar() {
   }
 
   const links = [
-    { path: '/',         label: 'Dashboard' },
-    { path: '/expenses', label: 'Expenses'  },
+    { path: '/dashboard', label: 'Dashboard' },
+    { path: '/expenses',  label: 'Expenses'  },
     { path: '/sync',     label: 'Sync'      },
     { path: '/budgets',  label: 'Budgets'   },
     { path: '/profile',  label: 'Profile'   }

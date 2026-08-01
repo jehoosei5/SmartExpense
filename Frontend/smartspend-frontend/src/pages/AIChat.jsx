@@ -11,8 +11,8 @@ const WELCOME = {
 export default function AIChat() {
   const location = useLocation()
   
-  // Don't render on the login page
-  if (location.pathname === '/login') return null
+  // Don't render on the login or landing page
+  if (location.pathname === '/login' || location.pathname === '/') return null
 
   const [isOpen, setIsOpen] = useState(() => {
     return sessionStorage.getItem('chat_open') === 'true'
