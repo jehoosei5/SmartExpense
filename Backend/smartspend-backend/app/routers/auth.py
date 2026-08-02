@@ -11,9 +11,11 @@ from app.schemas.auth import (
     LoginRequest,
     TokenResponse,
     RefreshRequest,
-    UserResponse
+    UserResponse,
+    VerifyEmailRequest,
+    ResendVerificationRequest
 )
-from app.services.auth_service import register_user, login_user, logout_user
+from app.services.auth_service import register_user, login_user, logout_user, verify_email_code, resend_verification_code
 from app.utils.security import hash_password
 
 
@@ -29,6 +31,31 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
             detail=error
         )
     return user
+
+
+@router.post("/verify-email", response_model=TokenResponse)
+def verify_email(data: VerifyEmailRequest, db: Session = Depends(get_db)):
+    tokens, error = verify_email_code(db, data.email, data.code)
+    if error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error
+        )
+    return TokenResponse(
+        access_token=tokens[0],
+        refresh_token=tokens[1]
+    )
+
+
+@router.post("/resend-verification")
+def resend_verification(data: ResendVerificationRequest, db: Session = Depends(get_db)):
+    success, error = resend_verification_code(db, data.email)
+    if error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error
+        )
+    return {"message": "Verification code resent"}
 
 
 @router.post("/login", response_model=TokenResponse)

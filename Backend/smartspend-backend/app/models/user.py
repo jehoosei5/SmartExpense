@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime
+from sqlalchemy import Column, String, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import uuid
@@ -10,6 +10,7 @@ class User(Base):
     id               = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     email            = Column(String(255), unique=True, nullable=False)
     password_hash    = Column(String(255), nullable=False)
+    is_verified      = Column(Boolean, nullable=False, default=False)
     display_name     = Column(String(100), nullable=False)
     default_currency = Column(String(3), nullable=False, default="GHS")
     report_frequency = Column(String(20), nullable=False, default="NONE") # NONE, WEEKLY, MONTHLY

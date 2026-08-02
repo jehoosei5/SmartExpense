@@ -10,6 +10,13 @@ class LoginRequest(BaseModel):
     email: EmailStr
     password: str
 
+class VerifyEmailRequest(BaseModel):
+    email: EmailStr
+    code: str
+
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr
+
 class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str

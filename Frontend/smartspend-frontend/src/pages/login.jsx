@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { GoogleLogin } from '@react-oauth/google'
-import { login, register, googleLogin } from '../api/client'
+import { login, register, googleLogin, verifyEmail, resendVerification } from '../api/client'
 import toast from 'react-hot-toast'
 
 function validateEmail(email) {
@@ -76,6 +76,9 @@ export default function Login() {
   const [loading, setLoading]         = useState(false)
   const [touched, setTouched]         = useState({ email: false, password: false })
 
+  const [verificationMode, setVerificationMode] = useState(false)
+  const [otp, setOtp]                           = useState('')
+
   const emailValid     = validateEmail(email)
   const passwordChecks = validatePassword(password)
   const passwordValid  = Object.values(passwordChecks).every(Boolean)
@@ -90,11 +93,8 @@ export default function Login() {
     try {
       if (isRegister) {
         await register(email, password, displayName)
-        setIsRegister(false)
-        setEmail('')
-        setPassword('')
-        setTouched({ email: false, password: false })
-        toast.success('Account created! Please login.')
+        toast.success('Account created! Please check your email for the verification code.')
+        setVerificationMode(true)
       } else {
         const res = await login(email, password)
         localStorage.setItem('access_token', res.data.access_token)
@@ -103,7 +103,43 @@ export default function Login() {
         navigate('/dashboard')
       }
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Something went wrong')
+      if (err.response?.data?.detail === "UNVERIFIED_ACCOUNT") {
+        toast.error('Your account is not verified. Please check your email for the code.')
+        setVerificationMode(true)
+      } else {
+        toast.error(err.response?.data?.detail || 'Something went wrong')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleVerifySubmit() {
+    if (!otp || otp.length !== 6) {
+      toast.error('Please enter the 6-digit code')
+      return
+    }
+    setLoading(true)
+    try {
+      const res = await verifyEmail(email, otp)
+      localStorage.setItem('access_token', res.data.access_token)
+      localStorage.setItem('refresh_token', res.data.refresh_token)
+      toast.success('Email verified successfully! Logging you in...')
+      navigate('/dashboard')
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Verification failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleResendCode() {
+    setLoading(true)
+    try {
+      await resendVerification(email)
+      toast.success('A new verification code has been sent to your email.')
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to resend code')
     } finally {
       setLoading(false)
     }
@@ -144,9 +180,12 @@ export default function Login() {
           <p className="text-slate-500 dark:text-slate-400 mt-2 text-sm font-medium tracking-wide">Your intelligent expense tracker</p>
         </div>
 
-        {/* Toggle */}
-        <div className="flex bg-slate-100 dark:bg-white/5 backdrop-blur-md rounded-xl p-1.5 mb-8 border border-slate-200 dark:border-white/5">
-          <button
+        {/* Main Content Area */}
+        {!verificationMode ? (
+          <>
+            {/* Toggle */}
+            <div className="flex bg-slate-100 dark:bg-white/5 backdrop-blur-md rounded-xl p-1.5 mb-8 border border-slate-200 dark:border-white/5">
+              <button
             type="button"
             onClick={() => { setIsRegister(false); setTouched({ email: false, password: false }) }}
             className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 cursor-pointer ${
@@ -249,7 +288,63 @@ export default function Login() {
             />
           </div>
 
-        </div>
+          </div>
+        </>
+        ) : (
+          <div className="space-y-6">
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-2">Verify Your Email</h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                We've sent a 6-digit verification code to <span className="font-semibold text-slate-700 dark:text-slate-300">{email}</span>.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold tracking-wider text-slate-500 dark:text-slate-400 mb-1.5 uppercase text-center">Verification Code</label>
+              <input
+                type="text"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="000000"
+                autoComplete="off"
+                className="w-full text-center tracking-[1em] font-mono text-2xl bg-white dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-4 text-slate-900 dark:text-white placeholder-slate-400/50 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 transition-all"
+              />
+            </div>
+
+            <button
+              onClick={handleVerifySubmit}
+              disabled={loading || otp.length !== 6}
+              className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 transform active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none mt-4"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Verifying...
+                </span>
+              ) : 'Verify & Continue'}
+            </button>
+
+            <div className="text-center mt-6">
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">Didn't receive the code?</p>
+              <button
+                onClick={handleResendCode}
+                disabled={loading}
+                className="text-cyan-600 dark:text-cyan-400 font-semibold hover:underline text-sm"
+              >
+                Resend Code
+              </button>
+            </div>
+
+            <div className="mt-8 text-center">
+              <button
+                onClick={() => setVerificationMode(false)}
+                className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white text-sm font-medium transition-colors"
+              >
+                Back to Login
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

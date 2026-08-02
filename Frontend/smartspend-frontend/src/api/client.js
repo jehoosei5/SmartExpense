@@ -23,6 +23,12 @@ export const login = (email, password) =>
 export const register = (email, password, display_name) =>
   api.post('/auth/register', { email, password, display_name })
 
+export const verifyEmail = (email, code) =>
+  api.post('/auth/verify-email', { email, code })
+
+export const resendVerification = (email) =>
+  api.post('/auth/resend-verification', { email })
+
 export const logout = (refresh_token) =>
   api.post('/auth/logout', { refresh_token })
 

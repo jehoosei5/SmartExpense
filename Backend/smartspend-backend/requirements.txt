@@ -17,6 +17,7 @@ pydantic[email]
 python-jose[cryptography]  
 passlib[bcrypt]
 bcrypt==4.3.0         
+resend
 
 # AI
 openai         

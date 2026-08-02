@@ -84,3 +84,20 @@ def send_email(to_email: str, subject: str, html_content: str):
     except Exception as e:
         logger.error(f"Failed to send email to {to_email} via SMTP: {str(e)}")
         return False
+
+def send_verification_email(to_email: str, code: str):
+    """
+    Helper function to construct and send the 6-digit OTP verification email.
+    """
+    subject = "SmartSpend - Verify Your Email"
+    html_content = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+        <h2 style="color: #1d3557; text-align: center;">Welcome to SmartSpend!</h2>
+        <p style="color: #457b9d; font-size: 16px;">Please use the following 6-digit code to verify your email address and complete your registration:</p>
+        <div style="background-color: #f1faee; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0;">
+            <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #e63946;">{code}</span>
+        </div>
+        <p style="color: #777; font-size: 14px; text-align: center;">This code will expire in 15 minutes. If you did not request this, please ignore this email.</p>
+    </div>
+    """
+    return send_email(to_email, subject, html_content)
