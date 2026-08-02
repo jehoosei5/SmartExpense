@@ -35,6 +35,9 @@ export const logout = (refresh_token) =>
 export const googleLogin = (credential) =>
   api.post('/auth/google', { credential })
 
+export const completeOnboarding = (data) =>
+  api.post('/auth/onboarding', data)
+
 // ── Expenses ──────────────────────────────────────────────────────────────
 export const getExpenses = (filters = {}) =>
   api.get('/expenses', { params: filters })

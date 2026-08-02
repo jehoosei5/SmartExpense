@@ -13,7 +13,8 @@ from app.schemas.auth import (
     RefreshRequest,
     UserResponse,
     VerifyEmailRequest,
-    ResendVerificationRequest
+    ResendVerificationRequest,
+    OnboardingRequest
 )
 from app.services.auth_service import register_user, login_user, logout_user, verify_email_code, resend_verification_code
 from app.utils.security import hash_password
@@ -146,7 +147,9 @@ def get_me(current_user: User = Depends(get_current_user)):
         "display_name":     current_user.display_name,
         "default_currency": current_user.default_currency,
         "report_frequency": current_user.report_frequency,
-        "is_oauth_user":   is_oauth
+        "is_oauth_user":   is_oauth,
+        "is_onboarded":    current_user.is_onboarded,
+        "tracking_focus":  current_user.financial_context.tracking_focus if current_user.financial_context else None
     }
 
 @router.put("/me")
@@ -185,9 +188,48 @@ def update_me(
         "display_name": current_user.display_name,
         "default_currency": current_user.default_currency,
         "report_frequency": current_user.report_frequency,
-        "is_oauth_user": len(current_user.password_hash) > 60 
+        "is_oauth_user": len(current_user.password_hash) > 60,
+        "is_onboarded": current_user.is_onboarded,
+        "tracking_focus":  current_user.financial_context.tracking_focus if current_user.financial_context else None
     }
     
+@router.post("/onboarding", response_model=UserResponse)
+def complete_onboarding(
+    payload: OnboardingRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    from app.models.financial_context import UserFinancialContext
+    
+    if current_user.is_onboarded:
+        raise HTTPException(status_code=400, detail="User is already onboarded")
+        
+    context = UserFinancialContext(
+        user_id=str(current_user.id),
+        tracking_focus=payload.tracking_focus,
+        main_income_source=payload.main_income_source,
+        monthly_income_range=payload.monthly_income_range,
+        payment_methods=payload.payment_methods,
+        top_categories=payload.top_categories
+    )
+    
+    db.add(context)
+    current_user.is_onboarded = True
+    db.commit()
+    db.refresh(current_user)
+    
+    is_oauth = len(current_user.password_hash) > 60
+    return {
+        "id": str(current_user.id),
+        "email": current_user.email,
+        "display_name": current_user.display_name,
+        "default_currency": current_user.default_currency,
+        "report_frequency": current_user.report_frequency,
+        "is_oauth_user": is_oauth,
+        "is_onboarded": current_user.is_onboarded,
+        "tracking_focus": context.tracking_focus
+    }
+
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
 def delete_my_account(
     db: Session = Depends(get_db), 

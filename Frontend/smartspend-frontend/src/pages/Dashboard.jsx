@@ -317,6 +317,12 @@ export default function Dashboard() {
         setMonthly(m.data)
         setCatData(c.data)
         setUserProfile(u.data)
+
+        if (u.data.is_onboarded === false) {
+          navigate('/onboarding')
+          return
+        }
+
         setLoading(false)
 
         // 2. Fetch AI Insights asynchronously in the background so it doesn't block the UI
@@ -509,6 +515,7 @@ export default function Dashboard() {
                 excessColorClass="text-rose-400"
                 excessBgClass="bg-rose-500/20"
               />
+              {userProfile?.tracking_focus !== 'Income & Expenses only' && (
                 <BreakdownGroup 
                   type="Savings" 
                   items={savingsCats} 
@@ -517,6 +524,7 @@ export default function Dashboard() {
                   excessColorClass="text-fuchsia-400"
                   excessBgClass="bg-fuchsia-500/20"
                 />
+              )}
               </div>
             </div>
           </div>
@@ -525,7 +533,9 @@ export default function Dashboard() {
           <div className="lg:col-span-3 flex flex-col gap-6 h-[700px]">
             <DonutChartCard title="Income Tracked" type="income" data={incomeCats} colors={COLORS_INC} />
             <DonutChartCard title="Expenses Tracked" type="expenses" data={expensesCats} colors={COLORS_EXP} />
-            <DonutChartCard title="Savings Tracked" type="savings" data={savingsCats} colors={COLORS_SAV} />
+            {userProfile?.tracking_focus !== 'Income & Expenses only' && (
+              <DonutChartCard title="Savings Tracked" type="savings" data={savingsCats} colors={COLORS_SAV} />
+            )}
           </div>
 
           {/* Right Column: Bar Chart */}
@@ -541,9 +551,11 @@ export default function Dashboard() {
                 <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-rose-600 dark:text-rose-400 hover:text-rose-500 dark:hover:text-rose-300">
                   <input type="checkbox" checked={showExpenses} onChange={e => setShowExpenses(e.target.checked)} className="accent-rose-500" /> Expenses
                 </label>
-                <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-fuchsia-600 dark:text-fuchsia-400 hover:text-fuchsia-500 dark:hover:text-fuchsia-300">
-                  <input type="checkbox" checked={showSavings} onChange={e => setShowSavings(e.target.checked)} className="accent-fuchsia-500" /> Savings
-                </label>
+                {userProfile?.tracking_focus !== 'Income & Expenses only' && (
+                  <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-fuchsia-600 dark:text-fuchsia-400 hover:text-fuchsia-500 dark:hover:text-fuchsia-300">
+                    <input type="checkbox" checked={showSavings} onChange={e => setShowSavings(e.target.checked)} className="accent-fuchsia-500" /> Savings
+                  </label>
+                )}
                 <div className="w-px h-4 bg-slate-300 dark:bg-white/20 mx-1" />
                 <label className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-slate-500 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
                   <input type="checkbox" checked={showBudget} onChange={e => setShowBudget(e.target.checked)} className="accent-slate-500" /> Budget

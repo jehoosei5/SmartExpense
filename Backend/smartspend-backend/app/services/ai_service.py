@@ -62,11 +62,25 @@ def handle_chat_message(db: Session, message: str, user_id: str, session_id: str
         for row in expense_summary
     ])
 
+    # Get user financial context
+    from app.models.financial_context import UserFinancialContext
+    ctx = db.query(UserFinancialContext).filter(UserFinancialContext.user_id == user_id).first()
+    if ctx:
+        ctx_str = (
+            f"\nUser Financial Profile:\n"
+            f"- Tracking Focus: {ctx.tracking_focus}\n"
+            f"- Main Income Source: {ctx.main_income_source} ({ctx.monthly_income_range})\n"
+            f"- Preferred Payment Methods: {', '.join(ctx.payment_methods) if ctx.payment_methods else 'Unknown'}\n"
+            f"- Top Priority Categories: {', '.join(ctx.top_categories) if ctx.top_categories else 'None'}\n"
+        )
+    else:
+        ctx_str = ""
+
     system_prompt = f"""
 You are SmartSpend AI, a financial assistant used in Ghana.
 Today's date is {today}. Current month: {current_month}, Current year: {current_year}.
 The default currency is GHS.
-
+{ctx_str}
 The user's expense summary is:
 {summary_text}
 
@@ -328,11 +342,24 @@ def generate_proactive_insight(db: Session, user_id: str, start_date: str = None
     from calendar import monthrange
     days_in_month = monthrange(today_dt.year, today_dt.month)[1]
     
+    from app.models.financial_context import UserFinancialContext
+    ctx = db.query(UserFinancialContext).filter(UserFinancialContext.user_id == user_id).first()
+    if ctx:
+        ctx_str = (
+            f"\nUser Financial Profile:\n"
+            f"- Tracking Focus: {ctx.tracking_focus}\n"
+            f"- Main Income Source: {ctx.main_income_source} ({ctx.monthly_income_range})\n"
+            f"- Preferred Payment Methods: {', '.join(ctx.payment_methods) if ctx.payment_methods else 'Unknown'}\n"
+            f"- Top Priority Categories: {', '.join(ctx.top_categories) if ctx.top_categories else 'None'}\n"
+        )
+    else:
+        ctx_str = ""
+
     system_prompt = f"""
 You are SmartSpend AI, a proactive financial assistant.
 Today is {today_dt.strftime('%Y-%m-%d')} (Day {today_dt.day} of {days_in_month} this month).
 The user is viewing expenses for the period: {start_date or 'All Time'} to {end_date or 'All Time'}.
-
+{ctx_str}
 The user's expenses vs budgets for the current filtered period are:
 {summary_text}
 

@@ -6,3 +6,5 @@ from app.models.chat import AIChatSession, AIChatMessage
 from app.models.sync_log import SyncLog
 from app.models.budget import Budget
 from app.models.alert import Alert
+from app.models.otp import OTP
+from app.models.financial_context import UserFinancialContext

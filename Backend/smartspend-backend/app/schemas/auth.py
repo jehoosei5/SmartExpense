@@ -31,6 +31,15 @@ class UserResponse(BaseModel):
     display_name: str
     default_currency: str
     is_oauth_user: bool
+    is_onboarded: bool
+    tracking_focus: str | None = None
 
     class Config:
         from_attributes = True
+
+class OnboardingRequest(BaseModel):
+    tracking_focus: str
+    main_income_source: str
+    monthly_income_range: str
+    payment_methods: list[str]
+    top_categories: list[str]
