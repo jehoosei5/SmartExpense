@@ -15,4 +15,4 @@ class Alert(Base):
     reference_key = Column(String(100), nullable=True) # Used to prevent duplicate alerts (e.g., budget_Food_2026_8)
     created_at = Column(DateTime, server_default=func.now())
 
-    user = relationship("User", backref="alerts")
+    user = relationship("User", back_populates="alerts")

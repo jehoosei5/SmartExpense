@@ -35,15 +35,15 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
 
 @router.post("/verify-email", response_model=TokenResponse)
 def verify_email(data: VerifyEmailRequest, db: Session = Depends(get_db)):
-    tokens, error = verify_email_code(db, data.email, data.code)
+    access_token, refresh_token, error = verify_email_code(db, data.email, data.code)
     if error:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=error
         )
     return TokenResponse(
-        access_token=tokens[0],
-        refresh_token=tokens[1]
+        access_token=access_token,
+        refresh_token=refresh_token
     )
 
 
