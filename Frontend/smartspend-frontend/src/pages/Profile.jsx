@@ -24,6 +24,9 @@ export default function Profile() {
 
   // Name & currency form
   const [displayName, setDisplayName] = useState('')
+  const [country, setCountry] = useState('')
+  const [phoneNumber, setPhoneNumber] = useState('')
+  const [profession, setProfession] = useState('')
   const [currency, setCurrency]       = useState('GHS')
   const [reportFrequency, setReportFrequency] = useState('NONE')
   const [trackingFocus, setTrackingFocus] = useState('Everything + AI insights')
@@ -44,6 +47,9 @@ export default function Profile() {
       const res = await getMe()
       setUser(res.data)
       setDisplayName(res.data.display_name || '')
+      setCountry(res.data.country || '')
+      setPhoneNumber(res.data.phone_number || '')
+      setProfession(res.data.profession || '')
       setCurrency(res.data.default_currency || 'GHS')
       setReportFrequency(res.data.report_frequency || 'NONE')
       setTrackingFocus(res.data.tracking_focus || 'Everything + AI insights')
@@ -60,10 +66,21 @@ export default function Profile() {
   async function handleUpdateInfo() {
     setInfoSaving(true)
     try {
-      const res = await updateMe({ display_name: displayName, default_currency: currency, report_frequency: reportFrequency, tracking_focus: trackingFocus })
+      const res = await updateMe({ 
+        display_name: displayName, 
+        country,
+        phone_number: phoneNumber,
+        profession,
+        default_currency: currency, 
+        report_frequency: reportFrequency, 
+        tracking_focus: trackingFocus 
+      })
       setUser(res.data) 
-      setDisplayName(res.data.display_name)
-      setCurrency(res.data.default_currency)
+      setDisplayName(res.data.display_name || '')
+      setCountry(res.data.country || '')
+      setPhoneNumber(res.data.phone_number || '')
+      setProfession(res.data.profession || '')
+      setCurrency(res.data.default_currency || 'GHS')
       setReportFrequency(res.data.report_frequency)
       setTrackingFocus(res.data.tracking_focus)
       toast.success('Profile updated successfully')
@@ -194,6 +211,40 @@ export default function Profile() {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="Your name"
+                className={inputClasses}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={labelClasses}>Country</label>
+                <input
+                  type="text"
+                  value={country}
+                  onChange={(e) => setCountry(e.target.value)}
+                  placeholder="e.g. Ghana"
+                  className={inputClasses}
+                />
+              </div>
+              <div>
+                <label className={labelClasses}>Phone Number</label>
+                <input
+                  type="text"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  placeholder="+233 24 000 0000"
+                  className={inputClasses}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className={labelClasses}>Profession</label>
+              <input
+                type="text"
+                value={profession}
+                onChange={(e) => setProfession(e.target.value)}
+                placeholder="e.g. Software Engineer"
                 className={inputClasses}
               />
             </div>

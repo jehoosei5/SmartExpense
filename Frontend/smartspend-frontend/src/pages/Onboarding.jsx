@@ -50,6 +50,18 @@ const CATEGORIES = [
   'Side Hustle', 'Family/Parents'
 ]
 
+const COUNTRIES = [
+  { name: 'Ghana', currency: 'GHS', phoneCode: '+233' },
+  { name: 'Nigeria', currency: 'NGN', phoneCode: '+234' },
+  { name: 'Kenya', currency: 'KES', phoneCode: '+254' },
+  { name: 'South Africa', currency: 'ZAR', phoneCode: '+27' },
+  { name: 'United States', currency: 'USD', phoneCode: '+1' },
+  { name: 'United Kingdom', currency: 'GBP', phoneCode: '+44' },
+  { name: 'Canada', currency: 'CAD', phoneCode: '+1' },
+  { name: 'Australia', currency: 'AUD', phoneCode: '+61' },
+  { name: 'Other', currency: 'USD', phoneCode: '' }
+]
+
 export default function Onboarding() {
   const navigate = useNavigate()
   const { theme } = useTheme()
@@ -57,6 +69,10 @@ export default function Onboarding() {
   const [loading, setLoading] = useState(false)
 
   const [formData, setFormData] = useState({
+    country: '',
+    phone_number: '',
+    profession: '',
+    default_currency: 'GHS',
     tracking_focus: '',
     main_income_source: '',
     monthly_income_range: '',
@@ -89,11 +105,17 @@ export default function Onboarding() {
   }
 
   const handleNext = () => {
-    if (step === 1 && !formData.tracking_focus) {
+    if (step === 1) {
+      if (!formData.country || !formData.phone_number || !formData.profession) {
+        toast.error('Please complete all personal information')
+        return
+      }
+    }
+    if (step === 2 && !formData.tracking_focus) {
       toast.error('Please select a tracking focus')
       return
     }
-    if (step === 2) {
+    if (step === 3) {
       if (!formData.main_income_source || !formData.monthly_income_range || formData.payment_methods.length === 0) {
         toast.error('Please complete all questions to proceed')
         return
@@ -131,10 +153,10 @@ export default function Onboarding() {
         <div className="px-8 pt-8 pb-6 border-b border-slate-100 dark:border-white/5">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-black bg-gradient-to-r from-blue-600 to-emerald-500 bg-clip-text text-transparent">SmartSpend</h1>
-            <div className="text-sm font-semibold text-slate-500 dark:text-slate-400">Step {step} of 3</div>
+            <div className="text-sm font-semibold text-slate-500 dark:text-slate-400">Step {step} of 4</div>
           </div>
           <div className="flex gap-2">
-            {[1, 2, 3].map(i => (
+            {[1, 2, 3, 4].map(i => (
               <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors duration-500 ${
                 step >= i ? 'bg-gradient-to-r from-blue-500 to-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'bg-slate-200 dark:bg-white/10'
               }`} />
@@ -145,8 +167,81 @@ export default function Onboarding() {
         {/* Content Area */}
         <div className="p-8 flex-1 flex flex-col justify-center">
           
-          {/* Step 1 */}
+          {/* Step 1: Personal Info */}
           {step === 1 && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Tell us about yourself</h2>
+                <p className="text-slate-500 dark:text-slate-400">Let's set up your profile basics.</p>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-2">Country</label>
+                  <select
+                    value={formData.country}
+                    onChange={(e) => {
+                      const selected = COUNTRIES.find(c => c.name === e.target.value)
+                      if (selected) {
+                        setFormData({ 
+                          ...formData, 
+                          country: selected.name,
+                          default_currency: selected.currency,
+                          phone_number: selected.phoneCode + ' '
+                        })
+                      } else {
+                        setFormData({ ...formData, country: e.target.value })
+                      }
+                    }}
+                    className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  >
+                    <option value="" disabled>Select your country</option>
+                    {COUNTRIES.map(c => (
+                      <option key={c.name} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-2">Default Currency</label>
+                    <input
+                      type="text"
+                      value={formData.default_currency}
+                      onChange={e => setFormData({ ...formData, default_currency: e.target.value.toUpperCase() })}
+                      className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-semibold"
+                      placeholder="e.g. GHS"
+                      maxLength={3}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-2">Phone Number</label>
+                    <input
+                      type="text"
+                      value={formData.phone_number}
+                      onChange={e => setFormData({ ...formData, phone_number: e.target.value })}
+                      className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      placeholder="+233 24 000 0000"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-2">Profession</label>
+                  <input
+                    type="text"
+                    value={formData.profession}
+                    onChange={e => setFormData({ ...formData, profession: e.target.value })}
+                    className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    placeholder="e.g. Software Engineer, Teacher"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2 */}
+          {step === 2 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">What do you want to track?</h2>
@@ -189,8 +284,8 @@ export default function Onboarding() {
             </div>
           )}
 
-          {/* Step 2 */}
-          {step === 2 && (
+          {/* Step 3 */}
+          {step === 3 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="text-center mb-6">
                 <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Your financial profile</h2>
@@ -259,8 +354,8 @@ export default function Onboarding() {
             </div>
           )}
 
-          {/* Step 3 */}
-          {step === 3 && (
+          {/* Step 4 */}
+          {step === 4 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Top spending categories</h2>
@@ -316,7 +411,7 @@ export default function Onboarding() {
             </button>
           ) : <div />}
 
-          {step < 3 ? (
+          {step < 4 ? (
             <button
               onClick={handleNext}
               className="flex items-center gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-2.5 rounded-xl font-bold hover:shadow-lg transition-all active:scale-95"

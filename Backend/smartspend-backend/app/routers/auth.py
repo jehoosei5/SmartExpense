@@ -149,6 +149,9 @@ def get_me(current_user: User = Depends(get_current_user)):
         "report_frequency": current_user.report_frequency,
         "is_oauth_user":   is_oauth,
         "is_onboarded":    current_user.is_onboarded,
+        "country":         current_user.country,
+        "phone_number":    current_user.phone_number,
+        "profession":      current_user.profession,
         "tracking_focus":  current_user.financial_context.tracking_focus if current_user.financial_context else None
     }
 
@@ -165,6 +168,12 @@ def update_me(
         current_user.default_currency = payload["default_currency"]
     if "report_frequency" in payload:
         current_user.report_frequency = payload["report_frequency"]
+    if "country" in payload:
+        current_user.country = payload["country"]
+    if "phone_number" in payload:
+        current_user.phone_number = payload["phone_number"]
+    if "profession" in payload:
+        current_user.profession = payload["profession"]
     if "tracking_focus" in payload and current_user.financial_context:
         current_user.financial_context.tracking_focus = payload["tracking_focus"]
 
@@ -192,6 +201,9 @@ def update_me(
         "report_frequency": current_user.report_frequency,
         "is_oauth_user": len(current_user.password_hash) > 60,
         "is_onboarded": current_user.is_onboarded,
+        "country": current_user.country,
+        "phone_number": current_user.phone_number,
+        "profession": current_user.profession,
         "tracking_focus":  current_user.financial_context.tracking_focus if current_user.financial_context else None
     }
     
@@ -217,6 +229,10 @@ def complete_onboarding(
     
     db.add(context)
     current_user.is_onboarded = True
+    current_user.country = payload.country
+    current_user.phone_number = payload.phone_number
+    current_user.profession = payload.profession
+    current_user.default_currency = payload.default_currency
     db.commit()
     db.refresh(current_user)
     
@@ -229,6 +245,9 @@ def complete_onboarding(
         "report_frequency": current_user.report_frequency,
         "is_oauth_user": is_oauth,
         "is_onboarded": current_user.is_onboarded,
+        "country": current_user.country,
+        "phone_number": current_user.phone_number,
+        "profession": current_user.profession,
         "tracking_focus": context.tracking_focus
     }
 

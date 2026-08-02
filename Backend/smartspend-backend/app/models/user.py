@@ -13,6 +13,9 @@ class User(Base):
     is_verified      = Column(Boolean, nullable=False, default=False)
     is_onboarded     = Column(Boolean, nullable=False, default=False)
     display_name     = Column(String(100), nullable=False)
+    country          = Column(String(100), nullable=True)
+    phone_number     = Column(String(20), nullable=True)
+    profession       = Column(String(100), nullable=True)
     default_currency = Column(String(3), nullable=False, default="GHS")
     report_frequency = Column(String(20), nullable=False, default="NONE") # NONE, WEEKLY, MONTHLY
     last_report_sent_at = Column(DateTime, nullable=True)

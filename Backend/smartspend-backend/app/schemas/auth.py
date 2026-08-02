@@ -32,12 +32,19 @@ class UserResponse(BaseModel):
     default_currency: str
     is_oauth_user: bool
     is_onboarded: bool
+    country: str | None = None
+    phone_number: str | None = None
+    profession: str | None = None
     tracking_focus: str | None = None
 
     class Config:
         from_attributes = True
 
 class OnboardingRequest(BaseModel):
+    country: str
+    phone_number: str
+    profession: str
+    default_currency: str
     tracking_focus: str
     main_income_source: str
     monthly_income_range: str
