@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useTheme } from '../contexts/ThemeContext'
-import { getAlerts, markAlertRead } from '../api/client'
+import { getAlerts, markAlertRead, getMe } from '../api/client'
 import toast from 'react-hot-toast'
 
 export default function Navbar() {
@@ -10,11 +10,13 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [alerts, setAlerts] = useState([])
+  const [userProfile, setUserProfile] = useState(null)
   const { theme, toggleTheme } = useTheme()
   const notifRef = useRef(null)
 
   useEffect(() => {
     loadAlerts()
+    getMe().then(res => setUserProfile(res.data)).catch(() => {})
     
     // Close dropdown on click outside
     function handleClickOutside(event) {

@@ -26,6 +26,7 @@ export default function Profile() {
   const [displayName, setDisplayName] = useState('')
   const [currency, setCurrency]       = useState('GHS')
   const [reportFrequency, setReportFrequency] = useState('NONE')
+  const [trackingFocus, setTrackingFocus] = useState('Everything + AI insights')
   const [infoSaving, setInfoSaving]   = useState(false)
 
   // Password form
@@ -45,6 +46,7 @@ export default function Profile() {
       setDisplayName(res.data.display_name || '')
       setCurrency(res.data.default_currency || 'GHS')
       setReportFrequency(res.data.report_frequency || 'NONE')
+      setTrackingFocus(res.data.tracking_focus || 'Everything + AI insights')
     } catch (err) {
       if (err.response?.status === 401) {
         localStorage.clear()
@@ -58,12 +60,17 @@ export default function Profile() {
   async function handleUpdateInfo() {
     setInfoSaving(true)
     try {
-      const res = await updateMe({ display_name: displayName, default_currency: currency, report_frequency: reportFrequency })
+      const res = await updateMe({ display_name: displayName, default_currency: currency, report_frequency: reportFrequency, tracking_focus: trackingFocus })
       setUser(res.data) 
       setDisplayName(res.data.display_name)
       setCurrency(res.data.default_currency)
       setReportFrequency(res.data.report_frequency)
+      setTrackingFocus(res.data.tracking_focus)
       toast.success('Profile updated successfully')
+      
+      if (trackingFocus !== user?.tracking_focus) {
+        setTimeout(() => window.location.reload(), 1000)
+      }
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Failed to update profile')
     } finally {
@@ -216,6 +223,20 @@ export default function Profile() {
                 <option value="MONTHLY" className="bg-white dark:bg-slate-900">Monthly (1st of the month)</option>
               </select>
               <p className="text-xs text-slate-500 mt-2 font-medium">Receive automated spending summaries.</p>
+            </div>
+            
+            <div>
+              <label className={labelClasses}>Tracking Focus</label>
+              <select
+                value={trackingFocus}
+                onChange={(e) => setTrackingFocus(e.target.value)}
+                className={`${inputClasses} appearance-none`}
+              >
+                <option value="Income & Expenses only" className="bg-white dark:bg-slate-900">Income & Expenses only</option>
+                <option value="Income, Expenses & Savings" className="bg-white dark:bg-slate-900">Income, Expenses & Savings</option>
+                <option value="Everything + AI insights" className="bg-white dark:bg-slate-900">Everything + AI insights</option>
+              </select>
+              <p className="text-xs text-slate-500 mt-2 font-medium">Determines what sections (Savings, Budget) appear in your dashboard.</p>
             </div>
             
             <button

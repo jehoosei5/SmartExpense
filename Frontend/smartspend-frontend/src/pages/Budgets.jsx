@@ -21,6 +21,10 @@ export default function Budgets() {
   // State for the currently edited category's 12 months
   const [editValues, setEditValues] = useState({})
 
+  const availableTypes = userProfile?.tracking_focus === 'Income & Expenses only'
+    ? ['Income', 'Expenses']
+    : ['Income', 'Expenses', 'Savings']
+
   useEffect(() => {
     load()
   }, [year])
@@ -126,7 +130,7 @@ export default function Budgets() {
           <div className="flex justify-center py-20"><div className="w-10 h-10 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin" /></div>
         ) : (
           <div className="flex flex-col gap-8">
-            {['Income', 'Expenses', 'Savings'].map(type => (
+            {availableTypes.map(type => (
               <div key={type} className="bg-white dark:bg-white/[0.02] backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-6 shadow-sm dark:shadow-2xl">
                 <h2 className={`text-xl font-bold mb-6 flex items-center gap-2 ${type === 'Income' ? 'text-emerald-600 dark:text-emerald-400' : type === 'Expenses' ? 'text-rose-600 dark:text-rose-400' : 'text-fuchsia-600 dark:text-fuchsia-400'}`}>
                   <span className="w-2 h-2 rounded-full shadow-[0_0_8px_currentColor]" style={{ backgroundColor: 'currentColor' }} />

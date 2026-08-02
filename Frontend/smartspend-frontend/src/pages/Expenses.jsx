@@ -5,7 +5,6 @@ import { getExpenses, createExpense, updateExpense, deleteExpense, getCategories
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import toast from 'react-hot-toast'
 
-const TYPES = ['Expenses', 'Income', 'Savings']
 const PAYMENT_METHODS = ['Cash', 'MoMo', 'Card', 'Bank Transfer']
 const CURRENCIES = ['GHS', 'USD', 'EUR', 'GBP', 'NGN', 'KES']
 
@@ -45,6 +44,10 @@ export default function Expenses() {
   const [suggestions, setSuggestions] = useState([])
   const [loading, setLoading]       = useState(true)
   const [userProfile, setUserProfile] = useState(null)
+  
+  const availableTypes = userProfile?.tracking_focus === 'Income & Expenses only' 
+    ? ['Expenses', 'Income'] 
+    : ['Expenses', 'Income', 'Savings']
 
   // Filters
   const [filterType, setFilterType]       = useState('')
@@ -486,7 +489,7 @@ export default function Expenses() {
         <div className="bg-white dark:bg-white/[0.02] backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-4 md:p-5 mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 shadow-md dark:shadow-xl">
           <select value={filterType} onChange={e => setFilterType(e.target.value)} className={inputClasses}>
             <option value="" className="bg-white dark:bg-slate-900">All Types</option>
-            {TYPES.map(t => <option key={t} value={t} className="bg-white dark:bg-slate-900">{t}</option>)}
+            {availableTypes.map(t => <option key={t} value={t} className="bg-white dark:bg-slate-900">{t}</option>)}
           </select>
 
           <select 
@@ -503,7 +506,7 @@ export default function Expenses() {
               ))
             ) : (
               // If no type is selected, group them by type
-              TYPES.map(type => {
+              availableTypes.map(type => {
                 const typeCategories = filterBarCategories.filter(c => c.type === type);
                 if (typeCategories.length === 0) return null;
                 return (
@@ -649,7 +652,7 @@ export default function Expenses() {
                     onChange={e => setForm({...form, type: e.target.value, category: ''})}
                     className={inputClasses}
                   >
-                    {TYPES.map(t => <option key={t} value={t} className="bg-white dark:bg-slate-900">{t}</option>)}
+                    {availableTypes.map(t => <option key={t} value={t} className="bg-white dark:bg-slate-900">{t}</option>)}
                   </select>
                 </div>
               </div>
@@ -889,7 +892,7 @@ export default function Expenses() {
                 <div className="flex-1">
                   <label className={labelClasses}>Type</label>
                   <select value={newCatType} onChange={e => setNewCatType(e.target.value)} className={inputClasses}>
-                    {TYPES.map(t => <option key={t} value={t} className="bg-white dark:bg-slate-900">{t}</option>)}
+                    {availableTypes.map(t => <option key={t} value={t} className="bg-white dark:bg-slate-900">{t}</option>)}
                   </select>
                 </div>
                 <div className="flex-[2]">
@@ -917,7 +920,7 @@ export default function Expenses() {
             {/* Categories List */}
             <div className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar">
               <DragDropContext onDragEnd={handleDragEnd}>
-                {TYPES.map(type => {
+                {availableTypes.map(type => {
                   const cats = categories.filter(c => c.type === type).sort((a, b) => a.position - b.position)
                   if (cats.length === 0) return null
                   return (

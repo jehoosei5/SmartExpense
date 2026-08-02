@@ -433,59 +433,61 @@ export default function Dashboard() {
         </div>
 
         {/* Proactive AI Insight Banner */}
-        <div 
-          onClick={() => setInsightExpanded(!insightExpanded)}
-          className="mb-6 relative overflow-hidden bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-fuchsia-500/10 border border-indigo-500/20 rounded-2xl p-6 shadow-lg backdrop-blur-xl group cursor-pointer transition-all duration-300 hover:shadow-indigo-500/10 hover:border-indigo-500/30"
-        >
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-fuchsia-500/10 rounded-full blur-[60px] pointer-events-none" />
-          <div className="flex items-start md:items-center gap-4 relative z-10 w-full">
-            <div className="shrink-0 p-3 bg-indigo-500/20 rounded-full border border-indigo-500/30 animate-pulse mt-1 md:mt-0">
-              <svg className="w-6 h-6 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-1">
-                <h4 className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest flex items-center gap-2">
-                  SmartSpend AI Insight
-                  {insightLoading && <span className="flex gap-1"><span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce" style={{animationDelay: '0ms'}}></span><span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce" style={{animationDelay: '150ms'}}></span><span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce" style={{animationDelay: '300ms'}}></span></span>}
-                </h4>
-                
-                {!insightLoading && insights.length > 1 && (
-                  <div className="flex items-center gap-2 text-indigo-400 ml-4 shrink-0" onClick={e => e.stopPropagation()}>
-                    <button 
-                      onClick={() => {
-                        setCurrentInsightIndex(prev => prev === 0 ? insights.length - 1 : prev - 1)
-                        setInsightExpanded(false)
-                      }}
-                      className="p-1 hover:bg-indigo-500/20 rounded-full transition-colors"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-                    </button>
-                    <span className="text-xs font-semibold">{currentInsightIndex + 1}/{insights.length}</span>
-                    <button 
-                      onClick={() => {
-                        setCurrentInsightIndex(prev => prev === insights.length - 1 ? 0 : prev + 1)
-                        setInsightExpanded(false)
-                      }}
-                      className="p-1 hover:bg-indigo-500/20 rounded-full transition-colors"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-                    </button>
-                  </div>
+        {userProfile?.tracking_focus === 'Everything + AI insights' && (
+          <div 
+            onClick={() => setInsightExpanded(!insightExpanded)}
+            className="mb-6 relative overflow-hidden bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-fuchsia-500/10 border border-indigo-500/20 rounded-2xl p-6 shadow-lg backdrop-blur-xl group cursor-pointer transition-all duration-300 hover:shadow-indigo-500/10 hover:border-indigo-500/30"
+          >
+            <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-fuchsia-500/10 rounded-full blur-[60px] pointer-events-none" />
+            <div className="flex items-start md:items-center gap-4 relative z-10 w-full">
+              <div className="shrink-0 p-3 bg-indigo-500/20 rounded-full border border-indigo-500/30 animate-pulse mt-1 md:mt-0">
+                <svg className="w-6 h-6 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-1">
+                  <h4 className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                    SmartSpend AI Insight
+                    {insightLoading && <span className="flex gap-1"><span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce" style={{animationDelay: '0ms'}}></span><span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce" style={{animationDelay: '150ms'}}></span><span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce" style={{animationDelay: '300ms'}}></span></span>}
+                  </h4>
+                  
+                  {!insightLoading && insights.length > 1 && (
+                    <div className="flex items-center gap-2 text-indigo-400 ml-4 shrink-0" onClick={e => e.stopPropagation()}>
+                      <button 
+                        onClick={() => {
+                          setCurrentInsightIndex(prev => prev === 0 ? insights.length - 1 : prev - 1)
+                          setInsightExpanded(false)
+                        }}
+                        className="p-1 hover:bg-indigo-500/20 rounded-full transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                      </button>
+                      <span className="text-xs font-semibold">{currentInsightIndex + 1}/{insights.length}</span>
+                      <button 
+                        onClick={() => {
+                          setCurrentInsightIndex(prev => prev === insights.length - 1 ? 0 : prev + 1)
+                          setInsightExpanded(false)
+                        }}
+                        className="p-1 hover:bg-indigo-500/20 rounded-full transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <p className="text-slate-700 dark:text-slate-200 text-sm md:text-base font-bold leading-relaxed pr-2">
+                  {insightLoading ? "Analyzing your latest financial data..." : insights[currentInsightIndex]?.title}
+                </p>
+                {insightExpanded && !insightLoading && (
+                  <p className="text-slate-600 dark:text-slate-300 text-sm mt-2 leading-relaxed border-t border-indigo-500/20 pt-2 animate-in fade-in slide-in-from-top-1">
+                    {insights[currentInsightIndex]?.details}
+                  </p>
                 )}
               </div>
-              <p className="text-slate-700 dark:text-slate-200 text-sm md:text-base font-bold leading-relaxed pr-2">
-                {insightLoading ? "Analyzing your latest financial data..." : insights[currentInsightIndex]?.title}
-              </p>
-              {insightExpanded && !insightLoading && (
-                <p className="text-slate-600 dark:text-slate-300 text-sm mt-2 leading-relaxed border-t border-indigo-500/20 pt-2 animate-in fade-in slide-in-from-top-1">
-                  {insights[currentInsightIndex]?.details}
-                </p>
-              )}
             </div>
           </div>
-        </div>
+        )}
 
         {/* 3-Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative">

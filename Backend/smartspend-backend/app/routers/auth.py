@@ -165,6 +165,8 @@ def update_me(
         current_user.default_currency = payload["default_currency"]
     if "report_frequency" in payload:
         current_user.report_frequency = payload["report_frequency"]
+    if "tracking_focus" in payload and current_user.financial_context:
+        current_user.financial_context.tracking_focus = payload["tracking_focus"]
 
     # Modified Password Logic
     if "new_password" in payload:
