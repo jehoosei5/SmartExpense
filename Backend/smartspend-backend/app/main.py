@@ -18,6 +18,14 @@ try:
     Base.metadata.create_all(bind=engine)
     print("Database tables created.", flush=True)
     
+    print("Running column migrations...", flush=True)
+    try:
+        from migrate_personal_info import migrate
+        migrate()
+        print("Migrations complete.", flush=True)
+    except Exception as me:
+        print(f"Migration error: {me}", flush=True)
+    
     # Seed default categories if none exist
     print("Seeding default categories...", flush=True)
     db = SessionLocal()
