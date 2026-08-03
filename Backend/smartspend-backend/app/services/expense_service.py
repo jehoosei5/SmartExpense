@@ -26,7 +26,7 @@ def create_expense(db: Session, data: ExpenseCreate, user_id: str):
     # Check if this exact expense already exists
     existing = db.query(Expense).filter(Expense.sync_hash == sync_hash).first()
     if existing:
-        return None, "Expense already exists"
+        return None, False, None, "Expense already exists"
 
     # Get user to know base currency
     user = db.query(User).filter(User.id == user_id).first()
@@ -62,9 +62,9 @@ def create_expense(db: Session, data: ExpenseCreate, user_id: str):
     db.refresh(expense)
 
     # Check for budget alerts!
-    alert_triggered = check_and_trigger_budget_alert(db, expense, user)
+    alert_triggered, alert_percentage = check_and_trigger_budget_alert(db, expense, user)
 
-    return expense, alert_triggered, None
+    return expense, alert_triggered, alert_percentage, None
 
 
 def get_expenses(

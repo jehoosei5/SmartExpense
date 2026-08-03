@@ -35,13 +35,14 @@ router = APIRouter(prefix="/expenses", tags=["Expenses"])
 
 @router.post("", response_model=ExpenseResponse, status_code=201)
 def create(data: ExpenseCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    expense, alert_triggered, error = create_expense(db, data, current_user.id)
+    expense, alert_triggered, alert_percentage, error = create_expense(db, data, current_user.id)
     if error:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=error
         )
     expense.alert_triggered = alert_triggered
+    expense.alert_percentage = alert_percentage
     return expense
 
 

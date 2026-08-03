@@ -175,7 +175,8 @@ export default function Expenses() {
       
       // Check for budget alert
       if (res && res.data && res.data.alert_triggered) {
-        toast('⚠️ Warning: You have reached 90% of your budget for this category!', {
+        const pct = res.data.alert_percentage || 90;
+        toast(`⚠️ Warning: You have reached ${pct}% of your budget for this category!`, {
           icon: '🚨',
           style: {
             borderRadius: '10px',
@@ -283,8 +284,10 @@ export default function Expenses() {
       const res = await createExpense(sugg)
       toast.success('Suggestion accepted!')
       
+      // Alert logic handling for drag/drop edits
       if (res && res.data && res.data.alert_triggered) {
-        toast('⚠️ Warning: You have reached 90% of your budget for this category!', {
+        const pct = res.data.alert_percentage || 90;
+        toast(`⚠️ Warning: You have reached ${pct}% of your budget for this category!`, {
           icon: '🚨',
           style: {
             borderRadius: '10px',

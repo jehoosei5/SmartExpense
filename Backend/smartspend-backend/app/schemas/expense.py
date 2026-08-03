@@ -79,6 +79,7 @@ class ExpenseResponse(BaseModel):
     recurrence_end_date: Optional[dt_date]
     created_at:     datetime
     alert_triggered: bool = False
+    alert_percentage: Optional[int] = None
 
     class Config:
         from_attributes = True

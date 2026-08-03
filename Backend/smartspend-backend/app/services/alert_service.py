@@ -9,16 +9,18 @@ from app.utils.email import send_email
 
 logger = logging.getLogger(__name__)
 
-def check_and_trigger_budget_alert(db: Session, expense: Expense, user: User) -> bool:
+from typing import Tuple, Optional
+
+def check_and_trigger_budget_alert(db: Session, expense: Expense, user: User) -> Tuple[bool, Optional[int]]:
     """
     Checks if the given expense causes the user to exceed 90% of their budget
     for that category in the expense's month. If so, creates an in-app Alert
     and sends an email warning.
     
-    Returns True if an alert was newly triggered, False otherwise.
+    Returns (True, percentage) if an alert was newly triggered, (False, None) otherwise.
     """
     if expense.type != "Expenses":
-        return False
+        return False, None
         
     year = expense.date.year
     month = expense.date.month
@@ -33,7 +35,7 @@ def check_and_trigger_budget_alert(db: Session, expense: Expense, user: User) ->
     ).first()
     
     if not budget or budget.amount <= 0:
-        return False
+        return False, None
         
     # Calculate total spent in this category for the month
     total_spent = db.query(func.sum(Expense.amount)).filter(
@@ -59,6 +61,13 @@ def check_and_trigger_budget_alert(db: Session, expense: Expense, user: User) ->
         
         if not existing_alert:
             percentage = int((total_spent / budget_limit) * 100)
+            
+            warning_text = (
+                f"You have exceeded your <strong>{expense.category}</strong> budget for the month!"
+                if percentage >= 100 else
+                f"You are dangerously close to exceeding your <strong>{expense.category}</strong> budget for the month!"
+            )
+            
             title = f"Budget Alert: {expense.category}"
             message = f"You have reached {percentage}% of your {user.default_currency} {budget_limit:,.2f} budget for {expense.category} this month. You have spent {user.default_currency} {total_spent:,.2f} so far."
             
@@ -79,7 +88,7 @@ def check_and_trigger_budget_alert(db: Session, expense: Expense, user: User) ->
                 <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                     <h2 style="color: #ef4444; text-align: center;">🚨 Budget Warning</h2>
                     <p style="color: #374151; font-size: 16px; text-align: center;">
-                        You are dangerously close to exceeding your <strong>{expense.category}</strong> budget for the month!
+                        {warning_text}
                     </p>
                     <div style="background-color: #fee2e2; border: 1px solid #fca5a5; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
                         <h3 style="margin: 0; color: #b91c1c; font-size: 14px; text-transform: uppercase;">Amount Spent</h3>
@@ -100,6 +109,6 @@ def check_and_trigger_budget_alert(db: Session, expense: Expense, user: User) ->
                 html_content=html_content
             )
             
-            return True
+            return True, percentage
             
-    return False
+    return False, None

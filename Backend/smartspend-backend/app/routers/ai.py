@@ -66,7 +66,7 @@ def confirm_parsed_expense(
         source="ai_chat"
     )
 
-    expense, exp_error = create_expense(db, expense_data, current_user.id)
+    expense, alert_triggered, alert_percentage, exp_error = create_expense(db, expense_data, current_user.id)
 
     if exp_error:
         raise HTTPException(
@@ -77,7 +77,9 @@ def confirm_parsed_expense(
     return {
         "message": "Expense saved successfully!",
         "expense_id": expense.id,
-        "session_id": session_id
+        "session_id": session_id,
+        "alert_triggered": alert_triggered,
+        "alert_percentage": alert_percentage
     }
 
 
