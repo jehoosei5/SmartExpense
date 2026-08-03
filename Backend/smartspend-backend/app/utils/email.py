@@ -22,11 +22,10 @@ def send_email(to_email: str, subject: str, html_content: str):
     """
     if settings.RESEND_API_KEY:
         try:
-            # Resend Free Tier requires sending FROM onboarding@resend.dev 
-            # if you haven't verified a custom domain yet.
+            # Use the verified custom domain for sending emails
             from_email = settings.SMTP_FROM_EMAIL
-            if "gmail.com" in from_email.lower():
-                from_email = "SmartSpend <onboarding@resend.dev>"
+            if not from_email or "gmail.com" in from_email.lower():
+                from_email = "SmartSpend AI <no-reply@contacts.coinmind.online>"
 
             headers = {
                 "Authorization": f"Bearer {settings.RESEND_API_KEY}",

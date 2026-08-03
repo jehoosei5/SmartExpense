@@ -1,4 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import field_validator
+import json
 
 class Settings(BaseSettings):
     # Database
@@ -10,6 +12,20 @@ class Settings(BaseSettings):
     
     # CORS
     CORS_ORIGINS: list[str] = ["http://localhost:5173"]
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    def assemble_cors_origins(cls, v):
+        if isinstance(v, str):
+            if v.startswith("["):
+                try:
+                    v = json.loads(v)
+                except Exception:
+                    v = [v]
+            else:
+                v = [i.strip() for i in v.split(",")]
+        if isinstance(v, list):
+            return [str(i).rstrip('/') for i in v]
+        return v
 
     # JWT Auth
     SECRET_KEY: str
