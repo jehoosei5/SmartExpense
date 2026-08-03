@@ -169,9 +169,65 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Trust & Security Section */}
+      <section className="py-24 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent dark:via-cyan-900/10 pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 mb-6 border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Bank-Grade Privacy & Security</h2>
+            <p className="text-slate-600 dark:text-slate-400 text-lg">Your financial data is your business alone. We built SmartSpend with strict privacy-first principles.</p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="flex gap-4 items-start p-6 rounded-2xl bg-white/40 dark:bg-slate-900/40 border border-slate-200 dark:border-white/5">
+              <div className="mt-1 text-cyan-600 dark:text-cyan-400">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
+              </div>
+              <div>
+                <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">100% Private (No Ads)</h4>
+                <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">Your expense data is strictly yours. We don't analyze your spending habits to sell targeted ads or share your data with third parties.</p>
+              </div>
+            </div>
+
+            <div className="flex gap-4 items-start p-6 rounded-2xl bg-white/40 dark:bg-slate-900/40 border border-slate-200 dark:border-white/5">
+              <div className="mt-1 text-cyan-600 dark:text-cyan-400">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+              </div>
+              <div>
+                <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">Cloud Secured & Encrypted</h4>
+                <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">Your data is safely backed up in the cloud with industry-standard encryption. Only you can access your account.</p>
+              </div>
+            </div>
+
+            <div className="flex gap-4 items-start p-6 rounded-2xl bg-white/40 dark:bg-slate-900/40 border border-slate-200 dark:border-white/5">
+              <div className="mt-1 text-cyan-600 dark:text-cyan-400">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+              </div>
+              <div>
+                <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">Total Data Ownership</h4>
+                <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">Don't get locked in. Export your entire transaction history to Excel at any time, or permanently delete your account with one click.</p>
+              </div>
+            </div>
+
+            <div className="flex gap-4 items-start p-6 rounded-2xl bg-white/40 dark:bg-slate-900/40 border border-slate-200 dark:border-white/5">
+              <div className="mt-1 text-cyan-600 dark:text-cyan-400">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" /></svg>
+              </div>
+              <div>
+                <h4 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">Zero Bank Credentials</h4>
+                <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">We never ask for your banking passwords. SmartSpend works entirely independently of your bank, keeping your real accounts 100% isolated.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA / Footer */}
       <footer className="py-20 text-center relative border-t border-slate-200 dark:border-white/5">
-        <div className="max-w-3xl mx-auto px-6">
+        <div className="max-w-3xl mx-auto px-6 mb-16">
           <h2 className="text-3xl md:text-5xl font-bold mb-6">Ready to take control?</h2>
           <p className="text-slate-600 dark:text-slate-400 mb-10 text-lg">Join SmartSpend today and experience the easiest way to track your finances in Ghana.</p>
           <Link 
@@ -180,6 +236,14 @@ export default function Landing() {
           >
             Create Your Account
           </Link>
+        </div>
+
+        <div className="border-t border-slate-200 dark:border-white/10 pt-8 flex flex-col md:flex-row items-center justify-center gap-6 text-sm text-slate-500 dark:text-slate-400">
+          <p>© {new Date().getFullYear()} SmartSpend AI. All rights reserved.</p>
+          <div className="flex items-center gap-4">
+            <Link to="/terms" className="hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">Terms & Conditions</Link>
+            <Link to="/privacy" className="hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">Privacy Policy</Link>
+          </div>
         </div>
       </footer>
     </div>

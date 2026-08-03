@@ -8,6 +8,8 @@ import Profile from './pages/Profile'
 import Budgets from './pages/Budgets'
 import Landing from './pages/Landing'
 import Onboarding from './pages/Onboarding'
+import Terms from './pages/Terms'
+import Privacy from './pages/Privacy'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { Toaster } from 'react-hot-toast'
 
@@ -25,6 +27,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="/onboarding" element={<PrivateRoute><Onboarding /></PrivateRoute>} />
           <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
           <Route path="/expenses" element={<PrivateRoute><Expenses /></PrivateRoute>} />

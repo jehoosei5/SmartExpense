@@ -271,6 +271,14 @@ export default function Login() {
           >
             {loading ? 'Processing...' : isRegister ? 'Create Account' : 'Secure Login'}
           </button>
+          
+          {isRegister && (
+            <p className="text-xs text-center text-slate-500 dark:text-slate-400 mt-4 px-2 leading-relaxed">
+              By creating an account, you agree to our <br className="sm:hidden" />
+              <a href="/terms" target="_blank" rel="noopener noreferrer" className="font-semibold text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">Terms & Conditions</a> and{' '}
+              <a href="/privacy" target="_blank" rel="noopener noreferrer" className="font-semibold text-slate-600 dark:text-slate-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors">Privacy Policy</a>.
+            </p>
+          )}
 
           {/* Divider */}
           <div className="flex items-center gap-4 my-6">
