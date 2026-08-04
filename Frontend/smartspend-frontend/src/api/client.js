@@ -35,6 +35,7 @@ export const logout = (refresh_token) =>
 export const googleLogin = (credential) =>
   api.post('/auth/google', { credential })
 
+export const checkAuth = () => api.get('/auth/me')
 export const completeOnboarding = (data) =>
   api.post('/auth/onboarding', data)
 
@@ -119,6 +120,9 @@ export const markAlertRead = (id) =>
 
 export const updateMe = (data) =>
   api.put('/auth/me', data)
+
+export const updatePassword = (data) =>
+  api.put('/auth/me/password', data)
 
 export const deleteAccount = () => 
     api.delete('/auth/me');

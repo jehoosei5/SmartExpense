@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
-import { getMe, updateMe, deleteAccount } from '../api/client'
+import { getMe, updateMe, updatePassword, deleteAccount } from '../api/client'
 import toast from 'react-hot-toast'
 
 const CURRENCIES = ['GHS', 'USD', 'EUR', 'GBP', 'NGN', 'KES', 'ZAR']
@@ -117,9 +117,10 @@ export default function Profile() {
     try {
       const payload = { new_password: newPassword }
       if (!user?.is_oauth_user) {
-          payload.old_password = oldPassword
+          payload.current_password = oldPassword
       }
-      const res = await updateMe(payload)
+      await updatePassword(payload)
+      const res = await getMe()
       setUser(res.data) 
       toast.success('Password changed successfully')
       setOldPassword('')

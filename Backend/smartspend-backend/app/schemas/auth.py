@@ -50,3 +50,13 @@ class OnboardingRequest(BaseModel):
     monthly_income_range: str
     payment_methods: list[str]
     top_categories: list[str]
+
+class UpdateProfileRequest(BaseModel):
+    display_name: str | None = None
+    phone_number: str | None = None
+    country: str | None = None
+    default_currency: str | None = None
+
+class UpdatePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str

@@ -12,9 +12,12 @@ from app.schemas.auth import (
     TokenResponse,
     RefreshRequest,
     UserResponse,
+    UserResponse,
     VerifyEmailRequest,
     ResendVerificationRequest,
-    OnboardingRequest
+    OnboardingRequest,
+    UpdateProfileRequest,
+    UpdatePasswordRequest
 )
 from app.services.auth_service import register_user, login_user, logout_user, verify_email_code, resend_verification_code
 from app.utils.security import hash_password
@@ -78,6 +81,51 @@ def login(request: Request, data: LoginRequest, db: Session = Depends(get_db)):
 def logout(data: RefreshRequest, db: Session = Depends(get_db)):
     logout_user(db, data.refresh_token)
     return {"message": "Logged out successfully"}
+
+@router.put("/me", response_model=UserResponse)
+def update_profile(
+    data: UpdateProfileRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if data.display_name is not None:
+        current_user.display_name = data.display_name
+    if data.phone_number is not None:
+        current_user.phone_number = data.phone_number
+    if data.country is not None:
+        current_user.country = data.country
+    if data.default_currency is not None:
+        current_user.default_currency = data.default_currency
+        
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+@router.put("/me/password")
+def update_password(
+    data: UpdatePasswordRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    from passlib.context import CryptContext
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+    
+    if current_user.is_oauth_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot change password for OAuth users"
+        )
+        
+    if not pwd_context.verify(data.current_password, current_user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect current password"
+        )
+        
+    current_user.password_hash = hash_password(data.new_password)
+    db.commit()
+    
+    return {"message": "Password updated successfully"}
 
 # Future endpoints for token refresh and Google OAuth
 @router.post("/google")
