@@ -388,9 +388,19 @@ export default function Expenses() {
   const lastRecordDate = sortedExpenses.length > 0 ? new Date(sortedExpenses[0].date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'
   
   let totalTrackingBalance = 0
+  let totalIncome = 0
+  let totalExpense = 0
   expenses.forEach(e => {
-    if (e.type === 'Income') totalTrackingBalance += Number(e.amount)
-    else totalTrackingBalance -= Number(e.amount)
+    const amt = Number(e.amount)
+    if (e.type === 'Income') {
+      totalTrackingBalance += amt
+      totalIncome += amt
+    } else if (e.type === 'Expenses') {
+      totalTrackingBalance -= amt
+      totalExpense += amt
+    } else {
+      totalTrackingBalance -= amt
+    }
   })
 
   return (
@@ -432,6 +442,37 @@ export default function Expenses() {
             >
               + Add Transaction
             </button>
+          </div>
+        </div>
+
+        {/* Mini Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
+          <div className="bg-white/95 dark:bg-emerald-500/10 backdrop-blur-xl border border-slate-200 dark:border-emerald-500/20 rounded-2xl p-5 shadow-sm dark:shadow-md flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold text-slate-500 dark:text-emerald-400 uppercase tracking-widest mb-1">Total Income</p>
+              <p className="text-xl font-bold text-slate-900 dark:text-white">{formatCurrency(totalIncome, userProfile?.default_currency)}</p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-xl">
+              ↓
+            </div>
+          </div>
+          <div className="bg-white/95 dark:bg-rose-500/10 backdrop-blur-xl border border-slate-200 dark:border-rose-500/20 rounded-2xl p-5 shadow-sm dark:shadow-md flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold text-slate-500 dark:text-rose-400 uppercase tracking-widest mb-1">Total Expenses</p>
+              <p className="text-xl font-bold text-slate-900 dark:text-white">{formatCurrency(totalExpense, userProfile?.default_currency)}</p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-500/20 flex items-center justify-center text-rose-600 dark:text-rose-400 text-xl">
+              ↑
+            </div>
+          </div>
+          <div className="bg-white/95 dark:bg-blue-500/10 backdrop-blur-xl border border-slate-200 dark:border-blue-500/20 rounded-2xl p-5 shadow-sm dark:shadow-md flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold text-slate-500 dark:text-blue-400 uppercase tracking-widest mb-1">Net Cash Flow</p>
+              <p className="text-xl font-bold text-slate-900 dark:text-white">{formatCurrency(totalTrackingBalance, userProfile?.default_currency)}</p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 text-xl">
+              =
+            </div>
           </div>
         </div>
 
@@ -555,7 +596,7 @@ export default function Expenses() {
           </button>
         </div>
 
-        {/* Table */}
+        {/* Table grouped by date */}
         <div className="bg-white dark:bg-white/[0.02] backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-md dark:shadow-2xl">
           {loading ? (
             <div className="p-12 text-center text-slate-500 flex justify-center">
@@ -564,22 +605,43 @@ export default function Expenses() {
           ) : expenses.length === 0 ? (
             <div className="p-12 text-center text-slate-500 font-medium tracking-wide">No transactions found</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10">
-                  <tr>
-                    {['Date','Type','Category','Amount','Details','Payment','Source',''].map(h => (
-                      <th key={h} className="text-left px-5 py-4 text-xs font-bold text-slate-500 dark:text-slate-300 uppercase tracking-widest">
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-                  {expenses.map(exp => (
-                    <tr key={exp.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors duration-200">
-                      <td className="px-5 py-4 text-slate-600 dark:text-slate-400 font-medium">{exp.date}</td>
-                      <td className="px-5 py-4">
+            <div>
+              {Object.keys(expenses.reduce((acc, exp) => {
+                if (!acc[exp.date]) acc[exp.date] = [];
+                acc[exp.date].push(exp);
+                return acc;
+              }, {})).sort((a, b) => new Date(b) - new Date(a)).map(date => {
+                const groupedExpenses = expenses.reduce((acc, exp) => {
+                  if (!acc[exp.date]) acc[exp.date] = [];
+                  acc[exp.date].push(exp);
+                  return acc;
+                }, {});
+                const dateExpenses = groupedExpenses[date];
+                return (
+                  <div key={date} className="mb-0">
+                    <div className="bg-slate-100 dark:bg-white/[0.05] border-y border-slate-200 dark:border-white/10 px-5 py-3 flex items-center justify-between sticky top-[68px] z-10 backdrop-blur-md">
+                      <h3 className="font-bold text-slate-800 dark:text-white uppercase tracking-widest text-sm drop-shadow-sm">
+                        {new Date(date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                      </h3>
+                      <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-white dark:bg-black/20 px-3 py-1 rounded-lg border border-slate-200 dark:border-white/10 shadow-sm">
+                        {dateExpenses.length} {dateExpenses.length === 1 ? 'record' : 'records'}
+                      </span>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-slate-50 dark:bg-black/10 border-b border-slate-200 dark:border-white/5 hidden md:table-header-group">
+                          <tr>
+                            {['Type','Category','Amount','Details','Payment','Source',''].map(h => (
+                              <th key={h} className="text-left px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                                {h}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+                          {dateExpenses.map(exp => (
+                            <tr key={exp.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors duration-200 flex flex-col md:table-row py-3 md:py-0">
+                              <td className="px-5 py-3 md:py-4">
                         <div className="flex items-center gap-2">
                           <span className={`px-3 py-1 rounded-full text-xs font-bold tracking-wide ${typeColors[exp.type]}`}>
                             {exp.type}
@@ -620,13 +682,26 @@ export default function Expenses() {
                           </button>
                         </div>
                       </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
+
+        {/* Floating Quick Add Button */}
+        <button
+          onClick={() => { setShowForm(true); setEditingId(null); setForm(EMPTY_FORM) }}
+          className="fixed bottom-6 right-6 md:bottom-10 md:right-10 w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-full flex items-center justify-center shadow-lg dark:shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:shadow-xl hover:scale-105 hover:-translate-y-1 transition-all z-40 focus:outline-none border-2 border-white/20"
+          title="Quick Add Transaction"
+        >
+          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+        </button>
       </div>
 
       {/* Add/Edit Form Modal */}

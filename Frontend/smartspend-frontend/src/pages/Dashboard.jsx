@@ -21,16 +21,17 @@ function DonutChartCard({ title, data, colors, type }) {
   const total = data.reduce((sum, item) => sum + Number(item.total), 0)
 
   return (
-    <div className="bg-white dark:bg-white/[0.02] backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl p-4 shadow-lg dark:shadow-2xl relative overflow-hidden flex flex-col flex-1 min-h-[180px]">
-      <h3 className="font-bold text-sm text-slate-800 dark:text-white mb-3 flex items-center gap-2 uppercase tracking-wider">
-        <span className="w-2 h-2 rounded-full shadow-md dark:shadow-[0_0_8px_rgba(255,255,255,0.8)]" style={{ backgroundColor: colors[0] }} />
+    <div className="bg-white dark:bg-slate-900/40 backdrop-blur-2xl border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-lg dark:shadow-2xl relative overflow-hidden flex flex-col flex-1 min-h-[180px] group transition-all hover:shadow-xl hover:border-slate-300 dark:hover:border-white/20">
+      <div className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-white/20 to-transparent dark:from-white/5 rounded-full blur-xl group-hover:scale-110 transition-transform duration-500 pointer-events-none" />
+      <h3 className="font-extrabold text-xs text-slate-800 dark:text-white mb-4 flex items-center gap-2 uppercase tracking-widest relative z-10">
+        <span className="w-2.5 h-2.5 rounded-full shadow-md dark:shadow-[0_0_8px_rgba(255,255,255,0.8)] ring-2 ring-white/50 dark:ring-black/50" style={{ backgroundColor: colors[0] }} />
         {title}
       </h3>
       {data.length === 0 ? (
-        <p className="text-slate-400 dark:text-slate-500 text-xs flex-1 flex items-center justify-center">No {type} data</p>
+        <p className="text-slate-400 dark:text-slate-500 text-xs flex-1 flex items-center justify-center font-medium">No {type} data</p>
       ) : (
-        <div className="flex items-center justify-between flex-1 gap-2">
-          <div className="w-[120px] h-[120px]">
+        <div className="flex items-center justify-between flex-1 gap-4 relative z-10">
+          <div className="w-[110px] h-[110px] drop-shadow-md">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -39,10 +40,11 @@ function DonutChartCard({ title, data, colors, type }) {
                   nameKey="category"
                   cx="50%"
                   cy="50%"
-                  innerRadius={35}
-                  outerRadius={55}
-                  paddingAngle={2}
+                  innerRadius={36}
+                  outerRadius={52}
+                  paddingAngle={4}
                   stroke="none"
+                  cornerRadius={4}
                 >
                   {data.map((_, i) => (
                     <Cell key={i} fill={colors[i % colors.length]} />
@@ -52,22 +54,22 @@ function DonutChartCard({ title, data, colors, type }) {
             </ResponsiveContainer>
           </div>
           
-          <div className="flex-1 flex flex-col justify-center gap-1.5 overflow-hidden">
+          <div className="flex-1 flex flex-col justify-center gap-2 overflow-hidden">
             {data.slice(0, 4).map((item, i) => (
-              <div key={i} className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-1.5 truncate pr-2">
-                  <div className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: colors[i % colors.length] }} />
-                  <span className="text-slate-600 dark:text-slate-300 truncate" title={item.category}>{item.category}</span>
+              <div key={i} className="flex items-center justify-between text-xs group/item hover:bg-slate-50 dark:hover:bg-white/5 p-1 -mx-1 rounded-lg transition-colors">
+                <div className="flex items-center gap-2 truncate pr-2">
+                  <div className="w-2 h-2 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: colors[i % colors.length] }} />
+                  <span className="text-slate-600 dark:text-slate-300 font-medium truncate group-hover/item:text-slate-900 dark:group-hover/item:text-white transition-colors" title={item.category}>{item.category}</span>
                 </div>
-                <span className="text-slate-900 dark:text-white font-medium shrink-0">{Number(item.total).toLocaleString()}</span>
+                <span className="text-slate-900 dark:text-white font-bold shrink-0">{Number(item.total).toLocaleString()}</span>
               </div>
             ))}
             {data.length > 4 && (
-              <div className="text-xs text-slate-400 dark:text-slate-500 italic ml-3.5">+ {data.length - 4} more</div>
+              <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest ml-4 mt-1">+ {data.length - 4} more</div>
             )}
-            <div className="flex items-center justify-between text-xs font-bold mt-2 pt-2 border-t border-slate-100 dark:border-white/10">
-              <span className="text-slate-500 dark:text-slate-400">Total</span>
-              <span className="text-slate-900 dark:text-white">{total.toLocaleString()}</span>
+            <div className="flex items-center justify-between text-xs font-black mt-2 pt-2 border-t border-slate-100 dark:border-white/10">
+              <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total</span>
+              <span className="text-slate-900 dark:text-white text-sm">{total.toLocaleString()}</span>
             </div>
           </div>
         </div>
@@ -76,24 +78,44 @@ function DonutChartCard({ title, data, colors, type }) {
   )
 }
 
-function StatCard({ label, amount, color = 'blue', sub = '', onClick }) {
+function StatCard({ label, amount, color = 'blue', sub = '', currency = 'GHS', onClick, icon }) {
   const styles = {
-    blue:   'border-white/10 text-white shadow-[0_0_15px_rgba(255,255,255,0.02)]',
-    green:  'border-emerald-500/20 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.1)]',
-    red:    'border-rose-500/20 text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.1)]',
-    purple: 'border-fuchsia-500/20 text-fuchsia-400 shadow-[0_0_15px_rgba(217,70,239,0.1)]',
+    blue:   'from-blue-500/5 to-cyan-500/5 border-blue-500/20 hover:border-blue-500/40 shadow-blue-500/5',
+    green:  'from-emerald-500/5 to-teal-500/5 border-emerald-500/20 hover:border-emerald-500/40 shadow-emerald-500/5',
+    red:    'from-rose-500/5 to-orange-500/5 border-rose-500/20 hover:border-rose-500/40 shadow-rose-500/5',
+    purple: 'from-fuchsia-500/5 to-purple-500/5 border-fuchsia-500/20 hover:border-fuchsia-500/40 shadow-fuchsia-500/5',
   }
+  const textColors = {
+    blue: 'text-blue-600 dark:text-blue-400',
+    green: 'text-emerald-600 dark:text-emerald-400',
+    red: 'text-rose-600 dark:text-rose-400',
+    purple: 'text-fuchsia-600 dark:text-fuchsia-400',
+  }
+  const iconBgs = {
+    blue: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+    green: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+    red: 'bg-rose-500/10 text-rose-600 dark:text-rose-400',
+    purple: 'bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400',
+  }
+
   return (
     <div 
       onClick={onClick}
-      className={`relative overflow-hidden rounded-2xl p-6 bg-white/[0.03] backdrop-blur-xl border ${styles[color]} transition-all duration-300 hover:-translate-y-1.5 hover:bg-white/[0.06] hover:shadow-2xl group ${onClick ? 'cursor-pointer' : ''}`}
+      className={`relative overflow-hidden rounded-2xl p-6 bg-white dark:bg-slate-900/50 bg-gradient-to-br ${styles[color]} border backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-lg group ${onClick ? 'cursor-pointer' : ''}`}
     >
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest">{label}</p>
-      <p className="text-2xl lg:text-3xl font-bold mt-2 tracking-tight drop-shadow-md">
-        {formatCurrency(Number(amount || 0), sub)}
+      <div className="absolute -right-6 -top-6 w-24 h-24 bg-gradient-to-br from-white/40 to-transparent dark:from-white/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700 pointer-events-none" />
+      <div className="flex justify-between items-start mb-4 relative z-10">
+        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{label}</p>
+        {icon && (
+          <div className={`p-2 rounded-xl ${iconBgs[color]} shadow-sm`}>
+            {icon}
+          </div>
+        )}
+      </div>
+      <p className={`text-2xl lg:text-3xl font-extrabold tracking-tight drop-shadow-sm ${textColors[color]} relative z-10`}>
+        {formatCurrency(Number(amount || 0), currency)}
       </p>
-      {sub && <p className="text-xs mt-3 text-slate-500 font-medium">{sub}</p>}
+      {sub && <p className="text-xs mt-3 text-slate-500 dark:text-slate-500 font-medium relative z-10 flex items-center gap-1">{sub}</p>}
     </div>
   )
 }
@@ -415,20 +437,90 @@ export default function Dashboard() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* 4 Top Summary Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+          <StatCard 
+            label="Total Income" 
+            amount={summary?.income} 
+            color="green" 
+            sub={`Total for ${filterType.replace('_', ' ')}`}
+            currency={userProfile?.default_currency}
+            onClick={() => handleCardClick('Income')} 
+            icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>}
+          />
+          <StatCard 
+            label="Total Expenses" 
+            amount={summary?.expenses} 
+            color="red" 
+            sub={`Total for ${filterType.replace('_', ' ')}`}
+            currency={userProfile?.default_currency}
+            onClick={() => handleCardClick('Expenses')} 
+            icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>}
+          />
+          <StatCard 
+            label="Total Savings" 
+            amount={summary?.savings} 
+            color="purple" 
+            sub="Dedicated savings"
+            currency={userProfile?.default_currency}
+            onClick={() => handleCardClick('Savings')} 
+            icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" /></svg>}
+          />
+          <StatCard 
+            label="Net Cash Flow" 
+            amount={summary?.balance} 
+            color="blue" 
+            sub="Surplus / Deficit"
+            currency={userProfile?.default_currency}
+            onClick={() => handleCardClick('Net Balance')} 
+            icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" /></svg>}
+          />
+        </div>
+
+        {/* Spending Trends Analysis */}
+        <div className="mb-8 bg-white dark:bg-slate-900/60 backdrop-blur-2xl border border-slate-200 dark:border-white/10 rounded-3xl p-6 md:p-8 shadow-xl dark:shadow-2xl relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-50" />
+          <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-500/10 rounded-full blur-[80px] pointer-events-none group-hover:bg-indigo-500/20 transition-all duration-700" />
           
-          <div className="flex flex-wrap items-center gap-4 xl:gap-8 shrink-0">
-             <div className="text-center bg-emerald-500/10 border border-emerald-500/20 px-6 py-2 rounded-xl">
-               <p className="text-xs text-emerald-600 dark:text-emerald-400 uppercase tracking-widest font-bold">Total Income</p>
-               <p className="text-xl font-bold text-slate-900 dark:text-white">{formatCurrency(Number(summary?.income || 0), userProfile?.default_currency)}</p>
-             </div>
-             <div className="text-center bg-rose-500/10 border border-rose-500/20 px-6 py-2 rounded-xl">
-               <p className="text-xs text-rose-600 dark:text-rose-400 uppercase tracking-widest font-bold">Total Expenses</p>
-               <p className="text-xl font-bold text-slate-900 dark:text-white">{formatCurrency(Number(summary?.expenses || 0), userProfile?.default_currency)}</p>
-             </div>
-             <div className="text-center bg-blue-500/10 border border-blue-500/20 px-6 py-2 rounded-xl">
-               <p className="text-xs text-blue-600 dark:text-blue-400 uppercase tracking-widest font-bold">Period Balance</p>
-               <p className="text-xl font-bold text-slate-900 dark:text-white">{formatCurrency(Number(summary?.balance || 0), userProfile?.default_currency)}</p>
-             </div>
+          <h3 className="font-extrabold text-sm text-slate-800 dark:text-white mb-6 flex items-center gap-2 uppercase tracking-widest relative z-10">
+            <div className="p-1.5 bg-indigo-500/10 rounded-lg">
+              <svg className="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+            </div>
+            Spending Trends Analysis
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+            <div className="text-center md:text-left flex flex-col justify-center">
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">Avg per Transaction</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                {formatCurrency((summary?.expenses || 0) / (expensesCats.reduce((acc, c) => acc + c.count, 0) || 1), userProfile?.default_currency)}
+              </p>
+              <p className="text-xs text-slate-400 mt-1">{expensesCats.reduce((acc, c) => acc + c.count, 0)} expense transactions</p>
+            </div>
+            
+            <div className="text-center md:text-left flex flex-col justify-center md:border-l md:border-slate-200 dark:md:border-white/10 md:pl-8">
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">Top Category</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white truncate">
+                {summary?.top_category || 'N/A'}
+              </p>
+              <p className="text-xs text-slate-400 mt-1">
+                {summary?.top_category_amount ? formatCurrency(summary.top_category_amount, userProfile?.default_currency) : '0'} spent
+              </p>
+            </div>
+
+            <div className="text-center md:text-left flex flex-col justify-center md:border-l md:border-slate-200 dark:md:border-white/10 md:pl-8">
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1">Savings Rate</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                {summary?.income > 0 ? (((summary.income - summary.expenses) / summary.income) * 100).toFixed(1) : 0}%
+              </p>
+              <div className="w-full bg-slate-100 dark:bg-white/10 h-1.5 rounded-full mt-2 overflow-hidden">
+                <div 
+                  className="bg-emerald-500 h-full rounded-full transition-all duration-1000"
+                  style={{ width: `${Math.min(100, Math.max(0, summary?.income > 0 ? (((summary.income - summary.expenses) / summary.income) * 100) : 0))}%` }}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -436,24 +528,26 @@ export default function Dashboard() {
         {userProfile?.tracking_focus === 'Everything + AI insights' && (
           <div 
             onClick={() => setInsightExpanded(!insightExpanded)}
-            className="mb-6 relative overflow-hidden bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-fuchsia-500/10 border border-indigo-500/20 rounded-2xl p-6 shadow-lg backdrop-blur-xl group cursor-pointer transition-all duration-300 hover:shadow-indigo-500/10 hover:border-indigo-500/30"
+            className="mb-8 relative overflow-hidden bg-gradient-to-r from-indigo-600/10 via-purple-600/10 to-pink-600/10 border border-indigo-500/20 dark:border-indigo-400/30 rounded-3xl p-6 md:p-8 shadow-xl dark:shadow-2xl backdrop-blur-2xl group cursor-pointer transition-all duration-500 hover:shadow-indigo-500/20 hover:border-indigo-400/50 hover:-translate-y-1"
           >
-            <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-fuchsia-500/10 rounded-full blur-[60px] pointer-events-none" />
-            <div className="flex items-start md:items-center gap-4 relative z-10 w-full">
-              <div className="shrink-0 p-3 bg-indigo-500/20 rounded-full border border-indigo-500/30 animate-pulse mt-1 md:mt-0">
-                <svg className="w-6 h-6 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-fuchsia-500/20 rounded-full blur-[60px] pointer-events-none group-hover:bg-fuchsia-500/30 transition-all duration-700" />
+            <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-indigo-500/20 rounded-full blur-[60px] pointer-events-none group-hover:bg-indigo-500/30 transition-all duration-700" />
+            
+            <div className="flex items-start md:items-center gap-5 relative z-10 w-full">
+              <div className="shrink-0 p-4 bg-white dark:bg-indigo-900/50 rounded-2xl border border-indigo-100 dark:border-indigo-400/30 shadow-lg shadow-indigo-500/10 group-hover:scale-110 transition-transform duration-500 mt-1 md:mt-0">
+                <svg className="w-7 h-7 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-1">
-                  <h4 className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-xs font-extrabold text-indigo-700 dark:text-indigo-300 uppercase tracking-widest flex items-center gap-2">
                     SmartSpend AI Insight
-                    {insightLoading && <span className="flex gap-1"><span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce" style={{animationDelay: '0ms'}}></span><span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce" style={{animationDelay: '150ms'}}></span><span className="w-1 h-1 rounded-full bg-indigo-400 animate-bounce" style={{animationDelay: '300ms'}}></span></span>}
+                    {insightLoading && <span className="flex gap-1"><span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce" style={{animationDelay: '0ms'}}></span><span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce" style={{animationDelay: '150ms'}}></span><span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce" style={{animationDelay: '300ms'}}></span></span>}
                   </h4>
                   
                   {!insightLoading && insights.length > 1 && (
-                    <div className="flex items-center gap-2 text-indigo-400 ml-4 shrink-0" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center gap-3 text-indigo-600 dark:text-indigo-400 ml-4 shrink-0 bg-white/50 dark:bg-black/20 rounded-full px-2 py-1 backdrop-blur-md border border-indigo-200 dark:border-indigo-500/30" onClick={e => e.stopPropagation()}>
                       <button 
                         onClick={() => {
                           setCurrentInsightIndex(prev => prev === 0 ? insights.length - 1 : prev - 1)
@@ -461,9 +555,9 @@ export default function Dashboard() {
                         }}
                         className="p-1 hover:bg-indigo-500/20 rounded-full transition-colors"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
                       </button>
-                      <span className="text-xs font-semibold">{currentInsightIndex + 1}/{insights.length}</span>
+                      <span className="text-xs font-bold">{currentInsightIndex + 1} / {insights.length}</span>
                       <button 
                         onClick={() => {
                           setCurrentInsightIndex(prev => prev === insights.length - 1 ? 0 : prev + 1)
@@ -471,18 +565,20 @@ export default function Dashboard() {
                         }}
                         className="p-1 hover:bg-indigo-500/20 rounded-full transition-colors"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
                       </button>
                     </div>
                   )}
                 </div>
-                <p className="text-slate-700 dark:text-slate-200 text-sm md:text-base font-bold leading-relaxed pr-2">
+                <p className="text-slate-900 dark:text-white text-sm md:text-lg font-bold leading-relaxed pr-2 drop-shadow-sm">
                   {insightLoading ? "Analyzing your latest financial data..." : insights[currentInsightIndex]?.title}
                 </p>
                 {insightExpanded && !insightLoading && (
-                  <p className="text-slate-600 dark:text-slate-300 text-sm mt-2 leading-relaxed border-t border-indigo-500/20 pt-2 animate-in fade-in slide-in-from-top-1">
-                    {insights[currentInsightIndex]?.details}
-                  </p>
+                  <div className="mt-4 pt-4 border-t border-indigo-500/20 dark:border-indigo-400/20 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <p className="text-slate-700 dark:text-indigo-100/90 text-sm md:text-base leading-relaxed font-medium">
+                      {insights[currentInsightIndex]?.details}
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
