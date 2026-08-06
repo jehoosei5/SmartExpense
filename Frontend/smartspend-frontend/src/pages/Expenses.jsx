@@ -673,8 +673,8 @@ export default function Expenses() {
                 const dateExpenses = groupedExpenses[date];
                 return (
                   <div key={date} className="mb-0">
-                    <div className="bg-slate-100 dark:bg-white/[0.05] border-y border-slate-200 dark:border-white/10 px-5 py-3 flex items-center justify-between sticky top-[68px] z-10 backdrop-blur-md">
-                      <h3 className="font-bold text-slate-800 dark:text-white uppercase tracking-widest text-sm drop-shadow-sm">
+                    <div className="bg-slate-50 dark:bg-white/[0.02] border-y border-slate-200 dark:border-white/10 px-5 py-3 flex items-center justify-between">
+                      <h3 className="font-bold text-slate-800 dark:text-white uppercase tracking-widest text-sm">
                         {new Date(date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                       </h3>
                       <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-white dark:bg-black/20 px-3 py-1 rounded-lg border border-slate-200 dark:border-white/10 shadow-sm">
