@@ -401,7 +401,7 @@ export default function Dashboard() {
   const savingsCats = catData.filter(d => d.type === 'Savings')
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-gradient-to-br dark:from-slate-950 dark:via-[#0a0f1c] dark:to-indigo-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-cyan-500/30 overflow-x-hidden transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-gradient-to-br dark:from-slate-950 dark:via-[#0a0f1c] dark:to-indigo-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-cyan-500/30 transition-colors duration-200">
       <Navbar />
 
       <div className="max-w-[1400px] mx-auto px-4 py-6 md:px-6 md:py-8 relative">

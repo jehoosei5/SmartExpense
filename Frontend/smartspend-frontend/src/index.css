@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900 transition-colors duration-200;
+    @apply bg-slate-50 text-slate-900 transition-colors duration-200 overflow-x-hidden;
   }
   .dark body {
     @apply bg-[#0a0a1a] text-white;
