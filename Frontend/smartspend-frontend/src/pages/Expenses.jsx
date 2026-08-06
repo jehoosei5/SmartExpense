@@ -8,6 +8,7 @@ import {
 } from '../api/client'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import toast from 'react-hot-toast'
+import ExportModal from '../components/ExportModal'
 
 const PAYMENT_METHODS = ['Cash', 'MoMo', 'Card', 'Bank Transfer']
 const CURRENCIES = ['GHS', 'USD', 'EUR', 'GBP', 'NGN', 'KES']
@@ -83,6 +84,9 @@ export default function Expenses() {
 
   // Snooze Modal
   const [snoozeModal, setSnoozeModal] = useState({ show: false, sync_hash: '', date: '' })
+
+  // Export Modal
+  const [showExportModal, setShowExportModal] = useState(false)
 
   useEffect(() => { loadAll() }, [])
 
@@ -477,10 +481,11 @@ export default function Expenses() {
           <div className="flex gap-4">
             <button
               type="button"
-              onClick={handleExportCSV}
-              className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm dark:shadow-md hover:bg-slate-50 dark:hover:bg-white/10 transition-all hidden md:block"
+              onClick={() => setShowExportModal(true)}
+              className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm dark:shadow-md hover:bg-slate-50 dark:hover:bg-white/10 transition-all hidden md:block flex items-center gap-2"
             >
-              ⬇️ Export CSV
+              <svg className="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+              Export Data
             </button>
             <button
               type="button"
@@ -1147,6 +1152,14 @@ export default function Expenses() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Export Modal */}
+      {showExportModal && (
+        <ExportModal 
+          onClose={() => setShowExportModal(false)}
+          userProfile={userProfile}
+        />
       )}
     </div>
   )

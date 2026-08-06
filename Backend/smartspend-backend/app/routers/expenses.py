@@ -102,26 +102,76 @@ def export_expenses(
     
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(['Date', 'Type', 'Category', 'Amount', 'Currency', 'Payment Method', 'Details', 'Notes', 'Source'])
     
+    incomes = [e for e in expenses if e.type == 'Income']
+    expenses_list = [e for e in expenses if e.type == 'Expenses']
+    
+    total_income = sum(e.amount for e in incomes)
+    total_expense = sum(e.amount for e in expenses_list)
+    net_amount = total_income - total_expense
+    
+    headers = ['Date', 'Category', 'Description', 'Vendor', 'Original Amount', 'Converted Currency']
+    
+    # --- INCOME SECTION ---
+    if incomes:
+        writer.writerow(['=== INCOME TRANSACTIONS ==='])
+        writer.writerow(headers)
+        for e in incomes:
+            writer.writerow([
+                e.date.strftime('%d-%b-%y') if e.date else '',
+                e.category or '',
+                e.details or '',
+                e.source or '',
+                f"{e.amount} {e.currency}",
+                f"{e.amount} {e.currency}"
+            ])
+        writer.writerow(['', 'Total Income', str(total_income)])
+        writer.writerow([])
+        writer.writerow([])
+        
+    # --- EXPENSE SECTION ---
+    if expenses_list:
+        writer.writerow(['=== EXPENSE TRANSACTIONS ==='])
+        writer.writerow(headers)
+        for e in expenses_list:
+            writer.writerow([
+                e.date.strftime('%d-%b-%y') if e.date else '',
+                e.category or '',
+                e.details or '',
+                e.source or '',
+                f"{e.amount} {e.currency}",
+                f"{e.amount} {e.currency}"
+            ])
+        writer.writerow(['', 'Total Expense', str(total_expense)])
+        writer.writerow([])
+        writer.writerow([])
+        
+    # --- SUMMARY SECTION ---
+    writer.writerow(['=== SUMMARY ==='])
+    writer.writerow(['Metric', 'Value'])
+    writer.writerow(['Total Income', str(total_income)])
+    writer.writerow(['Total Expense', str(total_expense)])
+    writer.writerow(['Net Amount', str(net_amount)])
+    writer.writerow([])
+    writer.writerow([])
+    
+    # --- CATEGORY BREAKDOWN ---
+    writer.writerow(['=== CATEGORY BREAKDOWN ==='])
+    writer.writerow(['Category', 'Total'])
+    
+    category_totals = {}
     for e in expenses:
-        writer.writerow([
-            e.date,
-            e.type,
-            e.category,
-            e.amount,
-            e.currency,
-            e.payment_method or '',
-            e.details or '',
-            e.notes or '',
-            e.source
-        ])
+        cat = e.category or 'Uncategorized'
+        category_totals[cat] = category_totals.get(cat, 0) + e.amount
+        
+    for cat, total in sorted(category_totals.items(), key=lambda x: x[1], reverse=True):
+        writer.writerow([cat, str(total)])
         
     output.seek(0)
     return StreamingResponse(
         iter([output.getvalue()]),
         media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=expenses_export.csv"}
+        headers={"Content-Disposition": "attachment; filename=expenses_detailed_export.csv"}
     )
 
 
