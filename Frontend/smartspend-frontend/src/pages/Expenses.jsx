@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
-import { getExpenses, createExpense, updateExpense, deleteExpense, getCategories, createCategory, deleteCategory, reorderCategories, exportExpenses, getSuggestions, snoozeSuggestion, getMe } from '../api/client'
+import { 
+  getExpenses, createExpense, updateExpense, deleteExpense, 
+  getCategories, createCategory, deleteCategory, reorderCategories,
+  exportExpenses, getSuggestions, snoozeSuggestion, getMe, parseQuickAdd 
+} from '../api/client'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import toast from 'react-hot-toast'
 
@@ -55,6 +59,10 @@ export default function Expenses() {
   const [filterMonth, setFilterMonth]       = useState('')
   const [filterYear, setFilterYear]         = useState('')
   const [filterSearch, setFilterSearch]     = useState('')
+
+  const [quickAddOpen, setQuickAddOpen] = useState(false)
+  const [quickAddText, setQuickAddText] = useState('')
+  const [quickAddLoading, setQuickAddLoading] = useState(false)
 
   // Form
   const [showForm, setShowForm]   = useState(false)
@@ -247,7 +255,53 @@ export default function Expenses() {
     }
   }
 
-  function handleDragEnd(result) {
+  async function handleQuickAdd() {
+    if (!quickAddText.trim()) return
+    setQuickAddLoading(true)
+    try {
+      const res = await parseQuickAdd(quickAddText)
+      const data = res.data
+      if (data.type === 'parse' && data.parsed_list?.length > 0) {
+        const parsed = data.parsed_list[0]
+        setShowForm(true)
+        setEditingId(null)
+        setForm({
+          ...EMPTY_FORM,
+          date: parsed.date || new Date().toISOString().split('T')[0],
+          type: parsed.type || 'Expenses',
+          category: parsed.category || 'Other',
+          amount: parsed.amount || '',
+          currency: parsed.currency || userProfile?.default_currency || 'GHS',
+          details: parsed.details || '',
+          payment_method: parsed.payment_method || '',
+          notes: parsed.notes || ''
+        })
+        setQuickAddOpen(false)
+        setQuickAddText('')
+        toast.success("AI parsed your transaction! Please review and save.", { icon: "✨" })
+      } else {
+        // Fallback if AI couldn't parse it
+        setShowForm(true)
+        setEditingId(null)
+        setForm({ ...EMPTY_FORM, details: quickAddText })
+        setQuickAddOpen(false)
+        setQuickAddText('')
+        toast.error("AI couldn't fully understand that. Please fill it manually.")
+      }
+    } catch (err) {
+      console.error("Quick Add Parse Error:", err)
+      toast.error("Failed to parse transaction. Opening manual form.")
+      setShowForm(true)
+      setEditingId(null)
+      setForm({ ...EMPTY_FORM, details: quickAddText })
+      setQuickAddOpen(false)
+      setQuickAddText('')
+    } finally {
+      setQuickAddLoading(false)
+    }
+  }
+
+  const handleDragEnd = async (result) => {
     if (!result.destination) return
 
     const sourceIndex = result.source.index
@@ -629,10 +683,10 @@ export default function Expenses() {
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
-                        <thead className="bg-slate-50 dark:bg-black/10 border-b border-slate-200 dark:border-white/5 hidden md:table-header-group">
+                        <thead className="bg-slate-50 dark:bg-black/10 border-b border-slate-200 dark:border-white/5">
                           <tr>
                             {['Type','Category','Amount','Details','Payment','Source',''].map(h => (
-                              <th key={h} className="text-left px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+                              <th key={h} className="text-left px-5 py-3 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest whitespace-nowrap">
                                 {h}
                               </th>
                             ))}
@@ -640,48 +694,48 @@ export default function Expenses() {
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                           {dateExpenses.map(exp => (
-                            <tr key={exp.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors duration-200 flex flex-col md:table-row py-3 md:py-0">
-                              <td className="px-5 py-3 md:py-4">
-                        <div className="flex items-center gap-2">
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold tracking-wide ${typeColors[exp.type]}`}>
-                            {exp.type}
-                          </span>
-                          {exp.is_recurring && (
-                            <span className="text-cyan-500 dark:text-cyan-400" title={`Recurring: ${exp.recurrence_period}`}>
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-5 py-4 text-slate-700 dark:text-slate-300">{exp.category}</td>
-                      <td className="px-5 py-4 font-bold text-emerald-600 dark:text-cyan-400 tracking-tight drop-shadow-sm dark:drop-shadow-md">
-                        {formatCurrency(Number(exp.amount), exp.currency)}
-                      </td>
-                      <td className="px-5 py-4 text-slate-500">{exp.details || '—'}</td>
-                      <td className="px-5 py-4 text-slate-500">{exp.payment_method || '—'}</td>
-                      <td className="px-5 py-4">
-                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400">
-                          {exp.source}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="flex gap-4">
-                          <button
-                            type="button"
-                            onClick={() => handleEdit(exp)}
-                            className="text-emerald-600 dark:text-cyan-400 hover:text-emerald-700 dark:hover:text-cyan-300 text-xs font-bold uppercase tracking-wider transition-colors"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeletingId(exp.id)}
-                            className="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 text-xs font-bold uppercase tracking-wider transition-colors"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
+                            <tr key={exp.id} className="hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors duration-200">
+                              <td className="px-5 py-4">
+                                <div className="flex items-center gap-2">
+                                  <span className={`px-3 py-1 rounded-full text-xs font-bold tracking-wide ${typeColors[exp.type]}`}>
+                                    {exp.type}
+                                  </span>
+                                  {exp.is_recurring && (
+                                    <span className="text-cyan-500 dark:text-cyan-400" title={`Recurring: ${exp.recurrence_period}`}>
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-5 py-4 text-slate-700 dark:text-slate-300">{exp.category}</td>
+                              <td className="px-5 py-4 font-bold text-emerald-600 dark:text-cyan-400 tracking-tight drop-shadow-sm dark:drop-shadow-md whitespace-nowrap">
+                                {formatCurrency(Number(exp.amount), exp.currency)}
+                              </td>
+                              <td className="px-5 py-4 text-slate-500 max-w-[200px] truncate" title={exp.details}>{exp.details || '—'}</td>
+                              <td className="px-5 py-4 text-slate-500">{exp.payment_method || '—'}</td>
+                              <td className="px-5 py-4">
+                                <span className="px-3 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                                  {exp.source}
+                                </span>
+                              </td>
+                              <td className="px-5 py-4">
+                                <div className="flex gap-4">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleEdit(exp)}
+                                    className="text-emerald-600 dark:text-cyan-400 hover:text-emerald-700 dark:hover:text-cyan-300 text-xs font-bold uppercase tracking-wider transition-colors"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setDeletingId(exp.id)}
+                                    className="text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 text-xs font-bold uppercase tracking-wider transition-colors"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -694,14 +748,57 @@ export default function Expenses() {
           )}
         </div>
 
-        {/* Floating Quick Add Button */}
-        <button
-          onClick={() => { setShowForm(true); setEditingId(null); setForm(EMPTY_FORM) }}
-          className="fixed bottom-6 right-6 md:bottom-10 md:right-10 w-14 h-14 md:w-16 md:h-16 bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-full flex items-center justify-center shadow-lg dark:shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:shadow-xl hover:scale-105 hover:-translate-y-1 transition-all z-40 focus:outline-none border-2 border-white/20"
-          title="Quick Add Transaction"
-        >
-          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
-        </button>
+        {/* Floating Quick Add Pill */}
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 transition-all duration-300">
+          {!quickAddOpen ? (
+            <button
+              onClick={() => setQuickAddOpen(true)}
+              className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-full flex items-center gap-2 shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all border border-slate-700 dark:border-white/20 font-bold"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+              </svg>
+              Quick Add
+            </button>
+          ) : (
+            <div className="bg-slate-900 dark:bg-black/90 backdrop-blur-xl text-white border border-slate-700 dark:border-white/20 p-2 rounded-2xl shadow-2xl flex items-center gap-2 w-[90vw] md:w-[600px] animate-in slide-in-from-bottom-4 fade-in duration-300">
+              <button 
+                onClick={() => setQuickAddOpen(false)}
+                className="p-2 text-slate-400 hover:text-white transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <input 
+                type="text"
+                value={quickAddText}
+                onChange={e => setQuickAddText(e.target.value)}
+                placeholder="Type or tap mic to add transaction (e.g., I spent $12 at Starbucks)"
+                className="flex-1 bg-transparent border-none text-white text-sm focus:outline-none focus:ring-0 placeholder-slate-500"
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    handleQuickAdd();
+                  }
+                }}
+              />
+              <button 
+                onClick={handleQuickAdd}
+                disabled={quickAddLoading}
+                className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors disabled:opacity-50"
+              >
+                {quickAddLoading ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                )}
+                {quickAddLoading ? 'Parsing...' : 'Add'}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Add/Edit Form Modal */}

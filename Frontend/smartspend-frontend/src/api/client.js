@@ -55,6 +55,8 @@ export const updateExpense = (id, data) =>
 export const deleteExpense = (id) =>
   api.delete(`/expenses/${id}`)
 
+
+
 export const getSuggestions = () =>
   api.get('/expenses/suggestions')
 
@@ -85,6 +87,12 @@ export const getSyncLogs = () =>
   api.get('/sync/logs')
 
 // ── AI ────────────────────────────────────────────────────────────────────
+export const getSessions = () =>
+  api.get('/ai/sessions')
+
+export const parseQuickAdd = (message) =>
+  api.post('/ai/quick-add', { message })
+
 export const sendChatMessage = (message, session_id = null) =>
   api.post('/ai/chat', { message, session_id })
 

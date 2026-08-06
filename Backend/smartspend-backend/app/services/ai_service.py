@@ -39,9 +39,13 @@ def save_message(db: Session, session_id: str, role: str, content: str, expense_
     db.add(message)
     db.commit()
 
-def handle_chat_message(db: Session, message: str, user_id: str, session_id: str = None):
-    session = get_or_create_session(db, user_id, session_id)
-    save_message(db, session.id, "user", message)
+def handle_chat_message(db: Session, message: str, user_id: str, session_id: str = None, save_chat: bool = True):
+    if save_chat:
+        session = get_or_create_session(db, user_id, session_id)
+        save_message(db, session.id, "user", message)
+        s_id = session.id
+    else:
+        s_id = None
 
     today = date.today().strftime("%Y-%m-%d")
     current_month = date.today().month
@@ -135,11 +139,12 @@ Return ONLY a valid JSON object matching this structure:
 
         if intent == "general":
             answer = result.get("general_response", "I'm not sure how to respond to that.")
-            save_message(db, session.id, "assistant", answer)
+            if save_chat:
+                save_message(db, s_id, "assistant", answer)
             return {
                 "type": "text",
                 "content": answer,
-                "session_id": session.id
+                "session_id": s_id
             }, None
 
         elif intent == "add_expense":
@@ -182,20 +187,22 @@ Return ONLY a valid JSON object matching this structure:
                 else:
                     summary = f"Got it — extracted {len(parsed_list)} expenses totaling GH₵{total_amount}."
 
-                save_message(db, session.id, "assistant", summary)
+                if save_chat:
+                    save_message(db, s_id, "assistant", summary)
                 return {
                     "type": "parse",
                     "content": summary,
                     "parsed_list": parsed_list,
-                    "session_id": session.id
+                    "session_id": s_id
                 }, None
             except (ValidationError, TypeError, ValueError):
                 error = "I think you want to add an expense, but I couldn't understand all the details (like amounts or categories). Please provide more info."
-                save_message(db, session.id, "assistant", error)
+                if save_chat:
+                    save_message(db, s_id, "assistant", error)
                 return {
                     "type": "text",
                     "content": error,
-                    "session_id": session.id
+                    "session_id": s_id
                 }, None
 
         elif intent == "query":
@@ -254,7 +261,7 @@ Return ONLY a valid JSON object matching this structure:
                     if filters.get("month") and filters.get("year"):
                         from calendar import month_name
                         filters_desc.append(f"{month_name[filters['month']]} {filters['year']}")
-                    elif filters.get("year"):
+                    if filters.get("year"):
                         filters_desc.append(str(filters["year"]))
                     desc = " | ".join(filters_desc) if filters_desc else "all categories"
                     
@@ -266,20 +273,22 @@ Return ONLY a valid JSON object matching this structure:
                         
                     answer = f"You {verb} GH₵{real_total:,.2f} on {desc} across {count} transaction{'s' if count > 1 else ''}."
 
-            save_message(db, session.id, "assistant", answer)
+            if save_chat:
+                save_message(db, s_id, "assistant", answer)
             return {
                 "type": "query",
                 "content": answer,
                 "data": data,
                 "total": real_total,
                 "chart_hint": result.get("chart_hint"),
-                "session_id": session.id
+                "session_id": s_id
             }, None
 
     except json.JSONDecodeError:
         error = "Could not understand your question. Please try rephrasing it."
-        save_message(db, session.id, "assistant", error)
-        return {"type": "text", "content": error, "session_id": session.id}, None
+        if save_chat:
+            save_message(db, s_id, "assistant", error)
+        return {"type": "text", "content": error, "session_id": s_id}, None
 
     except Exception as e:
         error = f"Something went wrong: {str(e)}"

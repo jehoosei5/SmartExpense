@@ -41,6 +41,34 @@ def chat(
     return UnifiedChatResponse(**result)
 
 
+@router.post("/quick-add", response_model=UnifiedChatResponse)
+@limiter.limit("15/minute")
+def quick_add_parse(
+    request: Request,
+    data: UnifiedChatRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Parses an AI transaction but skips saving to chat history.
+    """
+    result, error = handle_chat_message(
+        db=db,
+        message=data.message,
+        user_id=current_user.id,
+        session_id=data.session_id,
+        save_chat=False
+    )
+
+    if error:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error
+        )
+
+    return UnifiedChatResponse(**result)
+
+
 @router.post("/chat/confirm")
 @limiter.limit("10/minute")
 def confirm_parsed_expense(
