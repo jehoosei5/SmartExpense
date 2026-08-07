@@ -16,6 +16,7 @@ class ParsedExpense(BaseModel):
 class UnifiedChatRequest(BaseModel):
     message: str
     session_id: Optional[str] = None
+    image_data: Optional[str] = None # Base64 encoded image string (e.g. data:image/jpeg;base64,...)
 
 class UnifiedChatResponse(BaseModel):
     type:        str  # "text", "parse", "query"

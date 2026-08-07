@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { 
@@ -63,7 +63,20 @@ export default function Expenses() {
 
   const [quickAddOpen, setQuickAddOpen] = useState(false)
   const [quickAddText, setQuickAddText] = useState('')
+  const [quickAddImage, setQuickAddImage] = useState(null)
   const [quickAddLoading, setQuickAddLoading] = useState(false)
+  const fileInputRef = useRef(null)
+
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setQuickAddImage(reader.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
 
   // Form
   const [showForm, setShowForm]   = useState(false)
@@ -260,10 +273,10 @@ export default function Expenses() {
   }
 
   async function handleQuickAdd() {
-    if (!quickAddText.trim()) return
+    if (!quickAddText.trim() && !quickAddImage) return
     setQuickAddLoading(true)
     try {
-      const res = await parseQuickAdd(quickAddText)
+      const res = await parseQuickAdd(quickAddText, quickAddImage)
       const data = res.data
       if (data.type === 'parse' && data.parsed_list?.length > 0) {
         const parsed = data.parsed_list[0]
@@ -282,6 +295,7 @@ export default function Expenses() {
         })
         setQuickAddOpen(false)
         setQuickAddText('')
+        setQuickAddImage(null)
         toast.success("AI parsed your transaction! Please review and save.", { icon: "✨" })
       } else {
         // Fallback if AI couldn't parse it
@@ -290,6 +304,7 @@ export default function Expenses() {
         setForm({ ...EMPTY_FORM, details: quickAddText })
         setQuickAddOpen(false)
         setQuickAddText('')
+        setQuickAddImage(null)
         toast.error("AI couldn't fully understand that. Please fill it manually.")
       }
     } catch (err) {
@@ -300,6 +315,7 @@ export default function Expenses() {
       setForm({ ...EMPTY_FORM, details: quickAddText })
       setQuickAddOpen(false)
       setQuickAddText('')
+      setQuickAddImage(null)
     } finally {
       setQuickAddLoading(false)
     }
@@ -768,28 +784,65 @@ export default function Expenses() {
           ) : (
             <div className="bg-slate-900 dark:bg-black/90 backdrop-blur-xl text-white border border-slate-700 dark:border-white/20 p-2 rounded-2xl shadow-2xl flex items-center gap-2 w-[90vw] md:w-[600px] animate-in slide-in-from-bottom-4 fade-in duration-300">
               <button 
-                onClick={() => setQuickAddOpen(false)}
+                onClick={() => {
+                  setQuickAddOpen(false)
+                  setQuickAddImage(null)
+                  setQuickAddText('')
+                }}
                 className="p-2 text-slate-400 hover:text-white transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
+              
               <input 
-                type="text"
-                value={quickAddText}
-                onChange={e => setQuickAddText(e.target.value)}
-                placeholder="Type or tap mic to add transaction (e.g., I spent $12 at Starbucks)"
-                className="flex-1 bg-transparent border-none text-white text-sm focus:outline-none focus:ring-0 placeholder-slate-500"
-                onKeyDown={e => {
-                  if (e.key === 'Enter') {
-                    handleQuickAdd();
-                  }
-                }}
+                type="file" 
+                accept="image/*" 
+                ref={fileInputRef} 
+                onChange={handleImageSelect} 
+                className="hidden" 
               />
               <button 
+                onClick={() => fileInputRef.current?.click()}
+                className="p-2 text-slate-400 hover:text-white transition-colors flex-shrink-0"
+                title="Upload receipt or image"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
+
+              <div className="flex-1 flex items-center gap-2 overflow-hidden bg-slate-800/50 dark:bg-white/5 rounded-xl px-3 py-1 border border-slate-700/50 dark:border-white/10">
+                {quickAddImage && (
+                  <div className="relative w-8 h-8 rounded-md overflow-hidden flex-shrink-0 border border-slate-600">
+                    <img src={quickAddImage} alt="Preview" className="w-full h-full object-cover" />
+                    <button 
+                      onClick={() => setQuickAddImage(null)}
+                      className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
+                    >
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
+                )}
+                <input 
+                  type="text"
+                  value={quickAddText}
+                  onChange={e => setQuickAddText(e.target.value)}
+                  placeholder="Type or upload receipt (e.g., KFC 120)"
+                  className="w-full bg-transparent border-none text-white text-sm focus:outline-none focus:ring-0 placeholder-slate-500 py-1"
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      handleQuickAdd();
+                    }
+                  }}
+                />
+              </div>
+
+              <button 
                 onClick={handleQuickAdd}
-                disabled={quickAddLoading}
+                disabled={quickAddLoading || (!quickAddText.trim() && !quickAddImage)}
                 className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors disabled:opacity-50"
               >
                 {quickAddLoading ? (

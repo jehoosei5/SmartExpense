@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
 import { sendChatMessage, confirmChatMessage } from '../api/client'
 
@@ -28,9 +28,22 @@ export default function AIChat() {
   const [expandedQueries, setExpandedQueries] = useState({})
 
   const [input, setInput]               = useState('')
+  const [chatImage, setChatImage]       = useState(null)
+  const fileInputRef = useRef(null)
   const [sessionId, setSessionId]       = useState(() => sessionStorage.getItem('chat_session_id'))
   const [loading, setLoading]           = useState(false)
   const [pendingParse, setPendingParse] = useState({})
+
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setChatImage(reader.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
 
   function addMessage(role, type, content, extra = {}) {
     setMessages(prev => {
@@ -59,14 +72,20 @@ export default function AIChat() {
   }
 
   async function handleSend() {
-    if (!input.trim() || loading) return
+    if ((!input.trim() && !chatImage) || loading) return
     const userMessage = input.trim()
+    const imagePayload = chatImage
     setInput('')
-    addMessage('user', 'text', userMessage)
+    setChatImage(null)
+    
+    // Create a temporary message content that includes info about the image
+    const displayMessage = userMessage || '[Image uploaded]'
+    addMessage('user', 'text', displayMessage, { image: imagePayload })
+    
     setLoading(true)
 
     try {
-      const res = await sendChatMessage(userMessage, sessionId)
+      const res = await sendChatMessage(userMessage, sessionId, imagePayload)
       
       if (res.data.session_id) {
         setSessionId(res.data.session_id)
@@ -154,8 +173,17 @@ export default function AIChat() {
 
               {/* User message */}
               {msg.role === 'user' && (
-                <div className="bg-emerald-600 dark:bg-gradient-to-r dark:from-cyan-600 dark:to-blue-600 text-white px-4 py-2 rounded-2xl rounded-tr-sm shadow-sm max-w-[80%] text-sm font-medium leading-relaxed">
-                  {msg.content}
+                <div className="flex flex-col items-end gap-2 max-w-[80%]">
+                  {msg.image && (
+                    <div className="bg-emerald-600 dark:bg-slate-800 p-1 rounded-2xl rounded-tr-sm shadow-sm">
+                      <img src={msg.image} alt="User upload" className="rounded-xl object-cover max-h-48" />
+                    </div>
+                  )}
+                  {msg.content !== '[Image uploaded]' && (
+                    <div className="bg-emerald-600 dark:bg-gradient-to-r dark:from-cyan-600 dark:to-blue-600 text-white px-4 py-2 rounded-2xl rounded-tr-sm shadow-sm text-sm font-medium leading-relaxed">
+                      {msg.content}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -275,23 +303,53 @@ export default function AIChat() {
         </div>
 
         {/* Input area */}
-        <div className="p-3 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-white/10 flex gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSend()}
-            placeholder="Type your message..."
-            className="flex-1 bg-slate-100 dark:bg-slate-700/50 border-none rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:text-white placeholder-slate-500"
-          />
-          <button
-            type="button"
-            onClick={handleSend}
-            disabled={loading || !input.trim()}
-            className="bg-emerald-600 text-white p-2 rounded-xl disabled:opacity-50 hover:bg-emerald-700 transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-          </button>
+        <div className="p-3 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-white/10 flex flex-col gap-2">
+          {chatImage && (
+            <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 mx-2">
+              <img src={chatImage} alt="Preview" className="w-full h-full object-cover" />
+              <button 
+                onClick={() => setChatImage(null)}
+                className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
+              >
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+          )}
+          <div className="flex gap-2 items-center">
+            <input 
+              type="file" 
+              accept="image/*" 
+              ref={fileInputRef} 
+              onChange={handleImageSelect} 
+              className="hidden" 
+            />
+            <button 
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="text-slate-400 hover:text-emerald-600 dark:hover:text-cyan-400 p-2 rounded-xl transition-colors shrink-0"
+              title="Attach image"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+              </svg>
+            </button>
+            <input
+              type="text"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSend()}
+              placeholder="Type your message..."
+              className="flex-1 bg-slate-100 dark:bg-slate-700/50 border-none rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:text-white placeholder-slate-500"
+            />
+            <button
+              type="button"
+              onClick={handleSend}
+              disabled={loading || (!input.trim() && !chatImage)}
+              className="bg-emerald-600 text-white p-2 rounded-xl disabled:opacity-50 hover:bg-emerald-700 transition-colors shrink-0"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+            </button>
+          </div>
         </div>
       </div>
 

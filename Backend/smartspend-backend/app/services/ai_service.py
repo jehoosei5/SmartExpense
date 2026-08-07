@@ -39,10 +39,11 @@ def save_message(db: Session, session_id: str, role: str, content: str, expense_
     db.add(message)
     db.commit()
 
-def handle_chat_message(db: Session, message: str, user_id: str, session_id: str = None, save_chat: bool = True):
+def handle_chat_message(db: Session, message: str, user_id: str, session_id: str = None, save_chat: bool = True, image_data: str = None):
     if save_chat:
         session = get_or_create_session(db, user_id, session_id)
-        save_message(db, session.id, "user", message)
+        # We only save text to the chat history for now
+        save_message(db, session.id, "user", message or "[Image uploaded]")
         s_id = session.id
     else:
         s_id = None
@@ -89,9 +90,11 @@ The user's expense summary is:
 {summary_text}
 
 Determine the user's intent from their message:
-- "add_expense": if they are stating they spent/received money and want to log it.
+- "add_expense": if they are stating they spent/received money and want to log it, OR if an image of a receipt/item is provided.
 - "query": if they are asking a question about their past expenses/income.
 - "general": if it's just a greeting, general conversation, or unclear.
+
+If an image is provided, extract the vendor/source, date, amount, currency, and category directly from the image and format it as an "add_expense" intent. If the image is just a picture of an item (not a receipt), estimate a reasonable category and leave the amount blank (or try to guess if obvious).
 
 Return ONLY a valid JSON object matching this structure:
 {{
@@ -124,11 +127,30 @@ Return ONLY a valid JSON object matching this structure:
 """
 
     try:
+        user_content = []
+        if message:
+            user_content.append({"type": "text", "text": message})
+        else:
+            if image_data:
+                user_content.append({"type": "text", "text": "Extract the transaction details from this image."})
+            
+        if image_data:
+            user_content.append({
+                "type": "image_url",
+                "image_url": {
+                    "url": image_data
+                }
+            })
+            
+        # Ensure we have at least some content if message was empty and no image (edge case)
+        if not user_content:
+            user_content.append({"type": "text", "text": "Hello"})
+
         response = client.chat.completions.create(
             model=settings.AZURE_OPENAI_DEPLOYMENT,
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": message}
+                {"role": "user", "content": user_content}
             ],
             temperature=0
         )

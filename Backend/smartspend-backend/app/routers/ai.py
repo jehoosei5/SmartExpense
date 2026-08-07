@@ -29,7 +29,8 @@ def chat(
         db=db,
         message=data.message,
         user_id=current_user.id,
-        session_id=data.session_id
+        session_id=data.session_id,
+        image_data=data.image_data
     )
 
     if error:
@@ -57,7 +58,8 @@ def quick_add_parse(
         message=data.message,
         user_id=current_user.id,
         session_id=data.session_id,
-        save_chat=False
+        save_chat=False,
+        image_data=data.image_data
     )
 
     if error:

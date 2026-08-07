@@ -90,11 +90,11 @@ export const getSyncLogs = () =>
 export const getSessions = () =>
   api.get('/ai/sessions')
 
-export const parseQuickAdd = (message) =>
-  api.post('/ai/quick-add', { message })
+export const parseQuickAdd = (message, image_data = null) =>
+  api.post('/ai/quick-add', { message, image_data })
 
-export const sendChatMessage = (message, session_id = null) =>
-  api.post('/ai/chat', { message, session_id })
+export const sendChatMessage = (message, session_id = null, image_data = null) =>
+  api.post('/ai/chat', { message, session_id, image_data })
 
 export const confirmChatMessage = (parsed, session_id = null) =>
   api.post('/ai/chat/confirm', parsed, { params: { session_id } })
