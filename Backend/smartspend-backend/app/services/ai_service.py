@@ -110,8 +110,8 @@ Return ONLY a valid JSON object matching this structure:
        "amount": 100.50,
        "currency": "GHS",
        "details": "short description or null",
-       "payment_method": "Cash" | "MoMo" | "Card" | "Bank Transfer" | null,
-       "notes": "extra info or null",
+       "payment_method": "Cash" | "MoMo" | "Card" | "Bank Transfer" (Default to "Cash" if not specified),
+       "notes": null (Do not extract raw text from images into notes),
        "confidence": "high" | "medium" | "low"
     }}
   ],
