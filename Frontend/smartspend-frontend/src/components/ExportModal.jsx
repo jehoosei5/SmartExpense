@@ -46,7 +46,7 @@ export default function ExportModal({ onClose, userProfile }) {
       } else {
         // PDF Export with Charts
         toast.loading("Generating PDF Report...", { id: 'pdf-toast' })
-        
+
         // Fetch data for the charts
         const [dashRes, monthRes, catRes, expRes] = await Promise.all([
           getDashboard(filters.start_date, filters.end_date),
@@ -96,7 +96,7 @@ export default function ExportModal({ onClose, userProfile }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col relative">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500" />
-        
+
         <div className="p-6 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
             <div className="p-2 bg-indigo-500/10 rounded-xl">
@@ -108,32 +108,32 @@ export default function ExportModal({ onClose, userProfile }) {
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
-        
+
         <div className="p-6 space-y-6">
           <div>
             <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest mb-3">Format</label>
             <div className="grid grid-cols-2 gap-3">
-              <button 
+              <button
                 onClick={() => setFormat('csv')}
                 className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${format === 'csv' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10' : 'border-slate-200 dark:border-white/10 hover:border-indigo-300 dark:hover:border-indigo-400/50'}`}
               >
                 <svg className={`w-8 h-8 mb-2 ${format === 'csv' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                 <span className={`font-bold ${format === 'csv' ? 'text-indigo-700 dark:text-indigo-300' : 'text-slate-500'}`}>CSV Spreadsheet</span>
               </button>
-              <button 
+              <button
                 onClick={() => setFormat('pdf')}
                 className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${format === 'pdf' ? 'border-rose-500 bg-rose-50 dark:bg-rose-500/10' : 'border-slate-200 dark:border-white/10 hover:border-rose-300 dark:hover:border-rose-400/50'}`}
               >
                 <svg className={`w-8 h-8 mb-2 ${format === 'pdf' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-                <span className={`font-bold ${format === 'pdf' ? 'text-rose-700 dark:text-rose-300' : 'text-slate-500'}`}>PDF with Charts</span>
+                <span className={`font-bold ${format === 'pdf' ? 'text-rose-700 dark:text-rose-300' : 'text-slate-500'}`}>PDF</span>
               </button>
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest mb-3">Time Period</label>
-            <select 
-              value={period} 
+            <select
+              value={period}
               onChange={e => setPeriod(e.target.value)}
               className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/50 appearance-none"
             >
@@ -144,9 +144,9 @@ export default function ExportModal({ onClose, userProfile }) {
             </select>
           </div>
         </div>
-        
+
         <div className="p-6 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-black/20">
-          <button 
+          <button
             onClick={handleExport}
             disabled={loading}
             className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-4 rounded-xl font-bold text-lg hover:bg-slate-800 dark:hover:bg-slate-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg dark:shadow-white/10"
@@ -165,7 +165,7 @@ export default function ExportModal({ onClose, userProfile }) {
       {reportData && (
         <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
           <div ref={reportRef} className="bg-white text-slate-900 w-[1000px] p-12 font-serif">
-            
+
             {/* Header */}
             <div className="flex justify-between items-start mb-8 pb-4 border-b-2 border-slate-200">
               <h1 className="text-3xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
