@@ -8,3 +8,4 @@ from app.models.budget import Budget
 from app.models.alert import Alert
 from app.models.otp import OTP
 from app.models.financial_context import UserFinancialContext
+from app.models.user_category_preference import UserCategoryPreference

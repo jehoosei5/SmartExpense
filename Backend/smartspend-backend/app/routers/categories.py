@@ -34,19 +34,7 @@ def create(
     return category
 
 
-@router.delete("/{category_id}", status_code=204)
-def delete(
-    category_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    success, error = delete_category(db, category_id, current_user.id)
-    if error:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=error
-        )
-
+# Static path must be registered before /{category_id}
 @router.put("/reorder", status_code=200)
 def reorder(
     data: CategoryReorderRequest,
@@ -60,3 +48,17 @@ def reorder(
             detail=error
         )
     return {"message": "Categories reordered successfully"}
+
+
+@router.delete("/{category_id}", status_code=204)
+def delete(
+    category_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    success, error = delete_category(db, category_id, current_user.id)
+    if error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=error
+        )

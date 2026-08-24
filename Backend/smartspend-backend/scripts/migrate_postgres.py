@@ -61,6 +61,27 @@ def run_migration():
             except Exception as e:
                 conn.rollback()
                 logger.error(f"Failed to backfill data: {e}")
+
+            # Per-user category hide/reorder overrides
+            logger.info("Ensuring user_category_preferences table exists...")
+            try:
+                conn.execute(text("""
+                    CREATE TABLE IF NOT EXISTS user_category_preferences (
+                        id VARCHAR(36) PRIMARY KEY,
+                        user_id VARCHAR(36) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                        category_id INTEGER NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+                        is_hidden BOOLEAN NOT NULL DEFAULT FALSE,
+                        position INTEGER NULL,
+                        created_at TIMESTAMP DEFAULT NOW(),
+                        updated_at TIMESTAMP DEFAULT NOW(),
+                        CONSTRAINT uq_user_category_pref UNIQUE (user_id, category_id)
+                    );
+                """))
+                conn.commit()
+                logger.info("user_category_preferences table ready.")
+            except Exception as e:
+                conn.rollback()
+                logger.error(f"Failed to create user_category_preferences: {e}")
             
             logger.info("Migration completed successfully!")
 
