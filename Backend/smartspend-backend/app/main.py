@@ -1,4 +1,6 @@
-from fastapi import FastAPI, Depends
+from typing import Optional
+
+from fastapi import FastAPI, Depends, Header, HTTPException
 from app.utils.security import get_current_user
 from app.models import User
 from fastapi.middleware.cors import CORSMiddleware
@@ -84,10 +86,17 @@ def health_check():
     return {"status": "ok"}
 
 @app.get("/api/migrate")
-def migrate_db():
+def migrate_db(x_cron_secret: Optional[str] = Header(None)):
+    """
+    Runs Postgres column migrations. Protected by X-Cron-Secret —
+    do not expose this without authentication.
+    """
+    if x_cron_secret != settings.CRON_SECRET:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
     from scripts.migrate_postgres import run_migration
     try:
         run_migration()
         return {"message": "Migration completed. Check Render logs for details."}
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=str(e))

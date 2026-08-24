@@ -160,38 +160,45 @@ def trigger_reports(x_cron_secret: Optional[str] = Header(None), db: Session = D
     return {"message": f"Report job completed. Sent {sent_count} reports."}
 
 @router.post("/force-trigger")
-def force_trigger_reports(db: Session = Depends(get_db)):
+def force_trigger_reports(
+    x_cron_secret: Optional[str] = Header(None),
+    db: Session = Depends(get_db),
+):
     """
-    Force triggers sending of email reports for ALL users for testing purposes.
-    Bypasses day-of-week and day-of-month checks.
+    Force-sends test reports for ALL users. Dev/testing only.
+    Requires X-Cron-Secret and is disabled when APP_ENV=production.
     """
+    if settings.APP_ENV == "production":
+        raise HTTPException(status_code=404, detail="Not found")
+
+    if x_cron_secret != settings.CRON_SECRET:
+        raise HTTPException(status_code=401, detail="Unauthorized cron trigger")
+
     today = datetime.now()
     logger.info("Starting FORCE report generation process...")
     sent_count = 0
-    
+
     users = db.query(User).filter(User.report_frequency.in_(["WEEKLY", "MONTHLY"])).all()
-    
+
     for user in users:
-        # Calculate last 7 days for the test report
         start_date = today - timedelta(days=7)
         period_name = "Test (Last 7 Days)"
-        
-        # Fetch expenses
+
         expenses = db.query(Expense).filter(
             Expense.user_id == user.id,
             Expense.date >= start_date.date(),
             Expense.date <= today.date()
         ).all()
-        
+
         html_content = generate_report_html(user, expenses, period_name, start_date, today)
-        
+
         success = send_email(
             to_email=user.email,
             subject=f"Your {period_name} SmartSpend Report",
             html_content=html_content
         )
-        
+
         if success:
             sent_count += 1
-                
+
     return {"message": f"Force report job completed. Sent {sent_count} test reports."}
