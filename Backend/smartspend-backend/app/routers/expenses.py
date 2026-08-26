@@ -177,13 +177,14 @@ def export_expenses(
 
 @router.put("/{expense_id}", response_model=ExpenseResponse)
 def update(expense_id: str, data: ExpenseUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    expense, alert_triggered, error = update_expense(db, expense_id, current_user.id, data)
+    expense, alert_triggered, alert_percentage, error = update_expense(db, expense_id, current_user.id, data)
     if error:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=error
         )
     expense.alert_triggered = alert_triggered
+    expense.alert_percentage = alert_percentage
     return expense
 
 
