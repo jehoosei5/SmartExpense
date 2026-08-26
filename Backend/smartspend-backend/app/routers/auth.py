@@ -23,6 +23,7 @@ from app.schemas.auth import (
     OnboardingRequest,
     UpdateProfileRequest,
     UpdatePasswordRequest,
+    GoogleLoginRequest,
 )
 from app.services.auth_service import (
     register_user,
@@ -156,60 +157,96 @@ def update_password(
     return {"message": "Password updated successfully"}
 
 
-@router.post("/google")
-def google_login(payload: dict, db: Session = Depends(get_db)):
+@router.post("/google", response_model=TokenResponse)
+def google_login(data: GoogleLoginRequest, db: Session = Depends(get_db)):
+    if not settings.GOOGLE_CLIENT_ID:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Google sign-in is not configured",
+        )
+
     try:
         from google.oauth2 import id_token
         from google.auth.transport import requests as google_requests
+
         idinfo = id_token.verify_oauth2_token(
-            payload["credential"],
+            data.credential,
             google_requests.Request(),
             settings.GOOGLE_CLIENT_ID,
-            clock_skew_in_seconds=60
+            clock_skew_in_seconds=60,
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid Google token: {str(e)}",
         )
 
-        email = idinfo["email"]
-        display_name = idinfo.get("name", email.split("@")[0])
+    email = idinfo.get("email")
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Google account did not provide an email address",
+        )
 
-        user = db.query(User).filter(User.email == email).first()
+    if not idinfo.get("email_verified"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Google email is not verified. Please verify it with Google and try again.",
+        )
 
-        if not user:
-            import secrets
-            user = User(
-                email=email,
-                display_name=display_name,
-                password_hash=hash_password(secrets.token_hex(32)),
-                default_currency="GHS",
-                auth_provider="google",
-                is_verified=True,
+    display_name = idinfo.get("name") or email.split("@")[0]
+    user = db.query(User).filter(User.email == email).first()
+
+    if user:
+        # Do not auto-link Google to an existing email/password account
+        if user.auth_provider == "local":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=(
+                    "This email is already registered with a password. "
+                    "Please sign in with your email and password."
+                ),
             )
-            db.add(user)
+        # Existing Google user — ensure verified flag stays true
+        if not user.is_verified:
+            user.is_verified = True
             db.commit()
-            db.refresh(user)
+    else:
+        import secrets
+        user = User(
+            email=email,
+            display_name=display_name,
+            password_hash=hash_password(secrets.token_hex(32)),
+            default_currency="GHS",
+            auth_provider="google",
+            is_verified=True,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
 
-        access_token = create_access_token({"sub": str(user.id), "type": "access"})
-        refresh_token = create_refresh_token({"sub": str(user.id), "type": "refresh"})
+    access_token = create_access_token({"sub": str(user.id)})
+    refresh_token = create_refresh_token({"sub": str(user.id)})
 
-        from app.models.refresh_token import RefreshToken
-        import hashlib
-        from datetime import datetime, timedelta
-        hashed = hashlib.sha256(refresh_token.encode()).hexdigest()
-        db_token = RefreshToken(
+    from app.models.refresh_token import RefreshToken
+    import hashlib
+    from datetime import datetime, timedelta
+
+    hashed = hashlib.sha256(refresh_token.encode()).hexdigest()
+    db.add(
+        RefreshToken(
             user_id=str(user.id),
             token_hash=hashed,
-            expires_at=datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+            expires_at=datetime.utcnow()
+            + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
         )
-        db.add(db_token)
-        db.commit()
+    )
+    db.commit()
 
-        return {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "token_type": "bearer"
-        }
-
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=f"Invalid Google token: {str(e)}")
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+    )
 
 
 @router.post("/onboarding", response_model=UserResponse)

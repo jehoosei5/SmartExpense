@@ -64,3 +64,6 @@ class UpdateProfileRequest(BaseModel):
 class UpdatePasswordRequest(BaseModel):
     current_password: str | None = None  # not required for OAuth users setting a first password
     new_password: str
+
+class GoogleLoginRequest(BaseModel):
+    credential: str  # Google ID token from the client
