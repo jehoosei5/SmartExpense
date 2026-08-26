@@ -198,18 +198,16 @@ def google_login(data: GoogleLoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == email).first()
 
     if user:
-        # Do not auto-link Google to an existing email/password account
-        if user.auth_provider == "local":
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=(
-                    "This email is already registered with a password. "
-                    "Please sign in with your email and password."
-                ),
-            )
-        # Existing Google user — ensure verified flag stays true
+        # Google has verified ownership of this email — allow sign-in.
+        # Do not rewrite auth_provider: password users stay "local" (both
+        # methods work); Google-only users stay "google".
+        # Legacy Google accounts may be tagged "local" after the auth_provider
+        # backfill — they can still sign in here once Google verifies them.
         if not user.is_verified:
             user.is_verified = True
+            db.commit()
+        if not user.display_name and display_name:
+            user.display_name = display_name
             db.commit()
     else:
         import secrets
