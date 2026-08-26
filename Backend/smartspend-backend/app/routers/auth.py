@@ -154,7 +154,9 @@ def google_login(payload: dict, db: Session = Depends(get_db)):
                 email=email,
                 display_name=display_name,
                 password_hash=hash_password(secrets.token_hex(32)),
-                default_currency="GHS"
+                default_currency="GHS",
+                auth_provider="google",
+                is_verified=True,
             )
             db.add(user)
             db.commit()
@@ -188,14 +190,13 @@ def google_login(payload: dict, db: Session = Depends(get_db)):
     
 @router.get("/me")
 def get_me(current_user: User = Depends(get_current_user)):
-    is_oauth = len(current_user.password_hash) > 60 # Placeholder logic to identify Google users
     return {
         "id":               str(current_user.id),
         "email":            current_user.email,
         "display_name":     current_user.display_name,
         "default_currency": current_user.default_currency,
         "report_frequency": current_user.report_frequency,
-        "is_oauth_user":   is_oauth,
+        "is_oauth_user":   current_user.is_oauth_user,
         "is_onboarded":    current_user.is_onboarded,
         "country":         current_user.country,
         "phone_number":    current_user.phone_number,
@@ -227,9 +228,8 @@ def update_me(
 
     # Modified Password Logic
     if "new_password" in payload:
-        # If they are currently OAuth, we DON'T check the old password
-        is_oauth = len(current_user.password_hash) > 60
-        if not is_oauth:
+        # OAuth users have no known password — skip old-password check
+        if not current_user.is_oauth_user:
             from app.utils.security import verify_password
             if not verify_password(payload.get("old_password", ""), current_user.password_hash):
                 raise HTTPException(status_code=400, detail="Current password is incorrect")
@@ -247,7 +247,7 @@ def update_me(
         "display_name": current_user.display_name,
         "default_currency": current_user.default_currency,
         "report_frequency": current_user.report_frequency,
-        "is_oauth_user": len(current_user.password_hash) > 60,
+        "is_oauth_user": current_user.is_oauth_user,
         "is_onboarded": current_user.is_onboarded,
         "country": current_user.country,
         "phone_number": current_user.phone_number,
@@ -284,14 +284,13 @@ def complete_onboarding(
     db.commit()
     db.refresh(current_user)
     
-    is_oauth = len(current_user.password_hash) > 60
     return {
         "id": str(current_user.id),
         "email": current_user.email,
         "display_name": current_user.display_name,
         "default_currency": current_user.default_currency,
         "report_frequency": current_user.report_frequency,
-        "is_oauth_user": is_oauth,
+        "is_oauth_user": current_user.is_oauth_user,
         "is_onboarded": current_user.is_onboarded,
         "country": current_user.country,
         "phone_number": current_user.phone_number,

@@ -20,6 +20,12 @@ def migrate():
             print("Added profession")
         except Exception as e:
             print(f"Error (profession): {e}")
+
+        try:
+            conn.execute(text("ALTER TABLE users ADD COLUMN auth_provider VARCHAR(20) NOT NULL DEFAULT 'local';"))
+            print("Added auth_provider")
+        except Exception as e:
+            print(f"Error (auth_provider): {e}")
             
         conn.commit()
 

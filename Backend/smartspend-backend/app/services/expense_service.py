@@ -119,7 +119,7 @@ def update_expense(db: Session, expense_id: str, user_id: str, data: ExpenseUpda
     ).first()
 
     if not expense:
-        return None, "Expense not found"
+        return None, False, None, "Expense not found"
 
     # Only update fields that were actually sent
     if data.date is not None:
@@ -162,7 +162,11 @@ def update_expense(db: Session, expense_id: str, user_id: str, data: ExpenseUpda
 
     db.commit()
     db.refresh(expense)
-    return expense, None
+
+    user = db.query(User).filter(User.id == user_id).first()
+    alert_triggered, alert_percentage = check_and_trigger_budget_alert(db, expense, user)
+
+    return expense, alert_triggered, alert_percentage, None
 
 
 def delete_expense(db: Session, expense_id: str, user_id: str):

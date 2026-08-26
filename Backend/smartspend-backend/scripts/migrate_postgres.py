@@ -28,7 +28,8 @@ def run_migration():
                 ("expenses", "exchange_rate", "DECIMAL(10, 6) NULL"),
                 ("expenses", "sync_hash", "VARCHAR(64) NULL"),
                 ("users", "report_frequency", "VARCHAR(20) NOT NULL DEFAULT 'NONE'"),
-                ("users", "last_report_sent_at", "TIMESTAMP NULL")
+                ("users", "last_report_sent_at", "TIMESTAMP NULL"),
+                ("users", "auth_provider", "VARCHAR(20) NOT NULL DEFAULT 'local'"),
             ]
             
             for table_name, col_name, col_type in columns_to_add:

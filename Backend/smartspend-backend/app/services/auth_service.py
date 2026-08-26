@@ -40,6 +40,7 @@ def register_user(db: Session, data: RegisterRequest):
         password_hash=hash_password(data.password),
         display_name=data.display_name,
         default_currency=data.default_currency,
+        auth_provider="local",
         is_verified=False
     )
     db.add(user)
@@ -57,14 +58,11 @@ def login_user(db: Session, data: LoginRequest):
     if not user:
         return None, None, "Invalid email or password"
 
-    # Check if this is a Google OAuth user (random 64-char hex password)
-    is_oauth = len(user.password_hash) > 60
-    if is_oauth:
+    if user.is_oauth_user:
         return None, None, "This email is registered with Google. Please use 'Sign in with Google'."
 
-    if not user.is_oauth_user:
-        if not verify_password(data.password, user.password_hash):
-            return None, None, "Invalid email or password"
+    if not verify_password(data.password, user.password_hash):
+        return None, None, "Invalid email or password"
 
     if not user.is_verified:
         # We need a special flag to tell the frontend to show the OTP screen

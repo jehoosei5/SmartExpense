@@ -10,6 +10,8 @@ class User(Base):
     id               = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     email            = Column(String(255), unique=True, nullable=False)
     password_hash    = Column(String(255), nullable=False)
+    # "local" = email/password, "google" = Google OAuth
+    auth_provider    = Column(String(20), nullable=False, default="local")
     is_verified      = Column(Boolean, nullable=False, default=False)
     is_onboarded     = Column(Boolean, nullable=False, default=False)
     display_name     = Column(String(100), nullable=False)
@@ -40,4 +42,4 @@ class User(Base):
 
     @property
     def is_oauth_user(self) -> bool:
-        return len(self.password_hash) > 60
+        return self.auth_provider != "local"
