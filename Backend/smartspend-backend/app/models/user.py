@@ -43,3 +43,9 @@ class User(Base):
     @property
     def is_oauth_user(self) -> bool:
         return self.auth_provider != "local"
+
+    @property
+    def tracking_focus(self) -> str | None:
+        if self.financial_context:
+            return self.financial_context.tracking_focus
+        return None

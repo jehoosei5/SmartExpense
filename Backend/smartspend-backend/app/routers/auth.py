@@ -1,4 +1,10 @@
-from app.utils.security import create_access_token, create_refresh_token, get_current_user
+from app.utils.security import (
+    create_access_token,
+    create_refresh_token,
+    get_current_user,
+    hash_password,
+    verify_password,
+)
 from app.models.user import User
 from app.config import settings
 
@@ -12,18 +18,23 @@ from app.schemas.auth import (
     TokenResponse,
     RefreshRequest,
     UserResponse,
-    UserResponse,
     VerifyEmailRequest,
     ResendVerificationRequest,
     OnboardingRequest,
     UpdateProfileRequest,
-    UpdatePasswordRequest
+    UpdatePasswordRequest,
 )
-from app.services.auth_service import register_user, login_user, logout_user, verify_email_code, resend_verification_code
-from app.utils.security import hash_password
-
+from app.services.auth_service import (
+    register_user,
+    login_user,
+    logout_user,
+    verify_email_code,
+    resend_verification_code,
+)
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+VALID_REPORT_FREQUENCIES = {"NONE", "WEEKLY", "MONTHLY"}
 
 
 @router.post("/register", response_model=UserResponse, status_code=201)
@@ -82,6 +93,12 @@ def logout(data: RefreshRequest, db: Session = Depends(get_db)):
     logout_user(db, data.refresh_token)
     return {"message": "Logged out successfully"}
 
+
+@router.get("/me", response_model=UserResponse)
+def get_me(current_user: User = Depends(get_current_user)):
+    return current_user
+
+
 @router.put("/me", response_model=UserResponse)
 def update_profile(
     data: UpdateProfileRequest,
@@ -94,12 +111,24 @@ def update_profile(
         current_user.phone_number = data.phone_number
     if data.country is not None:
         current_user.country = data.country
+    if data.profession is not None:
+        current_user.profession = data.profession
     if data.default_currency is not None:
         current_user.default_currency = data.default_currency
-        
+    if data.report_frequency is not None:
+        if data.report_frequency not in VALID_REPORT_FREQUENCIES:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="report_frequency must be NONE, WEEKLY, or MONTHLY",
+            )
+        current_user.report_frequency = data.report_frequency
+    if data.tracking_focus is not None and current_user.financial_context:
+        current_user.financial_context.tracking_focus = data.tracking_focus
+
     db.commit()
     db.refresh(current_user)
     return current_user
+
 
 @router.put("/me/password")
 def update_password(
@@ -107,33 +136,31 @@ def update_password(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    from passlib.context import CryptContext
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    
     if current_user.is_oauth_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot change password for OAuth users"
-        )
-        
-    if not pwd_context.verify(data.current_password, current_user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Incorrect current password"
-        )
-        
-    current_user.password_hash = hash_password(data.new_password)
+        # OAuth users have no known password — allow setting one without current_password
+        current_user.password_hash = hash_password(data.new_password)
+    else:
+        if not data.current_password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Current password is required",
+            )
+        if not verify_password(data.current_password, current_user.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Incorrect current password",
+            )
+        current_user.password_hash = hash_password(data.new_password)
+
     db.commit()
-    
     return {"message": "Password updated successfully"}
 
-# Future endpoints for token refresh and Google OAuth
+
 @router.post("/google")
 def google_login(payload: dict, db: Session = Depends(get_db)):
     try:
         from google.oauth2 import id_token
         from google.auth.transport import requests as google_requests
-        # Verify the token Google sent us
         idinfo = id_token.verify_oauth2_token(
             payload["credential"],
             google_requests.Request(),
@@ -141,14 +168,12 @@ def google_login(payload: dict, db: Session = Depends(get_db)):
             clock_skew_in_seconds=60
         )
 
-        email        = idinfo["email"]
+        email = idinfo["email"]
         display_name = idinfo.get("name", email.split("@")[0])
 
-        # Find existing user or create new one
         user = db.query(User).filter(User.email == email).first()
 
         if not user:
-            from app.utils.security import hash_password
             import secrets
             user = User(
                 email=email,
@@ -162,11 +187,9 @@ def google_login(payload: dict, db: Session = Depends(get_db)):
             db.commit()
             db.refresh(user)
 
-        # Create tokens exactly like normal login
-        access_token  = create_access_token({"sub": str(user.id), "type": "access"})
+        access_token = create_access_token({"sub": str(user.id), "type": "access"})
         refresh_token = create_refresh_token({"sub": str(user.id), "type": "refresh"})
 
-        # Save refresh token
         from app.models.refresh_token import RefreshToken
         import hashlib
         from datetime import datetime, timedelta
@@ -180,81 +203,15 @@ def google_login(payload: dict, db: Session = Depends(get_db)):
         db.commit()
 
         return {
-            "access_token":  access_token,
+            "access_token": access_token,
             "refresh_token": refresh_token,
-            "token_type":    "bearer"
+            "token_type": "bearer"
         }
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=f"Invalid Google token: {str(e)}")
-    
-@router.get("/me")
-def get_me(current_user: User = Depends(get_current_user)):
-    return {
-        "id":               str(current_user.id),
-        "email":            current_user.email,
-        "display_name":     current_user.display_name,
-        "default_currency": current_user.default_currency,
-        "report_frequency": current_user.report_frequency,
-        "is_oauth_user":   current_user.is_oauth_user,
-        "is_onboarded":    current_user.is_onboarded,
-        "country":         current_user.country,
-        "phone_number":    current_user.phone_number,
-        "profession":      current_user.profession,
-        "tracking_focus":  current_user.financial_context.tracking_focus if current_user.financial_context else None
-    }
 
-@router.put("/me")
-def update_me(
-    payload: dict,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    # Update display name and currency as usual
-    if "display_name" in payload:
-        current_user.display_name = payload["display_name"]
-    if "default_currency" in payload:
-        current_user.default_currency = payload["default_currency"]
-    if "report_frequency" in payload:
-        current_user.report_frequency = payload["report_frequency"]
-    if "country" in payload:
-        current_user.country = payload["country"]
-    if "phone_number" in payload:
-        current_user.phone_number = payload["phone_number"]
-    if "profession" in payload:
-        current_user.profession = payload["profession"]
-    if "tracking_focus" in payload and current_user.financial_context:
-        current_user.financial_context.tracking_focus = payload["tracking_focus"]
 
-    # Modified Password Logic
-    if "new_password" in payload:
-        # OAuth users have no known password — skip old-password check
-        if not current_user.is_oauth_user:
-            from app.utils.security import verify_password
-            if not verify_password(payload.get("old_password", ""), current_user.password_hash):
-                raise HTTPException(status_code=400, detail="Current password is incorrect")
-        
-        from app.utils.security import hash_password
-        current_user.password_hash = hash_password(payload["new_password"])
-
-    db.commit()
-    db.refresh(current_user)
-    
-    # Return the same structure as get_me
-    return {
-        "id": str(current_user.id),
-        "email": current_user.email,
-        "display_name": current_user.display_name,
-        "default_currency": current_user.default_currency,
-        "report_frequency": current_user.report_frequency,
-        "is_oauth_user": current_user.is_oauth_user,
-        "is_onboarded": current_user.is_onboarded,
-        "country": current_user.country,
-        "phone_number": current_user.phone_number,
-        "profession": current_user.profession,
-        "tracking_focus":  current_user.financial_context.tracking_focus if current_user.financial_context else None
-    }
-    
 @router.post("/onboarding", response_model=UserResponse)
 def complete_onboarding(
     payload: OnboardingRequest,
@@ -262,10 +219,10 @@ def complete_onboarding(
     current_user: User = Depends(get_current_user)
 ):
     from app.models.financial_context import UserFinancialContext
-    
+
     if current_user.is_onboarded:
         raise HTTPException(status_code=400, detail="User is already onboarded")
-        
+
     context = UserFinancialContext(
         user_id=str(current_user.id),
         tracking_focus=payload.tracking_focus,
@@ -274,7 +231,7 @@ def complete_onboarding(
         payment_methods=payload.payment_methods,
         top_categories=payload.top_categories
     )
-    
+
     db.add(context)
     current_user.is_onboarded = True
     current_user.country = payload.country
@@ -283,32 +240,19 @@ def complete_onboarding(
     current_user.default_currency = payload.default_currency
     db.commit()
     db.refresh(current_user)
-    
-    return {
-        "id": str(current_user.id),
-        "email": current_user.email,
-        "display_name": current_user.display_name,
-        "default_currency": current_user.default_currency,
-        "report_frequency": current_user.report_frequency,
-        "is_oauth_user": current_user.is_oauth_user,
-        "is_onboarded": current_user.is_onboarded,
-        "country": current_user.country,
-        "phone_number": current_user.phone_number,
-        "profession": current_user.profession,
-        "tracking_focus": context.tracking_focus
-    }
+
+    return current_user
+
 
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
 def delete_my_account(
-    db: Session = Depends(get_db), 
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # Optional: Delete associated refresh tokens first if not handled by CASCADE
     from app.models.refresh_token import RefreshToken
     db.query(RefreshToken).filter(RefreshToken.user_id == str(current_user.id)).delete()
 
-    # Delete the user
     db.delete(current_user)
     db.commit()
-    
+
     return None

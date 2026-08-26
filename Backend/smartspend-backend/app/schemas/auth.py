@@ -32,6 +32,7 @@ class UserResponse(BaseModel):
     default_currency: str
     is_oauth_user: bool
     is_onboarded: bool
+    report_frequency: str = "NONE"
     country: str | None = None
     phone_number: str | None = None
     profession: str | None = None
@@ -55,8 +56,11 @@ class UpdateProfileRequest(BaseModel):
     display_name: str | None = None
     phone_number: str | None = None
     country: str | None = None
+    profession: str | None = None
     default_currency: str | None = None
+    report_frequency: str | None = None  # NONE, WEEKLY, MONTHLY
+    tracking_focus: str | None = None
 
 class UpdatePasswordRequest(BaseModel):
-    current_password: str
+    current_password: str | None = None  # not required for OAuth users setting a first password
     new_password: str
