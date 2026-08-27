@@ -30,6 +30,7 @@ def run_migration():
                 ("users", "report_frequency", "VARCHAR(20) NOT NULL DEFAULT 'NONE'"),
                 ("users", "last_report_sent_at", "TIMESTAMP NULL"),
                 ("users", "auth_provider", "VARCHAR(20) NOT NULL DEFAULT 'local'"),
+                ("otps", "attempts", "INTEGER NOT NULL DEFAULT 0"),
             ]
             
             for table_name, col_name, col_type in columns_to_add:

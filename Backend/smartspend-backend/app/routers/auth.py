@@ -50,7 +50,8 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/verify-email", response_model=TokenResponse)
-def verify_email(data: VerifyEmailRequest, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def verify_email(request: Request, data: VerifyEmailRequest, db: Session = Depends(get_db)):
     access_token, refresh_token, error = verify_email_code(db, data.email, data.code)
     if error:
         raise HTTPException(
@@ -64,7 +65,8 @@ def verify_email(data: VerifyEmailRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/resend-verification")
-def resend_verification(data: ResendVerificationRequest, db: Session = Depends(get_db)):
+@limiter.limit("3/minute")
+def resend_verification(request: Request, data: ResendVerificationRequest, db: Session = Depends(get_db)):
     success, error = resend_verification_code(db, data.email)
     if error:
         raise HTTPException(

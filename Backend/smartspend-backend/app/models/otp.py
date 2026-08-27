@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime
+from sqlalchemy import Column, String, DateTime, Integer
 from sqlalchemy.sql import func
 import uuid
 from app.database import Base
@@ -11,6 +11,7 @@ class OTP(Base):
     email      = Column(String(255), nullable=False, index=True)
     code       = Column(String(6), nullable=False)
     purpose    = Column(String(20), nullable=False, default="VERIFICATION")
+    attempts   = Column(Integer, nullable=False, default=0)
     expires_at = Column(DateTime, nullable=False)
     created_at = Column(DateTime, server_default=func.now())
 
