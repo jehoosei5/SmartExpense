@@ -1,6 +1,16 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 import json
+
+# Known weak defaults — rejected when APP_ENV=production
+_INSECURE_CRON_SECRETS = frozenset({
+    "changeme",
+    "change_me",
+    "secret",
+    "password",
+    "cron_secret",
+    "your_secret_here",
+})
 
 class Settings(BaseSettings):
     # Database
@@ -55,6 +65,22 @@ class Settings(BaseSettings):
     
     # Cron / Background Tasks
     CRON_SECRET: str = "changeme"
+
+    @model_validator(mode="after")
+    def validate_production_cron_secret(self):
+        if self.APP_ENV.lower() != "production":
+            return self
+
+        secret = (self.CRON_SECRET or "").strip()
+        if len(secret) < 16:
+            raise ValueError(
+                "CRON_SECRET must be at least 16 characters when APP_ENV=production"
+            )
+        if secret.lower() in _INSECURE_CRON_SECRETS:
+            raise ValueError(
+                "CRON_SECRET cannot be a placeholder value when APP_ENV=production"
+            )
+        return self
 
     # Pydantic V2 Configuration
     model_config = SettingsConfigDict(
