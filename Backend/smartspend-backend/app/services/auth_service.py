@@ -91,17 +91,22 @@ def login_user(db: Session, data: LoginRequest):
     return access_token, refresh_token, None
 
 
-def logout_user(db: Session, refresh_token: str):
+def logout_user(db: Session, refresh_token: str, user_id: str):
     token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
 
     db_token = db.query(RefreshToken).filter(
-        RefreshToken.token_hash == token_hash
+        RefreshToken.token_hash == token_hash,
+        RefreshToken.user_id == str(user_id),
     ).first()
 
-    if db_token:
+    if not db_token:
+        return False, "Refresh token not found"
+
+    if not db_token.revoked:
         db_token.revoked = 1
         db.commit()
-    return True
+
+    return True, None
 
 
 def _persist_refresh_token(db: Session, user_id: str, refresh_token: str) -> None:

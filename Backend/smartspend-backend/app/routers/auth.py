@@ -93,8 +93,17 @@ def login(request: Request, data: LoginRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/logout")
-def logout(data: RefreshRequest, db: Session = Depends(get_db)):
-    logout_user(db, data.refresh_token)
+def logout(
+    data: RefreshRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    success, error = logout_user(db, data.refresh_token, current_user.id)
+    if error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=error,
+        )
     return {"message": "Logged out successfully"}
 
 

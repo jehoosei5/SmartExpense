@@ -78,8 +78,9 @@ export const resendVerification = (email) =>
 export const refreshTokens = (refresh_token) =>
   api.post('/auth/refresh', { refresh_token })
 
-export const logout = (refresh_token) =>
+export const logout = (refresh_token = localStorage.getItem('refresh_token')) =>
   api.post('/auth/logout', { refresh_token })
+
 
 export const googleLogin = (credential) =>
   api.post('/auth/google', { credential })
