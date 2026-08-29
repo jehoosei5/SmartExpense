@@ -16,6 +16,52 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+let refreshPromise = null
+
+async function refreshSession() {
+  const refresh_token = localStorage.getItem('refresh_token')
+  if (!refresh_token) {
+    throw new Error('No refresh token')
+  }
+  const res = await axios.post(`${BASE_URL}/auth/refresh`, { refresh_token })
+  localStorage.setItem('access_token', res.data.access_token)
+  localStorage.setItem('refresh_token', res.data.refresh_token)
+  return res.data.access_token
+}
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const original = error.config
+    if (
+      error.response?.status !== 401 ||
+      original?._retry ||
+      original?.url?.includes('/auth/login') ||
+      original?.url?.includes('/auth/refresh') ||
+      original?.url?.includes('/auth/register')
+    ) {
+      return Promise.reject(error)
+    }
+
+    original._retry = true
+
+    try {
+      if (!refreshPromise) {
+        refreshPromise = refreshSession().finally(() => {
+          refreshPromise = null
+        })
+      }
+      const newToken = await refreshPromise
+      original.headers.Authorization = `Bearer ${newToken}`
+      return api(original)
+    } catch {
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
+      return Promise.reject(error)
+    }
+  }
+)
+
 // ── Auth ──────────────────────────────────────────────────────────────────
 export const login = (email, password) =>
   api.post('/auth/login', { email, password })
@@ -28,6 +74,9 @@ export const verifyEmail = (email, code) =>
 
 export const resendVerification = (email) =>
   api.post('/auth/resend-verification', { email })
+
+export const refreshTokens = (refresh_token) =>
+  api.post('/auth/refresh', { refresh_token })
 
 export const logout = (refresh_token) =>
   api.post('/auth/logout', { refresh_token })

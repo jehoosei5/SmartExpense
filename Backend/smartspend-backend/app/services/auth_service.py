@@ -104,6 +104,63 @@ def logout_user(db: Session, refresh_token: str):
     return True
 
 
+def _persist_refresh_token(db: Session, user_id: str, refresh_token: str) -> None:
+    token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
+    db.add(
+        RefreshToken(
+            user_id=str(user_id),
+            token_hash=token_hash,
+            expires_at=datetime.utcnow()
+            + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+        )
+    )
+
+
+def refresh_access_token(db: Session, refresh_token: str):
+    from app.utils.security import decode_token
+
+    payload = decode_token(refresh_token)
+    if payload is None or payload.get("type") != "refresh":
+        return None, None, "Invalid or expired refresh token"
+
+    user_id = payload.get("sub")
+    if not user_id:
+        return None, None, "Invalid or expired refresh token"
+
+    user_id = str(user_id)
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return None, None, "Invalid or expired refresh token"
+
+    token_hash = hashlib.sha256(refresh_token.encode()).hexdigest()
+    db_token = db.query(RefreshToken).filter(
+        RefreshToken.token_hash == token_hash
+    ).first()
+
+    if not db_token or str(db_token.user_id) != user_id:
+        return None, None, "Invalid or expired refresh token"
+
+    if db_token.revoked:
+        return None, None, "Refresh token has been revoked"
+
+    expires_at = db_token.expires_at
+    if getattr(expires_at, "tzinfo", None) is not None:
+        expires_at = expires_at.replace(tzinfo=None)
+    if expires_at < datetime.utcnow():
+        db_token.revoked = 1
+        db.commit()
+        return None, None, "Refresh token expired"
+
+    # Rotate refresh token
+    db_token.revoked = 1
+    new_access_token = create_access_token({"sub": user_id})
+    new_refresh_token = create_refresh_token({"sub": user_id})
+    _persist_refresh_token(db, user_id, new_refresh_token)
+    db.commit()
+
+    return new_access_token, new_refresh_token, None
+
+
 def verify_email_code(db: Session, email: str, code: str):
     user = db.query(User).filter(User.email == email).first()
     if not user:

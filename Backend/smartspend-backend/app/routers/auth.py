@@ -31,6 +31,7 @@ from app.services.auth_service import (
     logout_user,
     verify_email_code,
     resend_verification_code,
+    refresh_access_token,
 )
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -95,6 +96,21 @@ def login(request: Request, data: LoginRequest, db: Session = Depends(get_db)):
 def logout(data: RefreshRequest, db: Session = Depends(get_db)):
     logout_user(db, data.refresh_token)
     return {"message": "Logged out successfully"}
+
+
+@router.post("/refresh", response_model=TokenResponse)
+@limiter.limit("20/minute")
+def refresh_tokens(request: Request, data: RefreshRequest, db: Session = Depends(get_db)):
+    access_token, refresh_token, error = refresh_access_token(db, data.refresh_token)
+    if error:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=error,
+        )
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+    )
 
 
 @router.get("/me", response_model=UserResponse)
