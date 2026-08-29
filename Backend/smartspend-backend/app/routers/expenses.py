@@ -175,6 +175,43 @@ def export_expenses(
     )
 
 
+# Static paths must be registered before /{expense_id}
+@router.get("/suggestions")
+def get_suggestions(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    suggestions = get_recurring_suggestions(db, current_user.id)
+    return {"suggestions": suggestions}
+
+
+@router.post("/suggestions/snooze")
+def snooze_suggestion(
+    data: SnoozeRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    snoozed = db.query(SnoozedRecurrence).filter(
+        SnoozedRecurrence.sync_hash == data.sync_hash,
+        SnoozedRecurrence.user_id == current_user.id
+    ).first()
+
+    if not snoozed:
+        snoozed = SnoozedRecurrence(
+            user_id=current_user.id,
+            sync_hash=data.sync_hash,
+            remind_date=data.remind_date,
+            is_dismissed=data.is_dismissed
+        )
+        db.add(snoozed)
+    else:
+        snoozed.remind_date = data.remind_date
+        snoozed.is_dismissed = data.is_dismissed
+
+    db.commit()
+    return {"message": "Suggestion updated successfully"}
+
+
 @router.put("/{expense_id}", response_model=ExpenseResponse)
 def update(expense_id: str, data: ExpenseUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     expense, alert_triggered, alert_percentage, error = update_expense(db, expense_id, current_user.id, data)
@@ -200,37 +237,3 @@ def delete(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=error
         )
-
-@router.get("/suggestions")
-def get_suggestions(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    suggestions = get_recurring_suggestions(db, current_user.id)
-    return {"suggestions": suggestions}
-
-@router.post("/suggestions/snooze")
-def snooze_suggestion(
-    data: SnoozeRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    snoozed = db.query(SnoozedRecurrence).filter(
-        SnoozedRecurrence.sync_hash == data.sync_hash,
-        SnoozedRecurrence.user_id == current_user.id
-    ).first()
-    
-    if not snoozed:
-        snoozed = SnoozedRecurrence(
-            user_id=current_user.id,
-            sync_hash=data.sync_hash,
-            remind_date=data.remind_date,
-            is_dismissed=data.is_dismissed
-        )
-        db.add(snoozed)
-    else:
-        snoozed.remind_date = data.remind_date
-        snoozed.is_dismissed = data.is_dismissed
-        
-    db.commit()
-    return {"message": "Suggestion updated successfully"}

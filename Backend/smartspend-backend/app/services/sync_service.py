@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 from app.models.expense import Expense
 from app.models.sync_log import SyncLog
+from app.models.user import User
+from app.services.currency_service import currency_service
 from app.utils.hashing import generate_sync_hash
 import pandas as pd
 import io
@@ -35,6 +37,19 @@ def process_sync(db: Session, file_bytes: bytes, user_id: str):
     skipped   = 0
     failed    = 0
     errors    = []
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return {
+            "status":        "failed",
+            "total_rows":    0,
+            "inserted_rows": 0,
+            "skipped_rows":  0,
+            "failed_rows":   0,
+            "errors":        ["User not found"],
+        }
+
+    currency = user.default_currency
 
     # ── Step 1: Read the CSV file ─────────────────────────────────────────────
     try:
@@ -113,6 +128,12 @@ def process_sync(db: Session, file_bytes: bytes, user_id: str):
                 skipped += 1
                 continue
 
+            exchange_rate = currency_service.get_exchange_rate(
+                base_currency=user.default_currency,
+                target_currency=currency,
+            )
+            base_amount = amount * exchange_rate
+
             # Create expense record
             expense = Expense(
                 user_id=user_id,
@@ -120,7 +141,9 @@ def process_sync(db: Session, file_bytes: bytes, user_id: str):
                 type=type_val,
                 category=category,
                 amount=amount,
-                currency="GHS",
+                base_amount=base_amount,
+                exchange_rate=exchange_rate,
+                currency=currency,
                 details=details,
                 payment_method=payment,
                 source="excel",
